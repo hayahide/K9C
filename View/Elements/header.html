@@ -1,0 +1,421 @@
+<?php $controller=strtolower($this->params["controller"]); ?>
+<script>
+
+var TYPE_HEADER_LOGOUT="header-logout";
+var TYPE_HEADER_ITEMS="header-items";
+var TYPE_HEADER_REPORT="header-report";
+var TYPE_HEADER_CUSTOMER="header-customer";
+var TYPE_HEADER_WORKER="header-worker";
+var TYPE_HEADER_WORKER="header-schedule";
+var TYPE_HEADER_SITE="header-site";
+var TYPE_HEADER_PRINT="header-print";
+var TYPE_HEADER_TOP="header-top";
+var user_id='<?php echo $user_id; ?>';
+var clickEnd=deviceClickEventEnd();
+
+$(function(){
+
+		var controller="<?php echo $controller; ?>";
+		controller=controller.toLowerCase();
+		var header=$("header");
+		var header_items=header.find("div[data-type=\""+TYPE_HEADER_ITEMS+"\"]");
+
+		if(isSp()){
+
+			var start="touchstart";
+			header_items.one(start,function(e){
+
+				var target=$(this);
+				var fn=arguments.callee;
+				target.data("start_point_x",getPageX(e));
+				target.data("start_point_y",getPageY(e));
+				target.one(e.type,fn);
+				return false;
+			});
+		}
+
+		header_items.one(deviceClickEventEnd(),function(e){
+
+			var self=$(this);
+			var fn=arguments.callee;
+			var target=$(e.target);
+			if(target.prop("tagName").toLowerCase()!="a") target=target.parents("a");
+			var type=target.attr("data-type");
+			var href=target.attr("data-href");
+            var start_point_x=self.data("start_point_x");
+            var start_point_y=self.data("start_point_y");
+            self.removeData("start_point_x");
+            self.removeData("start_point_y");
+
+			console.log(type);
+
+ 			if(isSp()){
+
+                var allow_point=ALLOW_MOVE_TOUCH_POINT;
+                var diff_y=Math.abs(Math.abs(start_point_y)-Math.abs(getPageY(e)));
+                var diff_x=Math.abs(Math.abs(start_point_x)-Math.abs(getPageX(e)));
+                if(diff_x>allow_point || diff_y>allow_point){
+
+                	self.one(e.type,fn);
+                	return false;
+                }
+			}
+
+			if(type=="header-all-setting-a"){
+
+				metaSetting();
+				self.one(e.type,fn);
+				return;
+			}
+
+			if(type=="header-employee-setting-a"){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+				
+					alert('<?php echo __("「操作する」を押して下さい"); ?>');
+					self.one(e.type,fn);
+					return;
+				}
+
+				employeeRemodal();
+				self.one(e.type,fn);
+				return;
+			}
+
+			if(type=="header-room-situation-setting-a"){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+				
+					alert('<?php echo __("「操作する」を押して下さい"); ?>');
+					self.one(e.type,fn);
+					return;
+				}
+
+				roomSituation();
+				self.one(e.type,fn);
+				return;
+			}
+
+			if(type=="header-price-rate-setting-a"){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+				
+					alert('<?php echo __("「操作する」を押して下さい"); ?>');
+					self.one(e.type,fn);
+					return;
+				}
+
+				priceRateSetting();
+				self.one(e.type,fn);
+				return;
+			}
+
+			if(type=="header-masterprice-setting-a"){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+				
+					alert('<?php echo __("「操作する」を押して下さい"); ?>');
+					self.one(e.type,fn);
+					return;
+				}
+
+				baseBasePriceSetting();
+				self.one(e.type,fn);
+				return;
+			}
+
+			if(type=="header-company-setting-a"){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+				
+					alert('<?php echo __("「操作する」を押して下さい"); ?>');
+					self.one(e.type,fn);
+					return;
+				}
+
+				agentSetting();
+				self.one(e.type,fn);
+				return;
+			}
+
+			if(type=="header-extraorder-setting-a"){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+				
+					alert('<?php echo __("「操作する」を押して下さい"); ?>');
+					self.one(e.type,fn);
+					return;
+				}
+
+				var ymd=window["today"]["ymd"];
+				extraOrderCharge(ymd);
+
+				self.one(e.type,fn);
+				return;
+			}
+
+			if(type=="header-dailyreport-setting-a"){
+
+				dailyReport();
+				self.one(e.type,fn);
+				return;
+			}
+
+			<?php if(isset($reservation_hash)){ ?>
+			if(type=="header-deposit"){
+			
+				depositSetting("<?php echo $reservation_hash; ?>");
+				self.one(e.type,fn);
+				return;
+			}
+			<?php } ?>
+
+			if(type=="header-outputpayment-setting-a"){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+				
+					alert('<?php echo __("「操作する」を押して下さい"); ?>');
+					self.one(e.type,fn);
+					return;
+				}
+
+				var date=new Date("<?php echo $today; ?>");
+				var dates=[];
+				dates.push(date.getFullYear());
+				dates.push(Number(date.getMonth()+1).addZero());
+				dates.push(Number(date.getDate()).addZero());
+				var ymd=dates.join("");
+				balanceSetting(ymd);
+				self.one(e.type,fn);
+				return;
+			}
+
+			if(type==TYPE_HEADER_TOP){
+
+				if(["k9site"].indexOf(controller)>-1){
+
+					if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+						$(window).off("beforeunload");
+						var url=document.location.protocol+BASE_URL+href;
+						location.href=url;
+						return;
+					}
+
+					if(window["isScheduleEdit"]!=undefined && $.isFunction(isScheduleEdit) && isScheduleEdit()){
+
+						var main_title="<?php echo __("お知らせ"); ?>";
+						var message="<?php echo __("予約情報が更新されています"); ?><br />";
+						message+="<?php echo __("他のページへ遷移致しますか？"); ?>";
+						var params={};
+						params["yes"]=function(){ logInitializeToMove(user_id,href); };
+						params["close"]=function(){};
+						params["no"]   =function(){};
+						remodalAlert("modal",main_title,message,params);
+						return;
+					}
+
+					logInitializeToMove(user_id,href);
+					return;
+				}
+
+				var url=document.location.protocol+BASE_URL+href;
+				location.href=url;
+				return;
+			}
+
+			if(type==TYPE_HEADER_LOGOUT){
+
+				if(["k9site","k9sitemonthly"].indexOf(controller)>-1){
+
+					if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+						$(window).off("beforeunload");
+						var url=document.location.protocol+BASE_URL+href;
+						location.href=url;
+						return;
+					}
+
+					if(window["isScheduleEdit"]!=undefined && $.isFunction(isScheduleEdit) && isScheduleEdit()){
+
+						var message="<?php echo __("予約情報が更新されています"); ?>\n";
+						message+="<?php echo __("他のページへ遷移致しますか？"); ?>";
+						var res=window.confirm(message);
+						if(!res) return;
+						logInitializeToMove(user_id,href);
+						return;
+					}
+
+					logInitializeToMove(user_id,href);
+					return;
+				}
+
+				var url=document.location.protocol+BASE_URL+href;
+				location.href=url;
+				return;
+			}
+
+			if(controller=="k9site" && href!=undefined){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+					$(window).off("beforeunload");
+					var url=document.location.protocol+BASE_URL+href;
+					location.href=url;
+					return;
+				}
+
+				if($.isFunction(isScheduleEdit) && isScheduleEdit()){
+
+					var main_title="<?php echo __("お知らせ"); ?>";
+					var message="<?php echo __("予約情報が更新されています"); ?><br />";
+					message+="<?php echo __("他のページへ遷移致しますか？"); ?>";
+					var params={};
+					params["yes"]=function(){ logInitializeToMove(user_id,href); };
+					params["close"]=function(){};
+					params["no"]   =function(){};
+					remodalAlert("modal",main_title,message,params);
+					return;
+				}
+
+				logInitializeToMove(user_id,href);
+				return;
+			}
+
+			if(href==undefined){
+
+				self.one(e.type,fn);
+				return;
+			}
+
+			$(window).off("beforeunload");
+			var url=document.location.protocol+BASE_URL+href;
+			location.href=url;
+			return false;
+		});
+
+});
+
+</script>
+
+<header>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+    	<div class="row-fluid top-menu text-right">
+			<span>
+
+				<?php 
+
+					$login_name_tpl=__("nameとしてログイン中"); 
+					echo str_replace("name",$first_name,$login_name_tpl);
+				?>
+
+			</span>
+    	</div>
+        <div class="container-fluid" style="padding:5px 18px 0">
+
+            <div id="navbar" class="" data-type="header-items">
+				<h1 class="logo"><a class="navbar-brand" data-href="k9Site" data-type="header-top" href="#"><?php echo __("K9予約システム");?></a></h1>
+                <ul class="navbar-nav">
+
+                    <li data-type="header-par-price-setting-li">
+						<a href="#" data-href="K9Site" data-type="header-site" onclick="return false;">
+							<?php echo __("宿泊日程"); ?>
+						</a>
+					</li>
+
+					<?php if(HEADER_PRICERATE AND in_array($controller,array("k9site","k9sitemonthly"))){ ?>
+					<li data-type="header-price-rate-setting">
+						<a href="#" onclick="return false;" data-type="header-price-rate-setting-a">
+							<?php echo __("金額特別設定"); ?>
+						</a>
+					</li>
+					<?php } ?>
+
+					<?php if(HEADER_ROOMSITUATION AND in_array($controller,array("k9site","k9sitemonthly"))){ ?>
+					<li data-type="header-room-situation-setting">
+						<a href="#" onclick="return false;" data-type="header-room-situation-setting-a">
+							<?php echo __("部屋状況管理"); ?>
+						</a>
+					</li>
+					<?php } ?>
+
+					<?php if(HEADER_EMPLOYEE AND in_array($controller,array("k9site","k9sitemonthly"))){ ?>
+					<li data-type="header-employee-setting">
+						<a href="#" onclick="return false;" data-type="header-employee-setting-a">
+							<?php echo __("従業員管理"); ?>
+						</a>
+					</li>
+					<?php } ?>
+
+					<?php if(HEADER_BASEPRICE AND in_array($controller,array("k9site","k9sitemonthly"))){ ?>
+					<li data-type="header-masterprice-setting">
+						<a href="#" onclick="return false;" data-type="header-masterprice-setting-a">
+							<?php echo __("標準金額設定"); ?>
+						</a>
+					</li>
+					<?php } ?>
+
+					<?php if(HEADER_COMPANY AND in_array($controller,array("k9site","k9sitemonthly"))){ ?>
+					<li data-type="header-masterprice-setting">
+						<a href="#" onclick="return false;" data-type="header-company-setting-a">
+							<?php echo __("法人管理"); ?>
+						</a>
+					</li>
+					<?php } ?>
+
+					<?php if(HEADER_OUTPUTPAYMENT AND in_array($controller,array("k9site","k9sitemonthly"))){ ?>
+					<li data-type="header-masterprice-setting">
+						<a href="#" onclick="return false;" data-type="header-outputpayment-setting-a">
+							<?php echo __("財務管理"); ?>
+						</a>
+					</li>
+					<?php } ?>
+
+					<li data-type="header-masterprice-setting">
+						<a href="#" onclick="return false;" data-type="header-dailyreport-setting-a">
+							<?php echo __("レポート"); ?>
+						</a>
+					</li>
+
+					<?php if(HEADER_EXTRAORDER AND in_array($controller,array("k9site","k9sitemonthly"))){ ?>
+					<li data-type="header-masterprice-setting">
+						<a href="#" onclick="return false;" data-type="header-extraorder-setting-a">
+							<?php echo __("外部注文"); ?>
+						</a>
+					</li>
+					<?php } ?>
+
+					<li data-type="header-all-setting">
+						<a href="#" onclick="return false;" data-type="header-all-setting-a">
+							<?php echo __("全体設定"); ?>
+						</a>
+					</li>
+
+					<?php if(HEADER_DEPOSIT AND in_array($controller,array("k9reservation"))){ ?>
+					<?php if((isset($is_checkin) AND !empty($is_checkin))){ ?>
+                    <li data-type="header-logout-li">
+						<a data-href="#" data-type="header-deposit" onclick="return false;" href="#">
+							<?php echo __("デポジット"); ?>
+						</a>
+					</li>
+					<?php } ?>
+					<?php } ?>
+
+                    <li data-type="header-logout-li">
+						<a data-href="/K9Login/logout" data-type="header-logout" onclick="return false;" href="#">
+							<?php echo __("ログアウト"); ?>
+						</a>
+					</li>
+
+					<li><span data-type="header-date-range"></span></li>
+
+                </ul><!--/#navbar-->
+                <div class="header-btn" data-type="header-print">
+					<?php $controller=strtolower($this->params["controller"]);?>
+					<?php $action=strtolower($this->params["action"]);?>
+                </div>
+            </div>
+
+        </div><!--/.container-->
+    </nav><!--nav-->
+</header><!--header-->

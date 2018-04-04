@@ -1,0 +1,13 @@
+<?php
+  $result = [
+    'site'   => $site,
+    'schedules'   => $schedules,
+    'customers'   => $customers,
+    'prefs'   => $prefs,
+    'color_list'   => $color_list,
+    'remark_titles'   => $remark_titles,
+    'remarks'   => $remarks,
+    'month_prefix'   => $month_prefix
+  ];
+  echo json_encode(array('status'=>'YES','result'=>$result));
+?>

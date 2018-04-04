@@ -1,0 +1,4819 @@
+<?php $controller=strtolower($this->params["controller"]);?>
+<?php echo $this->element("schedule_apis/common"); ?>
+<?php echo $this->element("schedule_functions/common"); ?>
+
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/k9style.php">
+
+<?php if($device_type=="pc"){ ?>
+<style>
+body{ overflow-y:scroll;}
+</style>
+<?php } ?>
+
+<script>
+
+//html5 api of that don't allow to get forward.
+history.pushState(null,null,null);
+$(window).on("popstate",function(){ history.pushState(null, null, null); });
+
+var TYPE_SCHEDULE_CONTAINER_TOP="schedule-container-top";
+var TYPE_SCHEDULE      ="schedule";
+var TYPE_UNAVAILABLE_SCHEDULE      ="unavailable-schedule";
+var TYPE_SCHEDULE_BLOCK="schedule-block";
+var TYPE_DAYTOP        ="day-top";
+var TYPE_SCHEDULE_TOP="schedule-top";
+var TYPE_SCHEDULE_TOP_HEAD ="schedule-top-head";
+var TYPE_SCHEDULE_INNER="schedule-top-inner";
+var TYPE_SCHEDULE_HEAD ="schedule-head";
+var TYPE_SCHEDULE_SIDE_DATE ="schedule-site-date";
+var TYPE_SCHEDULE_SIDE ="schedule-site-box";
+var TYPE_SCHEDULE_WORKER ="schedule-worker";
+var TYPE_SCHEDULE_PRICE ="data-price";
+var TYPE_SCHEDULE_MODIFIED="schedule-modified-information";
+var TYPE_SCHEDULE_MODIFIED_PARSITE="schedule-modified-parsite-information";
+var TYPE_SCHEDULE_SIDE_SITE_WORKER_EDIT="schedule-site-edit-workers-btn";
+var TYPE_SCHEDULE_SIDE_SITE_EDIT="schedule-reservation-edit-btn";
+var TYPE_SCHEDULE_SIDE_SITE_PREVIEW="schedule-site-preview-btn";
+var TYPE_SCHEDULE_CONTENT_BOX="content-box";
+var TYPE_SCHEDULE_MODAL="schedule-site-modal";
+var TYPE_SCHEDULE_WORKER_HIDDEN="schedule-worker-hidden";
+var TYPE_SCHEDULE_TRUCK_HIDDEN="schedule-truck-hidden";
+var TYPE_SCHEDULE_SIDE_MEMO="schedule-side-memo";
+var TYPE_SCHEDULE_MEMO_LI="schedule-memo-li";
+
+var TYPE_SCHEDULE_DAY_BTN="schedule-switch-sitedaily";
+var TYPE_SCHEDULE_WEEK_BTN="schedule-switch-site";
+var TYPE_SCHEDULE_MONTH_BTN="schedule-switch-sitemonthly";
+var TYPE_SCHEDULE_GMAP="schedule-gmap";
+var TYPE_SCHEDULE_SIDE_BOX  ="schedule-site-box";
+var TYPE_SCHEDULE_HEAD_BOTTOM_LINE="schedule-head-bottom-line";
+var TYPE_SCHEDULE_HEAD_TOP_LINE="schedule-head-top-line";
+var TYPE_SCHEDULE_HEAD_MIDDLE_LINE="schedule-head-middle-line";
+var TYPE_SCHEDULE_HEADER_YMD="schedule-header-ymd";
+var TYPE_SCHEDULE_DATE_RANGE="header-date-range";
+var LOCAL_STORAGE_TIMEKEY="time_key";
+
+var TYPE_SCHEDULE_L_CONTENTS="schedule-l-contents";
+var BTN_SCHEDULE_WEEK_PREV_BUTTON ="schedule-week-btn-left";
+var BTN_SCHEDULE_WEEK_NEXT_BUTTON ="schedule-week-btn-right";
+var BTN_SCHEDULE_WEEK_PREV_BUTTON_SPAN ="schedule-week-btn-left-span";
+var BTN_SCHEDULE_WEEK_NEXT_BUTTON_SPAN ="schedule-week-btn-right-span";
+
+var BTN_SCHEDULE_PREV_BUTTON="schedule-btn-left";
+var BTN_SCHEDULE_NEXT_BUTTON="schedule-btn-right";
+var BTN_SCHEDULE_PREV_BUTTON_SPAN="schedule-btn-left-span";
+var BTN_SCHEDULE_NEXT_BUTTON_SPAN="schedule-btn-right-span";
+
+var BTN_ACTION_UNDO="action-undo";
+var BTN_ACTION_FORWARD="action-forward";
+var BTN_ACTION_UNDO_SPAN="action-undo-span";
+var BTN_ACTION_FORWARD_SPAN="action-forward-span";
+
+var BTN_ACTION_BUTTON="action-button";
+var BTN_ACTION_SAVE="action-save";
+var BTN_ACTION_START="action-start";
+var BTN_SEARCH_ROOM_NUM="room-num-search";
+var BTN_SEARCH_ROOM_TYPE="room-type-search";
+
+var BLOCK_NUM='<?php echo $schedule_block_num; ?>';
+var MEMO_LIST_NUM=BLOCK_NUM;
+
+var OUTSIDE_MOVE_PAR_MSECOND=300;
+
+var CACHE_ALL_DATA="cache_add_data";
+var CACHE_ALL_UNAVAILABLE_DATA="cache_add_unavailable_data";
+var CACHE_SEARCH_ACTION="cache_search_action";
+var CACHE_EDIT_INFORMATION="cache_edit_information";
+var CACHE_SCHEDULE_INFO="cache_schedule_info";
+var CACHE_CONTEXT_COPY="cache_context_copy";
+var CACHE_UNDO_ACTION="cache_undo_action";
+var CACHE_COLOR_LIST="cache_color_list";
+var CACHE_LAST_EDIT_TIME="cache_last_edit_time";
+var CACHE_SITE_REMOVE_VALUE="cache_site_remove_value";
+var CACHE_INITIAL_SCHEDULE_IDS="cache_initial_schedule_ids";
+var CACHE_SITE_NINKU_VALUE="cache_site_ninku_value";
+var CACHE_CUSTOMER_INFORMATIONS="cache_customer_informations";
+var MANAGED_AUTHORITY="managed_authority";
+var MANAGED_LIMITED_TIMER="managed_limited_timer";
+var TMP_SCHEDULE_ID_PRIFIX="TMP_";
+var REMARKS_SCHEDULE_MAX_LENGTH="<?php echo REMARKS_SCHEDULE_MAX_LENGTH; ?>";
+var FIELD_ERROR_C_CODE  ="rgba(244,201,203,1)";
+var FIELD_SUCCESS_C_CODE="rgba(255,255,255,1)";
+var is_sp=isSp();
+var is_smart=isSmart();
+var is_tablet=isTablet();
+
+var authority="<?php echo $authority; ?>";
+var master_authorities=JSON.parse('<?php echo mstepJsonEncode($master_authorities); ?>');
+var holidays=JSON.parse('<?php echo $holidays; ?>');
+var situations=JSON.parse('<?php echo $situations; ?>');
+
+window["schedule_log"]={};
+window["schedule_log"]["last_start_user"]     ="<?php echo $last_start_user; ?>";
+window["schedule_log"]["edit_time_expired_ms"]="<?php echo $edit_time_expired_ms; ?>";
+window["schedule_log"]["last_edit_time"]      ="<?php echo $last_edit_time; ?>";
+
+var is_edit="<?php echo $is_edit;?>";
+is_edit=parseInt(is_edit);
+
+var is_authority='<?php echo $is_authority;?>';
+is_authority=parseInt(is_authority);
+
+var user_id='<?php echo $user_id; ?>';
+var first_name='<?php echo $first_name; ?>';
+var limited_second='<?php echo EDIT_EFFECTIVE_SECOND;?>';
+var color_list=JSON.parse('<?php echo $color_list;?>');
+var base_start_ms='<?php echo $base_start_ms; ?>';
+var base_start_date='<?php echo $base_start_date; ?>';
+var last_modified_user=JSON.parse('<?php echo $last_modified_user; ?>');
+var GOOGLE_API_KEY='<?php echo GOOGLE_API_KEY; ?>';
+var client_data_sessions=JSON.parse('<?php echo $client_data_sessions; ?>');
+
+var rooms=JSON.parse('<?php echo $rooms; ?>');
+
+var effect_room_max_count=0;
+var effect_room_types=JSON.parse('<?php echo $effect_room_types; ?>');
+var effect_rooms=JSON.parse('<?php echo $effect_rooms; ?>');
+if(effect_rooms["1"]!=undefined) effect_room_max_count+=Object.keys(effect_rooms["1"]).length;
+if(effect_rooms["2"]!=undefined) effect_room_max_count+=Object.keys(effect_rooms["2"]).length;
+
+window["today"]={};
+window["today"]["today"]="<?php echo $today; ?>";
+window["today"]["date"] =new Date(window["today"]["today"]);
+window["today"]["ymd"]=window["today"]["date"].getYmdByMs().join("");
+
+//■編集開始前、最新の情報かどうかを確認し、最新出ない場合スケジュールを更新してから操作を行わせる
+//■day_top以下でユーザの重複が確認出来た場合サーバに稼働時間の照合を行う
+$(function(){
+
+	window["html"]                  =$("html");
+	window["body"]                  =html.find("body");
+	window["schedule_content_box"]  =window["body"].find("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+	window["schedule_container_top"]=body.find("div[data-type=\""+TYPE_SCHEDULE_CONTAINER_TOP+"\"]");
+	window["schedule_top"]          =schedule_container_top.find("div[data-type=\""+TYPE_SCHEDULE_TOP+"\"]");
+	window["schedule_head"]         =schedule_top.children("div[data-type=\""+TYPE_SCHEDULE_TOP_HEAD+"\"]");
+	window["schedule_top_inner"]    =schedule_top.children("div[data-type=\""+TYPE_SCHEDULE_INNER+"\"]");
+	window["schedule_left_side"]       =window["schedule_container_top"].find("div[data-type=\"schedule-left-side\"]");
+	window["action_lastmodified"]      =schedule_container_top.find("div[data-type=\""+TYPE_SCHEDULE_MODIFIED+"\"]");
+	window["schedule_action_button"]   =window["schedule_container_top"].find("div[data-type=\""+BTN_ACTION_BUTTON+"\"]");
+	window["schedule_side_memo"]    =schedule_container_top.find("ul[data-type=\""+TYPE_SCHEDULE_SIDE_MEMO+"\"]");
+
+	var clickEnd=deviceClickEventEnd();
+
+	<?php echo $this->element("schedule_header_date_selections/{$controller}"); ?>
+
+	var schedule_aside     =body.find("aside");
+	var action_button      =schedule_container_top.find("div[data-type=\""+BTN_ACTION_BUTTON+"\"]");
+	var action_undo        =schedule_container_top.find("div[data-type=\""+BTN_ACTION_UNDO+"\"]");
+	var action_forward     =schedule_container_top.find("div[data-type=\""+BTN_ACTION_FORWARD+"\"]");
+	var body_bg_color=body.css("background-color");
+	body.data("background-color",body_bg_color);
+
+	var removeRemovedSchedule=function(){
+
+		var __parent=this;
+		var day_tops=__parent.children("div[data-type=\""+TYPE_DAYTOP+"\"]");
+		var all_schedules=day_tops.find("div[data-type=\""+TYPE_SCHEDULE+"\"]").filter(function(a){ return !$(this).isDisplay(); });
+		if(all_schedules.size()>0) all_schedules.remove();
+	}
+
+	var scheduleReload=function(){
+	
+		var day_tops=window["schedule_top_inner"].children("div[data-type=\""+TYPE_DAYTOP+"\"]:visible");
+		var day_top=day_tops.eq(0);
+		var ymd=day_top.attr("data-time");
+		var base_url="<?php echo "K9Site".DS."index".DS; ; ?>";
+		base_url+=ymd;
+		location.href=base_url;
+	}
+
+	window["saveAction"]=function(is_dandori_done,callback){
+
+		var __getSomeData=function(){
+
+			//■データ取得対象日を可視領域全てへ
+			var data={};
+			var schedule_target_days=schedule_top_inner.children("div[data-type=\""+TYPE_DAYTOP+"\"]");
+			var schedules=schedule_target_days.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+			var object_id_prefix=new Date(window["today"]["today"]).getTime();
+			var remove_reserve_ids=cacheData().get(CACHE_SITE_REMOVE_VALUE).reserve_ids;
+			var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+
+			schedules.each(function(c){
+
+				var target          =$(this);
+				var data_id=target.parent().attr("data-id").split("_");
+				var schedule_id     =target.attr("data-schedule-id");
+				var reserve_id         =target.attr("data-reservation-id");
+				var current_date    =data_id[0];
+				var position_id     =data_id[1];
+				var is_display      =target.isDisplay();
+				var is_tmp=schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)>-1;
+				var is_same_day=false;
+				var is_same_position=false;
+
+				if(is_display && !is_tmp){
+
+					var before_position_num=informations[schedule_id]["schedule"]["position_num"];
+					is_same_position=parseInt(before_position_num)==parseInt(position_id);
+					is_same_day=parseInt(current_date)==parseInt(informations[schedule_id]["time"]);
+					if(is_same_position && is_same_day) return;
+				}
+
+				var object_id       =object_id_prefix+"_"+c;
+				data[object_id]      ={};
+				data[object_id]["schedule_id"]  =!is_tmp?schedule_id:schedule_id.split("_")[1];
+				data[object_id]["type"]         =!is_tmp?"NORMAL":"COPY";
+				data[object_id]["is_enable"]    =((remove_reserve_ids.indexOf(reserve_id)>-1) || (!target.isDisplay()))?0:1;
+				data[object_id]["reserve_id"]   =target.attr("data-reservation-id");
+				data[object_id]["day"]          =current_date;
+				data[object_id]["staytype"]     =informations[data[object_id]["schedule_id"]]["reservation"]["staytype"];
+			});
+
+			return data;
+		}
+
+		var fn=arguments.callee;
+		var limited_ms=(cacheData().get(MANAGED_LIMITED_TIMER).timer)+(limited_second*1000);
+		var current_ms=new Date(window["today"]["today"]).getTime();
+		if(current_ms>limited_ms){
+
+			//■権限再確認
+			var params={};
+			params["user_id"]       =user_id;
+			params["last_edit_time"]=cacheData().get(CACHE_LAST_EDIT_TIME).last_edit_time;
+			params["local_time_key"]=localKeyTime(LOCAL_STORAGE_TIMEKEY);
+			apiGeoRequests.editStart(params,function(status,res){
+
+				if(!status && res["type"]==0){
+
+					cacheData().set(MANAGED_AUTHORITY ,{"is_managed":false});
+					callback(false,null);
+					return;
+				}
+
+				if(!status && res["type"]==1){
+
+					cacheData().set(MANAGED_AUTHORITY ,{"is_managed":false});
+					callback(false,res["errorNo"],{
+
+						"title"  :res["title"],
+						"message":res["message"]
+					});
+					return;
+				}
+
+				//■タイマー基準時間更新
+				var time_key=res["time_key"];
+				var current_time_ms=res["last_modified_ms"];
+				var last_edit_time=res["last_edit_time"];
+				localKeyTime(LOCAL_STORAGE_TIMEKEY,time_key);
+				cacheData().set(MANAGED_LIMITED_TIMER,{"timer":current_time_ms});
+				cacheData().set(MANAGED_AUTHORITY ,{"is_managed":true});
+				cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":last_edit_time });
+				console.log("再認証OK");
+				fn(is_dandori_done,callback);
+			});
+			return;
+		}
+
+		var all_data              =Object.keys(cacheData().cache[CACHE_ALL_DATA]);
+		var params={};
+		params["user_id"]         =user_id;
+		params["start_date"]      =all_data[0];
+		params["end_date"]        =all_data[all_data.length-1];
+
+		var send_main_data      =__getSomeData(history);
+		params["effective_date"]=send_main_data;
+		params["time"]          =new Date(window["today"]["today"]).getTime();
+		params["last_edit_time"]=cacheData().get(CACHE_LAST_EDIT_TIME).last_edit_time;
+		params["remove_reserve_ids"]=cacheData().get(CACHE_SITE_REMOVE_VALUE).reserve_ids;
+		params["local_time_key"]=localKeyTime(LOCAL_STORAGE_TIMEKEY);
+		params["is_finish"]=(!!is_dandori_done?1:0);
+		apiGeoRequests.saveSchedule(params,function(status,res){
+
+			if(!status && res["type"]==0){
+
+				callback(false,null);
+				return;
+			}
+
+			if(!status && res["type"]==1){
+
+				callback(false,res["errorNo"],{
+
+					"title"  :res["title"],
+					"message":res["message"]
+				});
+				return;
+			}
+
+			// edit schedule_id.
+			var data=res["data"];
+			var new_schedule_ids=data["schedule_ids"];
+			for(var object_id in new_schedule_ids){
+
+				//for copy elements.
+				var new_schedule_id=new_schedule_ids[object_id];
+				var origin_schedule_id=send_main_data[object_id]["schedule_id"];
+				var target=schedule_top_inner.find("div[data-schedule-id=\""+origin_schedule_id+"\"]");
+				target.attr("data-schedule-id",new_schedule_id)
+			}
+
+			// renewal cache data.
+			var informations=res["data"]["informations"];
+			var week=Object.keys(informations);
+
+			var last_edit_time=res["last_edit_time"];
+			cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":last_edit_time });
+			localKeyTime(LOCAL_STORAGE_TIMEKEY,(parseInt(last_edit_time)/1000)+"");
+
+			// cache refresh.
+			cacheData().clear(CACHE_ALL_DATA);
+			cacheData().set(CACHE_ALL_DATA,informations);
+
+			var schedule_informations=makeInformationAry(week,informations);
+			cacheData().clear(CACHE_SCHEDULE_INFO);
+			cacheData().set(CACHE_SCHEDULE_INFO,schedule_informations);
+
+			// undo , forward clear.
+			cacheData().get(CACHE_UNDO_ACTION).undo=[];
+			cacheData().get(CACHE_UNDO_ACTION).forward=[];
+			actionForwardView.call(action_forward);
+			actionUndoView.call(action_undo);
+
+			var all_dates=Object.keys(cacheData().get(CACHE_ALL_DATA));
+			var schedule_data=makeInformationAry(all_dates,cacheData().cache[CACHE_ALL_DATA]);
+			var schedule_ids=Object.keys(schedule_data);
+
+			//remove elements shoud be removed after this function.
+			removeRemovedSchedule.call(schedule_top_inner);
+
+			addScheduleElements.call(schedule_top_inner,schedule_ids,function(registed_dates){
+
+				updateToInchageMessage({
+
+					"first_name"  :last_modified_user["user"]["first_name"],
+					"last_edit_ms":last_modified_user["last_edit_ms"]
+				});
+
+				var date=manageScheduleDate(schedule_head).getPreviousDate();
+				replaceSideScheduleEmpty.call(schedule_aside,date);
+
+				callback(true);
+			});
+		});
+	};
+
+	var actionUndoView=function(){
+
+		var elem=this;
+		var is_history=(cacheData().get(CACHE_UNDO_ACTION).undo.length>0);
+
+		if(!is_history){
+
+			elem.hide();
+			return;
+		}
+
+		elem.show();
+	}
+
+	var actionForwardView=function(){
+
+		var elem=this;
+		var is_history=(cacheData().get(CACHE_UNDO_ACTION).forward.length>0);
+
+		if(!is_history){
+
+			elem.hide();
+			return;
+		}
+
+		elem.show();
+	}
+
+	//■枠の範囲
+	var manageRangeOverFlow=(function(){
+
+		var fn=function(params){
+
+			this.params=params
+			this.params["offset_bottom"]=params["offset_top"]+params["height"];
+			this.params["offset_right"] =params["offset_left"]+params["width"];
+		}
+
+		fn.prototype.isLeftOver=function(left){
+
+			if(this.params["offset_left"]>=left) return true;
+			return false;
+		}
+
+		fn.prototype.isRightOver=function(left){
+
+			if(left>this.params["offset_right"]) return true;
+			return false;
+		}
+
+		fn.prototype.isTopOver=function(top){
+
+			if(this.params["offset_top"]>=top) return true;
+			return false;
+		}
+
+		fn.prototype.isBottomUnder=function(top){
+
+			if(top>this.params["offset_bottom"]) return true;
+			return false;
+		}
+
+		fn.prototype.isOver=function(left,top){
+
+			if(this.isTopOver(top)   || this.isBottomUnder(top)) return true;
+			if(this.isLeftOver(left) || this.isRightOver(left)) return true;
+			return false;
+		}
+
+		return function(selector){
+
+			if(fn.instance instanceof fn) return fn.instance;
+
+			var instance=new fn({
+
+				"offset_top" :selector.offset().top,
+				"offset_left":selector.offset().left,
+				"width"      :selector.width(),
+				"height"     :selector.height()
+			});
+
+			fn.instance=instance;
+			return instance;
+		}
+
+	}());
+
+	//■ボタンの日付
+	var manageScheduleDate=(function(){
+
+		var fn=function(selector){
+
+			if(selector!=undefined) this.selector=selector;
+		}
+
+
+		fn.prototype.getHeaders=function(){
+
+			var children=this.selector.children("div[data-type=\""+TYPE_SCHEDULE_HEAD+"\"]");
+			return children;
+		}
+
+		fn.prototype.getLatestDate=function(){
+
+			var children=this.getHeaders().filter(":visible");
+			var last=children.eq(children.size()-1);
+			var time=last.attr("data-time");
+			return time;
+		}
+
+		fn.prototype.getPreviousDate=function(){
+
+			var children=this.getHeaders().filter(":visible");
+			var last=children.eq(0);
+			var time=last.attr("data-time");
+			return time;
+		}
+
+		fn.prototype.getAllCurrentDate=function(){
+
+			var times=[];
+			var children=this.getHeaders().filter(":visible");
+			$.each(children,function(){
+
+				var elem=$(this);
+				var time=elem.attr("data-time");
+				times.push(time);
+			});
+
+			return times;
+		}
+
+		return function(selector){
+
+			if(fn.instance instanceof fn){
+
+				return fn.instance;
+			}
+
+			var instance=new fn(selector);
+			fn.instance=instance;
+			return instance;
+		}
+
+	}());
+
+	//■タッチ要素
+	var manageTouch=(function(){
+
+		var fn=function(selector){
+
+			if(selector instanceof jQuery){
+
+				this.touchElement=selector;
+			}
+		}
+
+		fn.prototype.isOn=function(){
+
+			return (this["touchElement"] instanceof jQuery);
+		}
+
+		fn.prototype.register=function(selector){
+
+			this.touchElement=selector;
+			return this;
+		}
+
+		fn.prototype.clear=function(){
+
+			if(!this.isOn()) return;
+			delete this["touchElement"];
+			return this;
+		}
+
+		return function(selector){
+
+			if(fn.instance instanceof fn){
+
+				return fn.instance;
+			}
+
+			var instance=new fn(selector);
+			fn.instance=instance;
+			return instance;
+		}
+
+	}());
+
+	//■領域の変更確認
+	var manageMoveJudge=(function(){
+
+		var fn=function(){}
+
+		fn.prototype.register=function(id){
+
+			this.currentId=id;
+			return this;
+		}
+
+		fn.prototype.isChange=function(id){
+
+			if(id==undefined) return false;
+			if(this.currentId==id) return false;
+			return true;
+		}
+
+		fn.prototype.clear=function(){
+
+			this.currentId="";
+			return this;
+		}
+
+		return function(id){
+
+			if(fn.instance instanceof fn) return fn.instance;
+
+			var instance=new fn(id);
+			fn.instance=instance;
+			return instance;
+		}
+
+	}())
+
+	//■タッチElem
+	var manageCurrentTouchElem=(function(){
+
+		var fn=function(selector){
+
+			this.touchElement=null;
+			this.startBlockId=null;
+			this.startLeftSideId=null;
+			this.startRightSideId=null;
+		}
+
+		fn.prototype.getScheduleBaseBlockId=function(){
+
+			var target=this.scheduleBaseBlock();
+			return target.attr("data-id");
+		}
+
+		fn.prototype.scheduleBaseBlock=function(){
+
+			return this.touchElement.parents("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+		}
+
+		fn.prototype.register=function(selector){
+
+			this.touchElement=selector;
+			this.startBlockId=this.getScheduleBaseBlockId();
+			this.startLeftSideId=manageScheduleDate(schedule_head).getPreviousDate();
+			this.startRightSideId=manageScheduleDate(schedule_head).getLatestDate();
+			return this;
+		}
+
+		fn.prototype.clear=function(){
+
+			fn.instance=null;
+			this.touchElement=null;
+			this.startBlockId=null;
+			return this;
+		}
+
+		return function(){
+
+			if(fn.instance instanceof fn) return fn.instance;
+			var instance=new fn();
+			fn.instance=instance;
+			return instance;
+		}
+
+	}())
+
+	//■前後１ヶ月間のデータ
+	cacheData().set(CACHE_ALL_DATA,JSON.parse('<?php echo $informations; ?>'));
+	cacheData().set(CACHE_ALL_UNAVAILABLE_DATA,JSON.parse('<?php echo $unavailable; ?>'));
+
+	cacheData().set(CACHE_EDIT_INFORMATION,JSON.parse('<?php echo $edit_informations; ?>'));
+	cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":window["schedule_log"]["last_edit_time"] });
+
+	//■undo & forward
+	cacheData().set(CACHE_UNDO_ACTION,{"undo":[],"forward":[]});
+	cacheData().set(CACHE_SEARCH_ACTION,{"is_purchase":1});
+	cacheData().set(MANAGED_AUTHORITY,{"is_managed":false});
+
+	cacheData().set(CACHE_INITIAL_SCHEDULE_IDS,{});
+	cacheData().set(CACHE_SITE_REMOVE_VALUE,{"reserve_ids":[],"schedules":{}});
+
+    var arrangeScheduleSizeByResize=function(def_current_offset_top,def_current_memo_height){
+
+		var __win=$(window);
+		var current_scroll_point=__win.scrollTop();
+		var prev_scroll_point=__win.data("prev_scroll_point");
+		var diff=current_scroll_point-prev_scroll_point;
+		__win.data("prev_scroll_point",current_scroll_point);
+
+		var current_height=window["schedule_top_inner"].height();
+		var current_memo_height=window["schedule_side_memo"].height();
+		var current_offset_top=window["schedule_top_inner"].offset().top;
+		var after_height=current_height+(diff);
+		var after_memo_height=current_memo_height+(diff);
+
+		if(diff>-1){
+
+			var side_menu=schedule_aside.children("div[data-type=\""+TYPE_SCHEDULE_SIDE_BOX+"\"]");
+			var side_menu_top=side_menu.offset().top;
+			var side_menu_height=side_menu.height();
+			var max_side_height=(side_menu_top+side_menu_height);
+			if((current_height+current_offset_top)>=max_side_height){
+
+				return;
+			}
+		}
+
+		window["schedule_top_inner"].height(Math.max(after_height,def_current_offset_top));
+		window["schedule_side_memo"].height(Math.max(after_memo_height,def_current_memo_height));
+	}
+
+	//■value of date for one week.
+	var times=getWeekDayFromNow(base_start_date,7);
+	var resizeContainerDaytop=function(){
+
+		var day_tops=this;
+		var schedule_maps=day_tops.children("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+		var schedule     =schedule_maps.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+		var wsize=schedule_top_inner.width();
+		var width=((wsize/7)+"px");
+		var __width=function(){ this.css("width",width); }
+
+		__width.call(day_tops);
+		__width.call(schedule_maps);
+		__width.call(schedule);
+	}
+
+	var resizeContainerHead=function(){
+
+		var schedule_head=this;
+		var wsize=schedule_top_inner.width();
+		var width=((wsize/7)+"px");
+		schedule_head.css("width",width);
+	}
+
+	var resizeContainerAll=function(){
+
+		var day_tops=schedule_top_inner.children("div[data-type=\""+TYPE_DAYTOP+"\"]");
+		var schedule_child_headers=schedule_head.children("div[data-type=\""+TYPE_SCHEDULE_HEAD+"\"]");
+		resizeContainerDaytop.call(day_tops);
+		resizeContainerHead.call(schedule_child_headers);
+	}
+
+	var resizeScheduleMapSize=function(){
+
+		var padding_bottom_screen_h=50;
+		var min_height=260;
+		var win_height=$(window).height();
+		var offset_top=window["schedule_top_inner"].offset().top;
+		var df_height=Math.max((win_height-offset_top)-padding_bottom_screen_h,min_height);
+		window["schedule_top_inner"].css("height",df_height+"px");
+		window["schedule_side_memo"].css("height",df_height+"px");
+	}
+
+	//■main key is schedule_id;
+	var makeInformationAry=function(times,information_data){
+
+		var res={};
+		for(var i in times){
+
+			$.each(information_data[times[i]],function(a,b){
+			
+				var schedule_id=b["schedule"]["id"];
+
+				res[schedule_id]={};
+				res[schedule_id]["time"]       =times[i];
+				res[schedule_id]["schedule"]   =b["schedule"];
+				res[schedule_id]["reservation"]=b["reservation"];
+				res[schedule_id]["room"]       =b["room"];
+				res[schedule_id]["guest"]      =b["guest"];
+				res[schedule_id]["payment"]    =b["payment"];
+			});
+		}
+
+		return res;
+	}
+
+	//■整形
+	var all_schedule_data=makeInformationAry(Object.keys(cacheData().cache[CACHE_ALL_DATA]),cacheData().cache[CACHE_ALL_DATA]);
+	cacheData().set(CACHE_SCHEDULE_INFO,all_schedule_data);
+
+	//■スケジュール要素か
+	var checkScheduleTargetElem=function(type){ return  type==TYPE_SCHEDULE; }
+
+	//■マップ要素か
+	var checkScheduleBlockElem=function(type){ return  type==TYPE_SCHEDULE_BLOCK; }
+
+	var addScheduleHead=function(times,method,callback,fragment){
+
+		var elem=this;
+		fragment=((fragment==undefined)?document.createDocumentFragment():fragment);
+		if(1>times.length){
+
+			elem[method](fragment);
+			callback.call(elem);
+			return;
+		}
+
+		var fn=arguments.callee;
+		var instance=TPL.getInstance(["schedule_head","schedule_head_saturday","schedule_head_sunday","schedule_head_room_count_end","schedule_head_room_count"]);
+		var time=times.shift();
+		var date=new Date(Number(time).addMinutesZero());
+		var ymd_split=date.getYmdByMs();
+		var ymd=ymd_split.join("");
+
+		var weekDayList=["<?php echo __("日"); ?>",
+			             "<?php echo __("月"); ?>",
+			             "<?php echo __("火"); ?>",
+			             "<?php echo __("水"); ?>",
+			             "<?php echo __("木"); ?>",
+						 "<?php echo __("金"); ?>",
+						 "<?php echo __("土"); ?>"];
+
+		var week=date.getWeek(weekDayList);
+
+		var year=ymd_split[0];
+		var today=window["today"]["ymd"];
+		var count_end_tpl=instance.get_schedule_head_room_count_end;
+		var room_count_tpl=instance.get_schedule_head_room_count;
+
+		switch(date.getDay()){
+			case(0):
+			tpl=instance.get_schedule_head_sunday;
+		break;
+			case(6):
+			tpl=instance.get_schedule_head_saturday;
+		break;
+			default:
+			tpl=instance.get_schedule_head;
+		break;
+		}
+
+		switch(today>ymd){
+
+			case(true):
+			message_tpl=count_end_tpl
+		break;
+
+			case(false):
+			message_tpl=instance.replaceTPL(room_count_tpl,{ "count":effect_room_max_count });
+		break;
+
+		}
+
+		//■後に使う
+		var year_holidays=holidays[year];
+		if(year_holidays !== undefined && year_holidays.indexOf(time) !== -1) tpl=instance.get_schedule_head_sunday;
+
+		var view_day  =ymd_split[2];
+		var view_month=ymd_split[1];
+		view_day      =view_day.indexOf("0")==0?view_day.ridFirstZero():view_day;
+		view_month    =view_month.indexOf("0")==0?view_month.ridFirstZero():view_month;
+		var view_md   =viewYmd(null,view_month,view_day);
+
+		var html=instance.replaceTPL(tpl,{
+
+			"week"      :week,
+			"year"      :ymd_split[0],
+			"month"     :ymd_split[1],
+			"day"       :ymd_split[2],
+			"view_md"   :view_md,
+			"time"      :time,
+			"message"   :message_tpl
+		});
+
+		html=$(html);
+		fragment.appendChild(html.get(0));
+		fn.call(elem,times,method,callback,fragment);
+	}
+
+	var addScheduleParDayElement=function(times,params,callback){
+
+		var elem=this;
+		var instance=TPL.getInstance(["schedule","schedule_guest_name","schedule_price","schedule_room_type","schedule_day","schedule_block"]);
+		var schedule_day_tpl     =instance.get_schedule_day;
+		var schedule_block_tpl   =instance.get_schedule_block;
+		var schedule_tpl         =instance.get_schedule;
+		var schedule_guest_tpl=instance.get_schedule_guest_name;
+		var schedule_price_tpl=instance.get_schedule_schedule_price;
+		var schedule_room_type_tpl=instance.get_schedule_room_type;
+
+		var day_top_add_method=params["day_top_add_method"];
+		var schedule_ids=params["schedule_ids"];
+		var data={"tpl":{"object":instance,"tpls":{
+
+			"schedule_day_tpl"  :schedule_day_tpl,
+			"schedule_block_tpl":schedule_block_tpl,
+			"schedule_tpl"      :schedule_tpl,
+			"schedule_guest_tpl":schedule_guest_tpl,
+			"schedule_price_tpl":schedule_price_tpl,
+			"schedule_room_type_tpl":schedule_room_type_tpl
+
+		}},"schedule_ids":schedule_ids,"day_top_add_method":params["day_top_add_method"]};
+
+		var registed_dates=[];
+		var main_fragment=document.createDocumentFragment();
+
+		var addDaytopElement=function(time){
+
+			var deferred=$.Deferred();
+			var tpl     =data["tpl"]["tpls"]["schedule_day_tpl"];
+			var instance=data["tpl"]["object"];
+			var day_top_elem=$(instance.replaceTPL(tpl,{"time":time}));
+			return deferred.resolve(day_top_elem,time);
+		}
+
+		var addBlockElement=function(day_top_elem,time){
+
+			var deferred=$.Deferred();
+			var instance=data["tpl"]["object"];
+			var tpl=data["tpl"]["tpls"]["schedule_block_tpl"];
+			var fragment=document.createDocumentFragment();
+			var block_num=BLOCK_NUM;
+			var html;
+			var room_id;
+			var room_ids=Object.keys(rooms);
+			var bgcolor;
+			for(var i=0;i<block_num;i++){
+
+				//> for mac vim.
+				room_id=room_ids.shift();
+				html=$(instance.replaceTPL(tpl,{
+
+					"id"           :(time+"_"+i),
+					"room_id"      :room_id,
+					"block_type"   :rooms[room_id]["type"],
+				}));
+
+				fragment.appendChild(html.get(0));
+			}
+
+			day_top_elem.append(fragment);
+			return deferred.resolve(day_top_elem,time);
+		}
+
+		var addScheduleElement=function(day_top_elem,time){
+
+			var deferred=$.Deferred();
+			var schedule_ids=data["schedule_ids"].slice(0);
+			__addScheduleElement(day_top_elem,time,schedule_ids,function(day_top_elem){
+			
+				__addUnavailableSchedule(day_top_elem,time,function(day_top_elem){
+
+					deferred.resolve(day_top_elem);
+				});
+			});
+
+			return deferred.promise();
+		}
+
+		var __addUnavailableSchedule=function(day_top_elem,time,callback){
+
+			var data=cacheData().get(CACHE_ALL_UNAVAILABLE_DATA);
+			var schedules=data[time];
+			if(schedules==undefined || 1>Object.keys(schedules).length){
+			
+				callback(day_top_elem);
+				return;
+			}
+
+			var instance=TPL.getInstance(["unavailable_schedule"]);
+			var unavailable_tpl=instance.get_unavailable_schedule;
+			var unavailable_html;
+			var room_id;
+			var schedule_map;
+
+			for(var data_id in schedules){
+			
+				room_id=schedules[data_id]["data"]["room_id"];
+				schedule_map=day_top_elem.find("div[data-room-id=\""+room_id+"\"]");
+				unavailable_html=instance.replaceTPL(unavailable_tpl,{
+				
+					"data_id"  :data_id,
+					"bgcolor"  :schedules[data_id]["situation"]["bgcolor"],
+					"fontcolor":schedules[data_id]["situation"]["fontcolor"],
+				});
+
+				schedule_map.append($(unavailable_html));
+			}
+
+			callback(day_top_elem);
+		}
+
+		var __addScheduleElement=function(day_top_elem,time,schedule_ids,callback){
+		
+			if(1>schedule_ids.length){
+	
+				callback(day_top_elem);
+				return;
+			}
+	
+			var fn=arguments.callee;
+
+			var instance=data["tpl"]["object"];
+			var tpl=data["tpl"]["tpls"]["schedule_tpl"];
+			var guest_tpl=data["tpl"]["tpls"]["schedule_guest_tpl"];
+			var price_tpl=data["tpl"]["tpls"]["schedule_price_tpl"];
+			var room_type_tpl=data["tpl"]["tpls"]["schedule_room_type_tpl"];
+
+			var tpl     =instance.get_schedule;
+			var guest_tpl =instance.get_schedule_guest_name;
+			var price_tpl =instance.get_schedule_price;
+			var room_type_tpl=instance.get_schedule_room_type;
+			var schedule_id=schedule_ids.shift();
+			var cache=cacheData().get(CACHE_SCHEDULE_INFO);
+			var information=cache[schedule_id];
+			var reserve_id=information["reservation"]["id"];
+			var time=information["time"];
+			registed_dates=((registed_dates==undefined)?[]:registed_dates);
+			registed_dates.push(time);
+	
+			var users=[];
+			var fn=arguments.callee;
+			var guest=information["guest"];
+			var guest_id=guest["id"];
+			var guest_first_name=guest["first_name"];
+			var guest_last_name =guest["last_name"];
+			var guest_view_name=guest_last_name+(guest_first_name.length>0?" "+guest_first_name:"");
+			var current_today=window["today"]["ymd"];
+			var schedule_color=information["schedule"]["color"];
+			var schedule_font_color=information["schedule"]["fontcolor"];
+	
+			var guest_name_html=instance.replaceTPL(guest_tpl,{
+	
+				"guest_name"      :guest_view_name.length>0?guest_view_name:"<?php echo __("宿泊者名未設定"); ?>",
+				"guest_id"        :guest_id,
+				"guest_font_color":schedule_font_color
+			});
+	
+			var price_type_colors={"0":"black","3":"blue","4":"red","5":"green","6":"purple"};
+			var room_price_type  =information["room"]["room_price_status"];
+			var price_html=instance.replaceTPL(price_tpl,{
+	
+				"price_type"      :information["room"]["room_price_status"],
+				"price_type_id"   :information["room"]["room_price_data_id"],
+				"room_price"      :(information["room"]["room_price"]+"$"),
+				"price_type_color":(price_type_colors[room_price_type]!=undefined)?price_type_colors[room_price_type]:price_type_colors["0"],
+				"price_type_bold" :(price_type_colors[room_price_type]!=undefined)?"bold":"none",
+				"price_type_decoration":(price_type_colors[room_price_type]!=undefined)?"underline":"none"
+			});
+	
+			var room_type_html=instance.replaceTPL(room_type_tpl,{
+	
+				"room_id"        :information["room"]["id"],
+				"room_type"      :information["room"]["room_type"],
+				"room_num"       :information["room"]["room_num"],
+				"room_type_color":"#fff",
+			});
+	
+			var html=instance.replaceTPL(tpl,{
+	
+				"reserve_id"  :information["reservation"]["id"],
+				"guest_name"  :guest_name_html,
+				"color"       :schedule_color,
+				"fontcolor"   :schedule_font_color,
+				"reserve_id"  :information["reservation"]["id"],
+				"schedule_id" :information["schedule"]["id"],
+				"room"        :room_type_html,
+				"price"       :price_html,
+				"room_type_id":information["room"]["room_type_id"],
+				"room_id"     :information["room"]["id"],
+				"purchase_flg":(information["payment"]["is_purchase"]+"")
+			});
+
+			html=$(html);
+			var map_id=time+"_"+information["schedule"]["position_num"];
+			var schedule_map=day_top_elem.children("div[data-id=\""+map_id+"\"]");
+			schedule_map.empty().append(html);
+			fn(day_top_elem,time,schedule_ids,callback);
+		}
+
+		var addScheduleMainElement=function(times){
+		
+			var self=this;
+			var fn=arguments.callee;
+
+			if(1>times.length){
+
+				var add_method=data["day_top_add_method"];
+				elem[add_method](main_fragment);
+				callback.call(elem,registed_dates);
+				return;
+			}
+
+			var time=times.shift();
+			addDaytopElement(time).
+			then(addBlockElement).
+			then(addScheduleElement).
+			done(function(day_top){
+
+				main_fragment.appendChild(day_top.get(0));
+				registed_dates.push(time);
+				fn.call(self,times);
+			});
+		}
+
+		addScheduleMainElement(times);
+	}
+
+	var updateRoomRestCount=function(time,max){
+
+		if($.isArray(time)){
+
+			for(var i in time){
+
+				if(!time.hasOwnProperty(i)) continue;
+				updateRoomRestCount.call(this,time[i],max);
+			}
+			return;
+		}
+
+		var elem=this;
+		var head=elem.find("div[data-type=\""+TYPE_SCHEDULE_HEAD+"\"]").filter("div[data-time=\""+time+"\"]");
+		var current_room=head.children("span[data-type=\"room-count\"]");
+		var day_top=schedule_top.find("div[data-type=\""+TYPE_DAYTOP+"\"]").filter("div[data-time=\""+time+"\"]");
+		var instance=TPL.getInstance(["schedule_head_room_count","schedule_head_room_undercount","schedule_head_room_count_end"]);
+		var html=instance.get_schedule_head_room_count;
+
+		var today_ymd=window["today"]["ymd"];
+		if(today_ymd>time){
+
+			current_room.html(instance.get_schedule_head_room_count_end);
+			return;
+		}
+
+		if(1>day_top.size()){
+
+			current_room.html(instance.replaceTPL(instance.get_schedule_head_room_count,{
+
+				"count":max+""
+			}));
+			return;
+		}
+
+		var schedules=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"]:visible");
+		var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+
+		var enable_room_ids=[];
+		schedules.each(function(){
+
+			var schedule=$(this);
+			if(!schedule.isDisplay()) return;
+			var schedule_id=schedule.attr("data-schedule-id");
+			if(schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)>-1) return;
+			var room_id=informations[schedule_id]["room"]["id"];
+			enable_room_ids.push(room_id);
+		});
+
+		if(1>enable_room_ids.length){
+
+			current_room.html(instance.replaceTPL(instance.get_schedule_head_room_count,{
+
+				"count":max+""
+			}));
+			return;
+		}
+
+		var count=max-enable_room_ids.length;
+		var html=instance["get_"+(0>count?"schedule_head_room_undercount":"schedule_head_room_count")];
+		current_room.html(instance.replaceTPL(html,{
+
+			count:count+""
+		}));
+	}
+
+	var addScheduleElements=function(schedule_ids,callback,registed_dates){
+
+		var elem=this;
+
+		if(1>schedule_ids.length){
+
+			callback.call(elem,registed_dates);
+			return;
+		}
+
+		var fn=arguments.callee;
+		var instance=TPL.getInstance(["schedule","schedule_guest_name","schedule_price","schedule_room_type"]);
+		var tpl     =instance.get_schedule;
+		var guest_tpl =instance.get_schedule_guest_name;
+		var price_tpl =instance.get_schedule_price;
+		var room_type_tpl=instance.get_schedule_room_type;
+		var remark_content_tpl=instance.get_schedule_remark_content;
+		var schedule_id=schedule_ids.shift();
+		var cache=cacheData().get(CACHE_SCHEDULE_INFO);
+		var information=cache[schedule_id];
+		var reserve_id=information["reservation"]["id"];
+		var time=information["time"];
+		var day_top=elem.children("div[data-time=\""+time+"\"]");
+		registed_dates=((registed_dates==undefined)?[]:registed_dates);
+		registed_dates.push(time);
+
+		if(information==undefined || 1>day_top.size()){
+
+			fn.call(elem,schedule_ids,callback,registed_dates);
+			return;
+		}
+
+		var users=[];
+		var fn=arguments.callee;
+		var guest=information["guest"];
+		var guest_id=guest["id"];
+		var guest_first_name=guest["first_name"];
+		var guest_last_name =guest["last_name"];
+		var guest_view_name=guest_last_name+(guest_first_name.length>0?" "+guest_first_name:"");
+		var current_today=window["today"]["ymd"];
+		var schedule_color=information["schedule"]["color"];
+		var schedule_font_color=information["schedule"]["fontcolor"];
+
+		var guest_name_html=instance.replaceTPL(guest_tpl,{
+
+			"guest_name"      :guest_view_name.length>0?guest_view_name:"<?php echo __("宿泊者名未設定"); ?>",
+			"guest_id"        :guest_id,
+			"guest_font_color":schedule_font_color
+		});
+
+		var price_type_colors={"0":"black","3":"blue","4":"red","5":"green","6":"purple"};
+		var room_price_type  =information["room"]["room_price_status"];
+		var price_html=instance.replaceTPL(price_tpl,{
+
+			"price_type"      :information["room"]["room_price_status"],
+			"price_type_id"   :information["room"]["room_price_data_id"],
+			"room_price"      :(information["room"]["room_price"]+"$"),
+			"price_type_color":(price_type_colors[room_price_type]!=undefined)?price_type_colors[room_price_type]:price_type_colors["0"],
+			"price_type_bold" :(price_type_colors[room_price_type]!=undefined)?"bold":"none",
+			"price_type_decoration":(price_type_colors[room_price_type]!=undefined)?"underline":"none"
+		});
+
+		var room_type_html=instance.replaceTPL(room_type_tpl,{
+
+			"room_id"        :information["room"]["id"],
+			"room_type"      :information["room"]["room_type"],
+			"room_num"       :information["room"]["room_num"],
+		});
+
+		var html=instance.replaceTPL(tpl,{
+
+			"reserve_id"  :information["reservation"]["id"],
+			"guest_name"  :guest_name_html,
+			"color"       :schedule_color,
+			"reserve_id"  :information["reservation"]["id"],
+			"schedule_id" :information["schedule"]["id"],
+			"room"        :room_type_html,
+			"price"       :price_html,
+			"room_type_id":information["room"]["room_type_id"],
+			"room_id"     :information["room"]["id"],
+			"is_purchase" :information["payment"]["is_purchase"]
+		});
+
+		html=$(html);
+		var map_id=time+"_"+information["schedule"]["position_num"];
+		var schedule_map=day_top.children("div[data-id=\""+map_id+"\"]");
+		schedule_map.empty().append(html);
+		fn.call(elem,schedule_ids,callback,registed_dates);
+	}
+
+	var getCalendarSchedulesDates=function(reserve_id,site_schedule_dates){
+
+		var day_tops=schedule_top_inner.find("div[data-type=\""+TYPE_DAYTOP+"\"]");
+		var site_all_schedules=day_tops.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+		var site_schedules=site_all_schedules.filter("div[data-reservation-id=\""+reserve_id+"\"]");
+		var first_date=day_tops.eq(0).attr("data-time");
+		var last_date=day_tops.eq(day_tops.size()-1).attr("data-time");
+
+		var visible_schedule_dates=[];
+		site_schedules.each(function(){
+
+			var target=$(this);
+			if(!target.isDisplay()) return;
+			var schedule_map=target.parent();
+			var data_id=schedule_map.attr("data-id");
+			var day=data_id.split("_")[0];
+			visible_schedule_dates.push(day);
+		});
+
+		for(var i in site_schedule_dates){
+
+			if(!site_schedule_dates.hasOwnProperty(i)) continue;
+			if(site_schedule_dates[i]>=first_date && last_date>=site_schedule_dates[i]) continue;
+			if(visible_schedule_dates.indexOf(site_schedule_dates[i])>-1) continue;
+			visible_schedule_dates.push(site_schedule_dates[i]);
+		}
+
+		visible_schedule_dates.sort();
+		return visible_schedule_dates;
+	}
+
+	//■可視化されている所のposition情報
+	var getPositionValues=function(dates){
+
+		var schedule_top_inner=this;
+		var __selector_dates=dates.map(function(a){
+
+			return "[data-time=\""+a+"\"]";
+		});
+
+		var day_positions={};
+		var day_tops=schedule_top_inner.find("div[data-type=\""+TYPE_DAYTOP+"\"]");
+		var visible_day_tops=day_tops.filter(__selector_dates.join(","));
+		visible_day_tops.each(function(){
+
+			var day_top=$(this);
+			var schedule_maps=day_top.children("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+			var schedules=schedule_maps.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+			if(0>schedules.size()) return;
+			schedules.each(function(){
+
+				var schedule=$(this);
+				var map=schedule.parent();
+				var data_id=map.attr("data-id");
+				var data_informations=data_id.split("_");
+				var schedule_id=schedule.attr("data-schedule-id");
+				if(!day_positions[data_informations[0]]) day_positions[data_informations[0]]=[];
+				day_positions[data_informations[0]].push({
+
+					"schedule_id":schedule_id,
+					"position_num":data_informations[1]
+				});
+			});
+		});
+
+		return day_positions;
+	}
+
+	//■Same site ids on same day.
+	var getSameDayReserveRegisted=function(touch_element){
+
+		var day_top=this;
+		var all_schedules=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+		var other_schedules=all_schedules.not(touch_element);
+		var all_reserve_ids=[];
+		other_schedules.each(function(){
+
+			var target=$(this);
+			if(!target.is(":visible")) return;
+			all_reserve_ids.push(target.attr("data-reservation-id"));
+		});
+
+		return all_reserve_ids;
+	}
+
+	//■Same site ids on same day.
+	var getSameDayRoomRegisted=function(touch_element){
+
+		var day_top=this;
+		var all_schedules=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+		var other_schedules=all_schedules.not(touch_element);
+		var all_room_ids=[];
+		other_schedules.each(function(){
+
+			var target=$(this);
+			if(!target.is(":visible")) return;
+			all_room_ids.push(target.parent().attr("data-room-id"));
+		});
+
+		return all_room_ids;
+	}
+
+	var priceHiddenByPostionningDiffrentDay=function(current_date){
+
+		var schedule=this;
+		var schedule_id=schedule.attr("data-schedule-id");
+		var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+		var t1=TYPE_SCHEDULE_PRICE;
+
+		if(schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)>-1){
+
+			schedule.find("span[data-type=\""+t1+"\"]").hide();
+			return;
+		}
+
+		if(parseInt(informations[schedule_id]["time"])==parseInt(current_date)){
+
+			var selectors=[];
+			var room_id=informations[schedule_id]["room"]["id"];
+			schedule.find("span[data-type=\""+t1+"\"]").show();
+			return;
+		}
+
+		schedule.find("span[data-type=\""+t1+"\"]").hide();
+	}
+
+	var contextSiteRemove=function(){
+
+		var day_top=this;
+		var remove_reserve_ids=cacheData().get(CACHE_SITE_REMOVE_VALUE).reserve_ids;
+		if(1>remove_reserve_ids.length) return;
+
+		var selectors=[];
+		for(var i in remove_reserve_ids){
+
+			var reserve_id=remove_reserve_ids[i];
+			selectors.push("div[data-type=\""+TYPE_SCHEDULE+"\"][data-reservation-id=\""+reserve_id+"\"]:visible");
+		}
+
+		var remove_site_schedules=day_top.find(selectors.join(","));
+		if(1>remove_site_schedules.size()) return;
+
+		remove_site_schedules.each(function(){
+
+			var schedule=$(this);
+			var reserve_id=schedule.attr("data-reservation-id");
+			var schedule_id=schedule.attr("data-schedule-id");
+			cacheData().get(CACHE_SITE_REMOVE_VALUE).schedules[reserve_id].push(schedule_id);
+			schedule.hide();
+		});
+	}
+
+	var scheduleBtnRightEvent=function(e,life,callback){
+
+		if(life==0){
+
+			if($.isFunction(callback)) callback();
+			return;
+		}
+
+		var self=this;
+		//■the newest data for a day.
+		var dates=[];
+		var latest_date=manageScheduleDate(schedule_head).getLatestDate();
+		var after_latest_date=Number(latest_date).addDate(1);
+		var cache=cacheData().get(CACHE_ALL_DATA);
+		var data=cache[after_latest_date];
+
+		var fn=arguments.callee;
+
+		//■if this variable called data has undefined. we must get new data from the server.
+		if(data==undefined){
+
+			var params={}
+			params["date"]=after_latest_date;
+			apiGeoRequests.getAddDateApi(params,function(status,res){
+
+				var informations=res["data"]["informations"];
+				var unavailable =res["data"]["unavailable"];
+				var edit_informations=res["data"]["edit_informations"];
+				$.extend(cacheData().get(CACHE_ALL_UNAVAILABLE_DATA),unavailable);
+
+				var week        =Object.keys(informations);
+				cacheData().set(CACHE_ALL_DATA,informations);
+				cacheData().set(CACHE_SCHEDULE_INFO,makeInformationAry(week,informations));
+				$.extend(cacheData().get(CACHE_EDIT_INFORMATION),edit_informations);
+
+				fn.call(self,e,life,callback);
+			});
+			return;
+		}
+
+		//■the date that it must be hided.
+		var prev_date=manageScheduleDate(schedule_head).getPreviousDate();
+
+		schedule_head.children("div[data-time=\""+prev_date+"\"]").hide();
+		schedule_top_inner.children("div[data-time=\""+prev_date+"\"]").hide();
+
+		//■whether thise elements are shown.
+		var current_head_top=schedule_head.children("div[data-time=\""+after_latest_date+"\"]");
+		var current_day_top =schedule_top_inner.children("div[data-time=\""+after_latest_date+"\"]");
+		if(current_head_top.size()>0){
+
+			current_head_top.show();
+			current_day_top.show();
+			contextSiteRemove.call(current_day_top);
+			fn.call(self,e,(life-1),callback);
+			return;
+		}
+
+		//■add the next day of data.
+		addScheduleHead.call(schedule_head,[after_latest_date],"append",function(){
+
+			var schedule_data=makeInformationAry([after_latest_date],cacheData().cache[CACHE_ALL_DATA]);
+			var schedule_ids=Object.keys(schedule_data);
+
+			addScheduleParDayElement.call(schedule_top_inner,[after_latest_date],{
+			
+				"schedule_ids":schedule_ids,
+				"day_top_add_method":"append"
+
+			},function(registed_dates){
+			
+				//■target elements
+				var day_top=schedule_top_inner.children("div[data-time=\""+after_latest_date+"\"]");
+				var schedule_blocks=day_top.children("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+				var schedule_child_header=schedule_head.children("div[data-time=\""+after_latest_date+"\"]");
+				var schedule=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+				var __registed_dates=(registed_dates==undefined?[after_latest_date]:registed_dates);
+
+				//■resize
+				resizeContainerDaytop.call(day_top);
+				resizeContainerHead.call(schedule_child_header);
+
+				//■開始時の日別reserve_id.
+				cacheDefauldSetScheduleIds.call(day_top);
+
+				contextSiteRemove.call(day_top);
+				updateRoomRestCount.call(schedule_top,__registed_dates,effect_room_max_count);
+
+				var search_history=cacheData().get(CACHE_SEARCH_ACTION);
+				if(1>search_history["is_purchase"]) purchaseOpacityEnable(schedule,search_history["is_purchase"]);
+
+				fn.call(self,e,(life-1),callback);
+			});
+		});
+	};
+
+	var scheduleBtnLeftEvent=function(e,life,callback){
+
+		if(life==0){
+
+			if($.isFunction(callback)) callback();
+			return;
+		}
+
+		var self=this;
+		var dates=[];
+		var prev_date=manageScheduleDate(schedule_head).getPreviousDate();
+		var before_prev_date=Number(prev_date).addDate(-1);
+		var cache=cacheData().get(CACHE_ALL_DATA);
+		var data=cache[before_prev_date];
+		var fn=arguments.callee;
+
+		//■if the data is undefined we have to get new data from the server.
+		if(data==undefined){
+
+			var params={}
+			params["date"]=before_prev_date;
+			apiGeoRequests.getSubDateApi(params,function(status,res){
+
+				var informations=res["data"]["informations"];
+				var unavailable =res["data"]["unavailable"];
+				var edit_informations=res["data"]["edit_informations"];
+				$.extend(cacheData().get(CACHE_ALL_UNAVAILABLE_DATA),unavailable);
+
+				var week=Object.keys(informations);
+				cacheData().set(CACHE_ALL_DATA,informations);
+				cacheData().set(CACHE_SCHEDULE_INFO,makeInformationAry(week,informations));
+				$.extend(cacheData().get(CACHE_EDIT_INFORMATION),edit_informations);
+
+				fn.call(self,e,life,callback);
+			});
+			return;
+		}
+
+		//■the date for it will be removed.
+		var latest_date=manageScheduleDate(schedule_head).getLatestDate();
+
+		//■we have to hide some elements when the day is outside the map.
+		schedule_head.children("div[data-time=\""+latest_date+"\"]").hide();
+		schedule_top_inner.children("div[data-time=\""+latest_date+"\"]").hide();
+
+		//■check if the schedule about the before_prev_date is show.
+		var current_head_top=schedule_head.children("div[data-time=\""+before_prev_date+"\"]");
+		var current_day_top =schedule_top_inner.children("div[data-time=\""+before_prev_date+"\"]");
+		if(current_head_top.size()>0){
+
+			current_head_top.show();
+			current_day_top.show();
+			contextSiteRemove.call(current_day_top);
+			fn.call(self,e,(life-1),callback);
+			return;
+		}
+
+		addScheduleHead.call(schedule_head,[before_prev_date],"prepend",function(){
+
+			var schedule_data=makeInformationAry([before_prev_date],cacheData().cache[CACHE_ALL_DATA]);
+			var schedule_ids=Object.keys(schedule_data);
+			addScheduleParDayElement.call(schedule_top_inner,[before_prev_date],{
+			
+				"schedule_ids":schedule_ids,
+				"day_top_add_method":"prepend"
+
+			},function(registed_dates){
+			
+				//■target elements
+				var day_top=schedule_top_inner.children("div[data-time=\""+before_prev_date+"\"]");
+				var schedule_blocks=day_top.children("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+				var schedule_child_header=schedule_head.children("div[data-time=\""+before_prev_date+"\"]");
+				var schedule=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+				var date=day_top.attr("data-time");
+				var __registed_dates=(registed_dates==undefined?[before_prev_date]:registed_dates);
+
+				//■resize
+				resizeContainerDaytop.call(day_top);
+				resizeContainerHead.call(schedule_child_header);
+
+				//■開始時の日別reserve_id.
+				cacheDefauldSetScheduleIds.call(day_top);
+
+				contextSiteRemove.call(day_top);
+				updateRoomRestCount.call(schedule_top,__registed_dates,effect_room_max_count);
+
+				var search_history=cacheData().get(CACHE_SEARCH_ACTION);
+				if(1>search_history["is_purchase"]) purchaseOpacityEnable(schedule,search_history["is_purchase"]);
+
+				fn.call(self,e,(life-1),callback);
+			});
+		});
+	};
+
+	var getVisibleDate=function(){
+
+		var t1=TYPE_DAYTOP;
+		var day_tops=window["schedule_top_inner"].children("div[data-type=\""+t1+"\"]:visible");
+		var start_date=day_tops.eq(0).attr("data-time");
+		var end_date  =day_tops.eq(day_tops.size()-1).attr("data-time");
+
+		return {
+
+			"start":start_date,
+			"end"  :end_date
+		};
+	}
+
+	var setCurrentDay=function(){
+
+		var styles={};
+		styles["0"]="<span style=\"color:white;\">";
+		styles["1"]="<span style=\"color:white;\">";
+		styles["2"]="<span style=\"color:white;\">";
+		styles["3"]="<span style=\"color:white;\">";
+		styles["4"]="<span style=\"color:white;\">";
+		styles["5"]="<span style=\"color:white;\">";
+		styles["6"]="<span style=\"color:white;\">";
+		var range=getVisibleDate();
+		var n_start=Number(range["start"]);
+		var n_end  =Number(range["end"]);
+		var w_start=new Date(n_start.addMinutesZero()).getDay()+"";
+		var w_end  =new Date(n_end.addMinutesZero()).getDay()+"";
+		var start=n_start.splitYmd();
+		var end  =n_end.splitYmd();
+		var start_ymd=viewYmd(start[0],start[1],start[2]);
+		var end_ymd=viewYmd(end[0],end[1],end[2]);
+		if(styles[w_start]!=undefined) start_ymd=(styles[w_start]+start_ymd+"</span>");
+		if(styles[w_end]!=undefined)   end_ymd=(styles[w_end]+end_ymd+"</span>");
+		var data=start_ymd+"&nbsp;<span style=\"color:#fff;\">〜</span>&nbsp;"+end_ymd;
+
+		var t1=TYPE_SCHEDULE_DATE_RANGE;
+		if(!("schedule-head-data-range" in window)) window["schedule-head-data-range"]=window["body"].find("span[data-type=\""+t1+"\"]");
+		window["schedule-head-data-range"].html(data);
+	}
+
+	var arr=[];
+	var contextActions={
+
+			"checkAuthority":function(limited_second){
+
+				var deferred=$.Deferred();
+				if(isDeadlineOver(limited_second)){
+
+					var params={};
+					params["user_id"]       =user_id;
+					params["last_edit_time"]=cacheData().get(CACHE_LAST_EDIT_TIME).last_edit_time;
+					params["local_time_key"]=localKeyTime(LOCAL_STORAGE_TIMEKEY);
+					deadlineOverGetAuthority(params).
+					done(function(){
+
+						deferred.resolve(false);
+					});
+
+					return deferred.promise();
+				}
+
+				return deferred.resolve(true);
+			},
+			"onContextMenu":function(e){
+
+				var target=$(e.target);
+				var data_type=target.attr("data-type");
+
+				if(checkScheduleBlockElem(data_type)){
+
+					if(!is_edit) return;
+					return true;
+				}
+
+				if((!cacheData().get(MANAGED_AUTHORITY).is_managed)){
+
+					var schedule=target.parents("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					if(schedule.size()>0){
+					
+						var reserve_id=schedule.attr("data-reservation-id");
+						schedule_top_inner.find("div[data-reservation-id=\""+reserve_id+"\"]").css("opacity",1)
+					}
+
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					return false;
+				}
+
+				if(TYPE_UNAVAILABLE_SCHEDULE==data_type){
+				
+					return true;
+				}
+	
+				if(checkScheduleTargetElem(data_type) || target.parents("div[data-type=\""+TYPE_SCHEDULE+"\"]").size()>0){
+
+					var day_top=target.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+					var ymd=day_top.attr("data-time");
+					var today=new Date(window["today"]["today"]).getYmdByMs().join("");
+					if(!is_edit && ymd>today) return false;
+					return true;
+				}
+
+				return false;
+			},
+			"onShowMenu":function(e,menu){
+
+				var target=$(e.target);
+				var data_type=target.attr("data-type");
+				var touch_element=manageTouch().touchElement;
+				var schedule_map=(checkScheduleBlockElem(data_type)?target:target.parents("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]"));
+				var day_top=schedule_map.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+				var date=day_top.attr("data-time");
+				var data_block_type=schedule_map.attr("data-block-type");
+				var is_rest=data_block_type=="etc";
+
+				// when put the copy element touch_element is nothing.
+				if((touch_element instanceof jQuery) && (checkScheduleTargetElem(touch_element.attr("data-type")))){
+
+					var reserve_id=touch_element.attr("data-reservation-id");
+					var data_count=touch_element.children("div[data-type=\"schedule-around\"]").attr("data-count");
+					if(data_count!=2) schedule_top_inner.find("div[data-reservation-id=\""+reserve_id+"\"]").css("opacity",1);
+				}
+
+				// clear left touch action.
+				manageTouch().clear();
+
+				if(checkScheduleBlockElem(data_type)){
+
+					var content_box=target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+					content_box.data("data_id",schedule_map.attr("data-id"));
+
+					var clone=cacheData().get(CACHE_CONTEXT_COPY);
+					menu.find("li[data-type=\"context-copy\"]").hide();
+					menu.find("li[data-type=\"context-remove\"]").hide();
+					menu.find("li[data-type=\"context-site-remove\"]").hide();
+					menu.find("li[data-type=\"context-site-edit\"]").hide();
+					menu.find("li[data-type=\"context-diposit\"]").hide();
+					menu.find("li[data-type=\"context-site-info\"]").hide();
+
+					if(is_rest){
+
+						menu.find("li[data-type=\"context-site-unavailable\"]").hide();
+					}
+
+					if(!clone){
+
+						menu.find("li[data-type=\"context-paste\"]").hide();
+						return menu;
+					}
+
+					return menu;
+				}
+
+				if(TYPE_UNAVAILABLE_SCHEDULE==data_type){
+
+					var content_box=target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+					content_box.data("data_id",schedule_map.attr("data-id"));
+
+					menu.find("li[data-type=\"context-site-add\"]").hide();
+					menu.find("li[data-type=\"context-paste\"]").hide();
+					menu.find("li[data-type=\"context-copy\"]").hide();
+					menu.find("li[data-type=\"context-remove\"]").hide();
+					menu.find("li[data-type=\"context-site-remove\"]").hide();
+					menu.find("li[data-type=\"context-site-edit\"]").hide();
+					menu.find("li[data-type=\"context-diposit\"]").hide();
+					return menu;
+				}
+
+				if(checkScheduleTargetElem(data_type) || target.parents("div[data-type=\""+TYPE_SCHEDULE+"\"]").size()>0){
+
+					var schedule_elem=checkScheduleTargetElem(data_type)?target:target.parents("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					var schedule_id=schedule_elem.attr("data-schedule-id");
+					var cache=cacheData().get(CACHE_SCHEDULE_INFO);
+					var information=cache[schedule_id];
+					var staytype=information["reservation"]["staytype"];
+
+					var content_box=target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+					var is_managed=cacheData().get(MANAGED_AUTHORITY).is_managed;
+					content_box.data("data_id",schedule_map.attr("data-id"));
+
+					if(!is_edit){
+
+						//report only.
+						menu.find("li[data-type=\"context-site-add\"]").hide();
+						menu.find("li[data-type=\"context-site-unavailable\"]").hide();
+						menu.find("li[data-type=\"context-paste\"]").hide();
+						menu.find("li[data-type=\"context-copy\"]").hide();
+						menu.find("li[data-type=\"context-remove\"]").hide();
+						menu.find("li[data-type=\"context-site-remove\"]").hide();
+						menu.find("li[data-type=\"context-site-edit\"]").hide();
+						menu.find("li[data-type=\"context-diposit\"]").hide();
+						return menu;
+					}
+
+					if(!is_managed){
+
+						menu.find("li[data-type=\"context-site-add\"]").hide();
+						menu.find("li[data-type=\"context-site-unavailable\"]").hide();
+						menu.find("li[data-type=\"context-paste\"]").hide();
+						menu.find("li[data-type=\"context-copy\"]").hide();
+						menu.find("li[data-type=\"context-remove\"]").hide();
+						menu.find("li[data-type=\"context-site-remove\"]").hide();
+						menu.find("li[data-type=\"context-site-edit\"]").hide();
+						menu.find("li[data-type=\"context-diposit\"]").hide();
+						return menu;
+					}
+
+					if(is_rest){
+
+						menu.find("li[data-type=\"context-copy\"]").hide();
+						menu.find("li[data-type=\"context-site-remove\"]").hide();
+						menu.find("li[data-type=\"context-site-unavailable\"]").hide();
+					}
+
+					menu.find("li[data-type=\"context-site-add\"]").hide();
+					menu.find("li[data-type=\"context-site-unavailable\"]").hide();
+					menu.find("li[data-type=\"context-paste\"]").hide();
+					return menu;
+				}
+
+			 },
+			 "copy":function(data_id){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return;
+
+				var schedule_map=this;
+				var fn=arguments.callee;
+				contextActions.checkAuthority(limited_second).then(function(status){
+
+					if(!status){
+
+						fn.call(schedule_map,data_id);
+						return;
+					}
+
+					var instance=TPL.getInstance(["schedule_guest_name","schedule_price","schedule_room_type"]);
+					var schedule=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					var schedule_id=schedule.attr("data-schedule-id");
+					schedule_id=0>schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)?schedule_id:schedule_id.split("_")[1];
+
+					var guest_tpl =instance.get_schedule_guest_name;
+					var price_tpl =instance.get_schedule_price;
+					var room_type_tpl=instance.get_schedule_room_type;
+
+					var reserve_id    =schedule.attr("data-reservation-id");
+					var room_type_id  =schedule.attr("data-room-type-id");
+					var room_id       =schedule.parent().attr("data-room-id");
+					var cache=cacheData().get(CACHE_SCHEDULE_INFO);
+					var information=cache[schedule_id];
+					var color=information["schedule"]["color"];
+					var remarks=!!information["schedule"]["remarks"]?information["schedule"]["remarks"].substr(0,REMARKS_SCHEDULE_MAX_LENGTH):"...";
+					var title=information["guest"]["first_name"];
+
+					var guest=information["guest"];
+					var guest_id=guest["id"];
+					var guest_first_name=guest["first_name"];
+					var guest_last_name =guest["last_name"];
+					var guest_view_name=guest_last_name+(guest_first_name.length>0?" "+guest_first_name:"");
+
+					var guest_name_html=instance.replaceTPL(guest_tpl,{
+
+						"guest_name":guest_view_name.length>0?guest_view_name:'<?php echo __("宿泊者名未設定"); ?>',
+						"guest_id"  :guest_id,
+					});
+
+					var price_type_colors={"0":"black","3":"blue","4":"red","5":"green","6":"purple"};
+					var room_price_type  =information["room"]["room_price_status"];
+					var price_html=instance.replaceTPL(price_tpl,{
+
+						"price_type"      :information["room"]["room_price_status"],
+						"price_type_id"   :information["room"]["room_price_data_id"],
+						"room_price"      :(information["room"]["room_price"]+""),
+						"price_type_color":(price_type_colors[room_price_type]!=undefined)?price_type_colors[room_price_type]:price_type_colors["0"],
+						"price_type_bold" :(price_type_colors[room_price_type]!=undefined)?"bold":"none",
+						"price_type_decoration":(price_type_colors[room_price_type]!=undefined)?"underline":"none"
+					});
+
+					var room_type_html=instance.replaceTPL(room_type_tpl,{
+
+						"room_id"        :information["room"]["id"],
+						"room_type"      :information["room"]["room_type"],
+						"room_num"       :information["room"]["room_num"],
+					});
+
+					cacheData().set(CACHE_CONTEXT_COPY,{
+
+						"schedule_id"  :schedule_id,
+						"reserve_id"   :reserve_id,
+						"room_type_id" :room_type_id,
+						"room_id"      :room_id,
+						"color"        :color,
+						"title"        :title,
+						"price"        :price_html,
+						"guest_name"   :guest_name_html,
+						"room"         :room_type_html,
+						"remarks"      :"...",
+						"name"         :"...",
+					});
+				});
+			},
+			"paste":function(){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return;
+
+				var schedule_map=this;
+				var fn=arguments.callee;
+				contextActions.checkAuthority(limited_second).then(function(status){
+
+					if(!status){
+
+						fn.call(schedule_map);
+						return;
+					}
+
+					var schedule=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					var day_top=schedule_map.parent();
+					var ymd=day_top.attr("data-time");
+
+					var instance=TPL.getInstance("schedule");
+					var copy_informations=cacheData().get(CACHE_CONTEXT_COPY);
+					var tpl=instance.replaceTPL(instance.get_schedule,copy_informations);
+					var copy_html=$(tpl);
+					var reserve_id=copy_informations["reserve_id"];
+					var room_id   =copy_informations["room_id"];
+					var registed_reserve_ids=getSameDayReserveRegisted.call(day_top,copy_html);
+					var registed_room_ids   =getSameDayRoomRegisted.call(day_top,copy_html);
+					var current_today=window["today"]["ymd"];
+
+					var is_past=false;
+					var is_reserve_id_registed=false;
+					var is_room_id_registed=false;
+
+					if(current_today>ymd) is_past=true;
+					if(!is_past && registed_reserve_ids.indexOf(reserve_id)>-1) is_reserve_id_registed=true;
+					if(!is_past && !is_reserve_id_registed && registed_room_ids.indexOf(room_id)>-1) is_room_id_registed=true; 
+
+					if(schedule_map.attr("data-room-id")!=copy_informations["room_id"]){
+
+						var message="<?php echo __("異なる部屋番号の位置には設定出来ません"); ?>";
+						__alert(message);
+						return;
+					}
+
+					if(is_past || is_reserve_id_registed || is_room_id_registed){
+
+						var split_ymd=Number(ymd).splitYmd();
+						var month=split_ymd[1].ridFirstZero();
+						var day  =split_ymd[2].ridFirstZero();
+						var main_title="<?php echo __("エラー"); ?>";
+
+						switch(true){
+						
+							case(is_past):
+							var message="<?php echo __("本日より過去の日付は選択出来ません"); ?><br />";
+							message+="※<?php echo __("別の日を選択して下さい"); ?>";
+						break;
+
+							case(is_reserve_id_registed):
+							var message="<?php echo __("同じ予約情報を同日に設定出来ません"); ?><br />";
+							message+="※<?php echo __("別の日を選択して下さい"); ?>";
+						break;
+
+							case(is_room_id_registed):
+							var message="<?php echo __("同じ部屋情報を同日に設定出来ません"); ?><br />";
+							message+="※<?php echo __("別の日を選択して下さい"); ?>";
+						break;
+
+						}
+
+						__alert(message);
+						return;
+					}
+
+					var schedule_id=copy_informations["schedule_id"];
+					var __schedule_id=0>schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)?schedule_id:schedule_id.split("_")[1];
+					var tmp_schedule_id=makeTmpScheduleId(__schedule_id);
+					copy_html.attr("data-schedule-id",tmp_schedule_id);
+					schedule_map.append(copy_html);
+
+					copy_html.ready(function(){
+
+						//■paste history.
+						var current_left_date=manageScheduleDate(schedule_head).getPreviousDate();
+						var data_id=copy_html.parent().attr("data-id");
+						var map_informations=data_id.split("_");
+
+						cacheData().get(CACHE_UNDO_ACTION).undo.push({
+
+							"type"              :"paste",
+							"tmp_schedule_id"   :tmp_schedule_id,
+							"day"               :map_informations[0],
+							"position"          :map_informations[1],
+							"start_left_side_id":current_left_date,
+						});
+
+						updateRoomRestCount.call(schedule_top,map_informations[0],effect_room_max_count);
+
+						actionForwardView.call(action_forward);
+						actionUndoView.call(action_undo);
+
+						//■history.
+						beforeunLoadEvent();
+
+						//■arrangeElement.call(day_top);
+						cacheData().cache[CACHE_CONTEXT_COPY]=null;
+					});
+				});
+			},
+			"remove":function(){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return;
+
+				var schedule_map=this;
+				var fn=arguments.callee;
+				contextActions.checkAuthority(limited_second).then(function(status){
+
+					if(!status){
+
+						fn.call(schedule_map);
+						return;
+					}
+
+					var data_id=schedule_map.attr("data-id");
+					var schedule=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					var map_detail=data_id.split("_");
+					var current_left_date=manageScheduleDate(schedule_head).getPreviousDate();
+					var schedule_id=schedule.attr("data-schedule-id");
+					var __schedule_id=0>schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)?schedule_id:schedule_id.split("_")[1];
+					var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+					var guest=informations[__schedule_id]["guest"];
+					var ymd_split=Number(map_detail[0]).splitYmd();
+					var ymd=(ymd_split[0]+"年"+ymd_split[1].ridFirstZero()+"月"+ymd_split[2].ridFirstZero()+"日");
+					var guest=informations[__schedule_id]["guest"];
+					var reserve_id=informations[__schedule_id]["reservation"]["id"];
+
+					var main_title="Reservation "+reserve_id+"("+ymd+")";
+					var message="<?php echo __("こちらの予約情報を削除します"); ?><br />";
+					message+="※<?php echo __("「操作する」ボタンを押すと削除されます"); ?>";
+					remodalAlert("modal",main_title,message,{
+				
+						"yes"  :function(){
+
+							cacheData().get(CACHE_UNDO_ACTION).undo.push({
+
+								"type"   :"remove",
+								"schedule_id":schedule_id,
+								"day"     :map_detail[0],
+								"position":map_detail[1],
+								"start_left_side_id":current_left_date
+							});
+
+							actionForwardView.call(action_forward);
+							actionUndoView.call(action_undo);
+							schedule.hide();
+							beforeunLoadEvent();
+						},
+						"no"   :function(){},
+						"close":function(){}
+					});
+				});
+			},
+			"site_remove":function(){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return;
+
+				var schedule_map=this;
+				var fn=arguments.callee;
+				contextActions.checkAuthority(limited_second).then(function(status){
+
+					if(!status){
+
+						fn.call(schedule_map);
+						return;
+					}
+
+					var data_id=schedule_map.attr("data-id");
+					var schedule=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					var schedule_id=schedule.attr("data-schedule-id");
+					var __schedule_id=0>schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)?schedule_id:schedule_id.split("_")[1];
+
+					var reserve_id=schedule.attr("data-reservation-id");
+					var schedules=schedule_top_inner.find("div[data-type=\""+TYPE_SCHEDULE+"\"][data-reservation-id=\""+reserve_id+"\"]");
+					var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+					var guest=informations[__schedule_id]["guest"];
+					var reserve_id=informations[__schedule_id]["reservation"]["id"];
+
+					var main_title="Reservation "+reserve_id+"("+guest["first_name"]+")";
+					var message="<?php echo __("こちらの予約情報の日程を全て削除します"); ?><br />";
+					message+="※<?php echo __("「操作する」ボタンを押すと削除されます"); ?>";
+					remodalAlert("modal",main_title,message,{
+				
+						"yes"  :function(){
+
+							var schedule_ids=[];
+							schedules.each(function(){
+
+								var schedule=$(this);
+								var schedule_id=schedule.attr("data-schedule-id");
+								if(!schedule.isDisplay()) return;
+								schedule_ids.push(schedule_id);
+								var day=schedule.parents("div[data-type=\""+TYPE_DAYTOP+"\"]").attr("data-time");
+								schedule.hide();
+								updateRoomRestCount.call(schedule_top,day,effect_room_max_count);
+
+								beforeunLoadEvent();
+							});
+
+							var current_left_date=manageScheduleDate(schedule_head).getPreviousDate();
+							cacheData().get(CACHE_UNDO_ACTION).undo.push({
+
+								"type"    :"site_remove",
+								"reserve_id" :reserve_id,
+								"start_left_side_id":current_left_date
+							});
+
+							cacheData().get(CACHE_SITE_REMOVE_VALUE).schedules[reserve_id]=schedule_ids;
+							cacheData().get(CACHE_SITE_REMOVE_VALUE).reserve_ids.push(reserve_id);
+							actionForwardView.call(action_forward);
+							actionUndoView.call(action_undo);
+						},
+						"no"   :function(){},
+						"close":function(){}
+					});
+				});
+			},
+			"unavailable":function(data){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+					var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+					message+="<?php echo __("「操作する」を押して下さい"); ?>";
+					__alert(message);
+					return;
+				}
+
+				var schedule_map=this;
+				var fn=arguments.callee;
+				var day_top=schedule_map.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+				var start=day_top.attr("data-time");
+
+				if(window["today"]["ymd"]>start){
+
+					var message="<?php echo __("本日より過去の日付は選択出来ません"); ?>";
+					__alert(message);
+					return;
+				}
+
+				var roomid=schedule_map.attr("data-room-id");
+
+				var unavailable=schedule_map.children("div[data-type=\""+TYPE_UNAVAILABLE_SCHEDULE+"\"]");
+				if(data==undefined && unavailable.size()>0){
+
+					var params={"data":{}};
+					params["data"]["data_id"]=unavailable.attr("data-id");
+					apiGeoRequests.getUnavailabledata(params,function(status,res){
+					
+						fn.call(schedule_map,res["data"]);
+					});
+					return;
+				}
+
+				var id;
+				var end;
+				var remarks;
+				var reason_id;
+				if(data!=undefined){
+				
+					id     =data["data_id"];
+					start  =data["start_date"];
+					end    =data["end_date"];
+					reason_id=data["reason_id"];
+					remarks=data["remarks"];
+				}
+
+				var params={};
+				params["roomid"]   =roomid;
+				params["start"]    =start;
+				params["end"]      =end;
+				params["remarks"]  =remarks;
+				params["reason_id"]=reason_id;
+				unavailableRoom(id,params,function(is_update){
+
+					if(!is_update) return;
+					scheduleReload();
+				});
+			},
+			"site":function(reserve_id,callback,check_schedule_edit){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+					var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+					message+="<?php echo __("「操作する」を押して下さい"); ?>";
+					__alert(message);
+					return;
+				}
+
+				var schedule_map=this;
+				var fn=arguments.callee;
+				var day_top=schedule_map.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+				var ymd=day_top.attr("data-time");
+
+				if(!reserve_id && window["today"]["ymd"]>ymd){
+
+					var message="<?php echo __("当日以降の日付は指定出来ません"); ?>";
+					__alert(message);
+					return;
+				}
+
+				var schedule_id;
+				var schedule=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+				var room_id=schedule_map.attr("data-room-id");
+				if(schedule.size()>0) schedule_id=schedule.attr("data-schedule-id");
+
+				var reservation_hash="";
+				var all_reservation_info=cacheData().get(CACHE_SCHEDULE_INFO);
+				if(reserve_id!=undefined && all_reservation_info[schedule_id]!=undefined){
+				
+					if(all_reservation_info[schedule_id]["reservation"]["staytype"]=="rest") room_id=all_reservation_info[schedule_id]["room"]["id"];
+					reservation_hash=all_reservation_info[schedule_id]["reservation"]["hash"];
+				}
+
+				var base_url="<?php echo "K9Reservation".DS."index".DS; ; ?>";
+
+				var params=[];
+				params.push(room_id);
+				params.push(ymd);
+				if(reservation_hash.length>0) params.push(reservation_hash);
+				base_url+=params.join("/");
+				location.href=base_url;
+			},
+			"diposit":function(){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return;
+
+				var schedule_map=this;
+				var fn=arguments.callee;
+				var day_top=schedule_map.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+				var ymd=day_top.attr("data-time");
+				var schedule=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+				var schedule_id=schedule.attr("data-schedule-id").replace("_","");
+				var blocktype=schedule_map.attr("data-block-type");
+				var is_rest=(blocktype=="etc");
+				var staytype=(is_rest)?"rest":"stay";
+				diposit(schedule_id,ymd,staytype,function(is_edit){
+				
+					if(!is_edit) return;
+					scheduleReload();
+				});
+			},
+			"edit":function(){
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return;
+
+				var schedule_map=this;
+				var fn=arguments.callee;
+				contextActions.checkAuthority(limited_second).then(function(status){
+
+					if(!status){
+
+						fn.call(schedule_map);
+						return;
+					}
+
+					var schedule=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					var schedule_id=schedule.attr("data-schedule-id");
+					var reserve_id    =schedule.attr("data-reservation-id");
+					contextActions.site.call(schedule_map,reserve_id,function(htmls){
+
+						var overlay=this;
+					});
+				});
+			},
+			"bindings":{
+
+				"copy":function(t){
+
+					var content_box=$(t);
+					var data_id=content_box.data("data_id");
+					var schedule_map=content_box.find("div[data-id=\""+data_id+"\"]");
+					contextActions.copy.call(schedule_map);
+				},
+				"paste":function(t){
+
+					var content_box=$(t);
+					var data_id=content_box.data("data_id");
+					var schedule_map=content_box.find("div[data-id=\""+data_id+"\"]");
+					contextActions.paste.call(schedule_map);
+				},
+				"remove":function(t){
+
+					var content_box=$(t);
+					var data_id=content_box.data("data_id");
+					var schedule_map=content_box.find("div[data-id=\""+data_id+"\"]");
+					contextActions.remove.call(schedule_map);
+				},
+				"site_remove":function(t){
+
+					var content_box=$(t);
+					var data_id=content_box.data("data_id");
+					var schedule_map=content_box.find("div[data-id=\""+data_id+"\"]");
+					contextActions.site_remove.call(schedule_map);
+				},
+				"unavailable":function(t){
+
+					var content_box=$(t);
+					var data_id=content_box.data("data_id");
+					var schedule_map=content_box.find("div[data-id=\""+data_id+"\"]");
+					contextActions.unavailable.call(schedule_map);
+				},
+				"site":function(t,reserve_id,callback){
+
+					var content_box=$(t);
+					var data_id=content_box.data("data_id");
+					var schedule_map=content_box.find("div[data-id=\""+data_id+"\"]");
+					contextActions.site.call(schedule_map,reserve_id,callback);
+				},
+				"edit":function(t){
+
+					var content_box=$(t);
+					var data_id=content_box.data("data_id");
+					var schedule_map=content_box.find("div[data-id=\""+data_id+"\"]");
+					contextActions.edit.call(schedule_map);
+				},
+				"diposit":function(t){
+
+					var content_box=$(t);
+					var data_id=content_box.data("data_id");
+					var schedule_map=content_box.find("div[data-id=\""+data_id+"\"]");
+					contextActions.diposit.call(schedule_map);
+				},
+			}
+	}
+
+	window["isScheduleEdit"]=function(){
+
+		var is_edit=false;
+		var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+		var day_tops=schedule_top_inner.children("div[data-type=\""+TYPE_DAYTOP+"\"]");
+		var __day_tops=day_tops.toArray();
+
+		for(var i in __day_tops){
+
+			if(!__day_tops.hasOwnProperty(i)) continue;
+			var day_top=$(__day_tops[i]);
+
+			var schedules=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+			if(1>schedules.size()) continue;
+
+			var __schedules=schedules.toArray();
+			for(var i in __schedules){
+
+				if(!__schedules.hasOwnProperty(i)) continue;
+
+				var schedule=$(__schedules[i]);
+				var schedule_id=schedule.attr("data-schedule-id");
+				var reserve_id=schedule.attr("data-reservation-id");
+				var is_show=schedule.isDisplay();
+				var is_tmp=schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)>-1;
+
+				//copy and no visible.(コピーして消した)
+				if(!is_show && is_tmp) continue;
+
+				//copy element.(コピーした)
+				if(is_show && is_tmp){
+
+					is_edit=true;
+					break;
+				}
+
+				//no visible.(消されている)
+				if(!is_show){
+
+					is_edit=true;
+					break;
+				}
+
+				//position is diffrence.
+				var schedule_map=schedule.parent();
+				var current_position_num=schedule_map.attr("data-id").split("_")[1];
+				var initial_position_num=informations[schedule_id]["schedule"]["position_num"];
+				if(current_position_num!=initial_position_num){
+
+					is_edit=true;
+					break;
+				}
+
+				//date is diffrence.
+				var current_ymd=schedule_map.parent().attr("data-time");
+				var initial_ymd=informations[schedule_id]["time"];
+				if(current_ymd!=initial_ymd){
+
+					is_edit=true;
+					break;
+				}
+			}
+
+			if(is_edit) break;
+		}
+
+		return is_edit;
+	}
+
+	//■開始
+	var make=function(callback){
+
+		var promiseLayoutHidden=function(){
+
+			var deferred=$.Deferred();
+			window["schedule_head"].hide();
+			window["schedule_top_inner"].hide();
+			return deferred.resolve({}).promise();
+		}
+
+		var promiseAddScheduleHead=function(args){
+
+			var deferred=$.Deferred();
+			addScheduleHead.call(schedule_head,times.slice(0),"append",function(){
+
+				args["schedule_head"]=schedule_head;
+				deferred.resolve(args);
+			});
+			return deferred.promise();
+		};
+
+		var promiseAddScheduleTimeElements=function(args){
+
+			var registed_dates=[];
+			var add=function(times,callback){
+
+				if(1>times.length){
+				
+					callback();
+					return;
+				}
+
+				var time=times.shift();
+				var fn=arguments.callee;
+				var schedule_data=makeInformationAry([time],cacheData().cache[CACHE_ALL_DATA]);
+				var schedule_ids=Object.keys(schedule_data);
+				addScheduleParDayElement.call(schedule_top_inner,[time],{
+				
+					"schedule_ids":schedule_ids,
+					"day_top_add_method":"append"
+
+				},function(__registed_dates){
+
+					registed_dates=registed_dates.concat(__registed_dates);
+					fn(times,callback);
+				});
+			}
+
+			var deferred=$.Deferred();
+			add(times.slice(0),function(){
+
+				var schedule_day=schedule_top_inner.find("div[data-type=\""+TYPE_DAYTOP+"\"]")
+				deferred.resolve($.extend(args,{
+
+					"schedule_day"  :schedule_day,
+					"registed_dates":registed_dates
+				}));
+			})
+
+			return deferred.promise();
+		}
+
+		var promiseAddActionButton=function(args){
+
+			var deferred=$.Deferred();
+			addActionButton.call(window["schedule_action_button"],0,function(){
+
+				deferred.resolve(args);
+			});
+
+			return deferred.promise();
+		}
+
+		var promiseLayoutShow=function(args){
+
+			var deferred=$.Deferred();
+			window["schedule_head"].show();
+			window["schedule_top_inner"].show();
+			return deferred.resolve(args).promise();
+		}
+
+		var promiseLastUpdateUser=function(args){
+
+			var deferred=$.Deferred();
+			if(1>Object.keys(last_modified_user).length) return deferred.resolve(args);
+
+			updateToInchageMessage({
+
+				"first_name"  :last_modified_user["user"]["first_name"],
+				"last_edit_ms":last_modified_user["last_edit_ms"]
+
+			},function(){
+
+				deferred.resolve(args);
+			});
+
+			return deferred.promise();
+		}
+		
+		var promiseSituationColors=function(args){
+
+			var deferred=$.Deferred();
+
+			var instance=TPL.getInstance(["situation_label"]);
+			var situation_labels=window["schedule_top"].children("div[data-type=\"situation-labels\"]");
+			var situation_parent=situation_labels.children("div").eq(0);
+			var fragment=document.createDocumentFragment();
+			var situation_tpl=instance.get_situation_label;
+			var situation_html;
+			var width=Math.floor(100/Object.keys(situations).length)-1;
+
+			for(var type in situations){
+
+				situation_html=instance.replaceTPL(situation_tpl,{
+				
+					"size"     :width,
+					"bgcolor"  :situations[type]["bgcolor"],
+					"fontcolor":situations[type]["fontcolor"],
+					"title"    :situations[type]["type"],
+					"type"     :type
+				});
+
+				fragment.appendChild($(situation_html).get(0));
+			}
+
+			situation_parent.append(fragment);
+
+			return deferred.resolve(args);
+		}
+
+		var promiseMakeFinal=function(args){
+
+			var schedule_day=args["schedule_day"];
+			var schedule_blocks=schedule_day.find("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+			var registed_dates=args["registed_dates"];
+			var timer="";
+
+			//■window.load
+			resizeContainerAll();
+
+			var moveToElement=function(e,callback){
+
+				// check context menu is viewed.
+				var context_elem=body.find("div[id=\"jqContextMenu\"]").children("ul");
+				if(context_elem.is(":visible")) return;
+
+				var map=this;
+				var target_map_id=map.attr("data-id");
+				var touch_element=manageTouch().touchElement;
+
+				//■check if element was moving compare to the position where it started.
+				if(!manageMoveJudge().isChange(target_map_id)) return;
+				manageMoveJudge().clear().register(target_map_id);
+
+				//■moveing element to the right position.
+				//■set number of z-index;
+				var z_index=map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]").size();
+				touch_element.prependTo(map);
+				touch_element.css("z-index",z_index);
+
+				//■edit date detail in side menu.
+				var target=schedule_aside.find("div[data-type=\""+TYPE_SCHEDULE_SIDE_DATE+"\"]");
+				var day_top=map.parent();
+				var date=day_top.attr("data-time");
+
+				var __date=new Date(Number(date).addMinutesZero()).getTime();
+				replaceSideScheduleDate.call(target.empty(),__date);
+
+				if(!$.isFunction(callback)) return;
+				map.ready(function(){
+
+					callback();
+				});
+			}
+
+			var scheduleMouseUpEvent=function(e,s){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+
+				var allow_point=ALLOW_MOVE_TOUCH_POINT;
+				var diff_x=Math.abs(Math.abs(getPageX(e))-Math.abs(s["startPageX"]));
+				var diff_y=Math.abs(Math.abs(getPageY(e))-Math.abs(s["startPageY"]));
+				var is_diff=(diff_x>allow_point || diff_y>allow_point);
+
+				var touch_element=manageTouch().touchElement;
+				var is_managed=cacheData().get(MANAGED_AUTHORITY).is_managed;
+				var is_touch_on=manageTouch().isOn();
+				var touch_num=s["touchNum"];
+				manageTouch().clear();
+
+				//■set opacity group of site_id.
+				if($.isArray(s["startSelectReserveIDs"])){
+
+					var reserve_ids=s["startSelectReserveIDs"];
+					var selectors=reserve_ids.map(function(reserve_id){ return "div[data-reservation-id=\""+reserve_id+"\"]"; });
+					schedule_top_inner.find(selectors.join(",")).each(function(){
+
+						var target=$(this);
+						target.css("opacity","1.0");
+					});
+				}
+
+				if(!is_sp || !is_diff) leftSideContentMoveToViewerPosition();
+				if(!is_touch_on) return;
+
+				var t1=TYPE_SCHEDULE_BLOCK;
+				var schedule_map=(type==t1)?target:target.parents("div[data-type=\""+t1+"\"]");
+				if(1>schedule_map.size()) return;
+
+				var schedule_day_top =schedule_map.parent();
+				var schedule_date    =schedule_day_top.attr("data-time");
+				if(s["lastMoveDataId"]!=undefined){
+
+					var last_move_data_id=s["lastMoveDataId"].split("_");
+					if(!is_managed && ((s["startPositionID"]!=last_move_data_id[1]) || (s["startDate"]!=last_move_data_id[0]))){
+
+						if(is_smart) return;
+						return;
+					}
+				}
+
+				var schedule_size=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]").size();
+				if(1>schedule_size) return;
+
+				if(!is_sp || !is_diff){
+
+					//■edit some data in side menu.
+					var schedule=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					var schedule_id=schedule.attr("data-schedule-id");
+					var cache=cacheData().get(CACHE_SCHEDULE_INFO);
+					var __schedule_id=0>schedule_id.indexOf(TMP_SCHEDULE_ID_PRIFIX)?schedule_id:schedule_id.split("_")[1];
+					var information=cache[__schedule_id];
+					var reserve_id=information["reservation"]["id"];
+					var current_ymd=touch_element.parents("div[data-type=\""+TYPE_DAYTOP+"\"]").attr("data-time");
+
+					replaceSideSchedule.call(schedule_aside,current_ymd,information,function(main_html){
+
+						//viewReservationSearchButton(reserve_id,true,true);
+
+						//edit date detail in side menu.
+						var target=main_html.find("div[data-type=\""+TYPE_SCHEDULE_SIDE_DATE+"\"]");
+						var date=schedule_day_top.attr("data-time");
+						var date_ms=new Date(Number(date).addMinutesZero()).getTime();
+						replaceSideScheduleDate.call(target,date_ms,function(html){
+
+							var t1=TYPE_SCHEDULE_MODIFIED_PARSITE;
+							var action_lastmodified_parsite=schedule_container_top.find("div[data-type=\""+t1+"\"]");
+							action_lastmodified_parsite.empty();
+							var information=cacheData().get(CACHE_EDIT_INFORMATION)[reserve_id];
+							lastModifiedInformationUpdateParSite.call(action_lastmodified_parsite,information);
+						});
+					});
+				}
+
+				//■judge for the position are same.
+				var target_map_id=(!schedule_map?manageMoveJudge().currentId:schedule_map.attr("data-id"));
+				var start_block_map_id=manageCurrentTouchElem().startBlockId;
+				var current_block_map_id=touch_element.parent().attr("data-id");
+
+				var current_map=touch_element.parent();
+				var day_top=current_map.parent();
+				var current_schedules=current_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+
+				//■The thread about one date.
+				var day_top=touch_element.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+				var ymd=day_top.attr("data-time");
+
+				//■check for if a site already registed same day.
+				var registed_reserve_ids=getSameDayReserveRegisted.call(day_top,touch_element);
+				var registed_room_ids   =getSameDayRoomRegisted.call(day_top,touch_element);
+				var reserve_id=touch_element.attr("data-reservation-id");
+				var room_id   =touch_element.parent().attr("data-room-id");
+				var current_ymd=window["today"]["ymd"];
+
+				var is_past=false;
+				var is_reserve_id_registed=false;
+				var is_room_id_registed=false;
+				if(current_ymd>schedule_date && (current_block_map_id.split("_")[0]!=start_block_map_id.split("_")[0])) is_past=true;
+				if(!is_past && registed_reserve_ids.indexOf(reserve_id)>-1) is_reserve_id_registed=true;
+				if(!is_past && !is_reserve_id_registed && registed_room_ids.indexOf(room_id)>-1) is_room_id_registed=true; 
+
+				if(is_past || is_reserve_id_registed || is_room_id_registed){
+
+					//■ドラッグ(CRTL-A後の)による誤動作対応
+					if(schedule_size>1 && current_block_map_id==start_block_map_id){
+
+						var message="<?php echo __("予約情報が同日に重複しております"); ?>";
+						__alert(message);
+						reloadUnbindUnload();
+						return;
+					}
+
+					var split_ymd=Number(ymd).splitYmd();
+					var month=split_ymd[1].ridFirstZero();
+					var day  =split_ymd[2].ridFirstZero();
+					reset.call(touch_element,start_block_map_id);
+
+					var main_title="動作異常";
+
+					switch(true){
+					
+						case(is_past):
+						var message="<?php echo __("本日より過去の日付は選択出来ません"); ?><br />";
+						message+="※<?php echo __("別の日を選択して下さい"); ?>";
+					break;
+
+						case(is_reserve_id_registed):
+						var message="<?php echo __("同じ予約情報を同日に設定出来ません"); ?><br />";
+						message+="※<?php echo __("別の日を選択して下さい"); ?>";
+					break;
+
+						case(is_room_id_registed):
+
+						var message="<?php echo __("同じ部屋情報を同日に設定出来ません"); ?><br />";
+						message+="※<?php echo __("別の日を選択して下さい"); ?>";
+					break;
+
+					}
+
+					__alert(message);
+					return;
+				}
+
+				if(start_block_map_id==current_block_map_id) return;
+				if(start_block_map_id==target_map_id) return;
+
+				var is_same_position=false;
+				var move_histories=[];
+				if(current_schedules.size()>1){
+
+					is_same_position=true;
+
+					// get some elements which have to move next map.
+					var __targetMoveElements=function(current_position,schedule_elems){
+
+						if(current_position>=BLOCK_NUM) throw new Error("その場所には配置出来ません");
+						var other_schedule_elem=this;
+						var day_top=other_schedule_elem.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+						var day=day_top.attr("data-time");
+						var other_schedule_map=other_schedule_elem.parent();
+						var other_schedule_map_position=other_schedule_map.attr("data-id");
+						var position=other_schedule_map_position.split("_")[1];
+						var next_position=parseInt(position)+1;
+						if(current_position==undefined) current_position=position;
+						if(schedule_elems==undefined)    schedule_elems=[];
+						schedule_elems.push(other_schedule_elem);
+						var data_id=day+"_"+next_position;
+						var next_schedule_map=day_top.children("div[data-id=\""+data_id+"\"]");
+						var next_schedule=next_schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+						if(BLOCK_NUM > next_position && 1>next_schedule.size()) return schedule_elems;
+						return arguments.callee.call(next_schedule,next_position,schedule_elems);
+					}
+
+					// move to next map element.
+					var __moveToNextElement=function(){
+
+						var schedule=this;
+						var schedule_map=schedule.parent();
+						var schedule_id=schedule.attr("data-schedule-id");
+						var day_top=schedule_map.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+						var day=day_top.attr("data-time");
+						var position=schedule_map.attr("data-id").split("_")[1];
+						var next_position=parseInt(position)+1;
+						var next_schedule_map=day_top.children("div[data-id=\""+(day+"_"+next_position)+"\"]");
+						schedule.prependTo(next_schedule_map);
+						schedule.css("z-index",0);
+
+						return {
+
+							"schedule_id":schedule_id,
+							"from":position,
+							"to"  :next_position,
+							"day" :day
+						}
+					}
+
+					var schedule_id=touch_element.attr("data-schedule-id");
+					var other_schedule_elem=current_schedules.filter(":not(div[data-schedule-id=\""+schedule_id+"\"])");
+
+					try{
+
+						var move_history;
+						var target_move_elems=__targetMoveElements.call(other_schedule_elem);
+						for(var i in target_move_elems){
+
+							if(!target_move_elems.hasOwnProperty(i)) continue;
+							move_history=__moveToNextElement.call(target_move_elems[i]);
+							move_histories.push(move_history);
+						}
+
+					}catch(e){
+
+						reset.call(touch_element,start_block_map_id);
+						var message=e.message;
+						__alert(message);
+						return;
+					}
+				}
+
+				touch_element.css("z-index",0);
+
+				//■move history.
+				var start_map_details=manageCurrentTouchElem().startBlockId.split("_");
+				var schedule_id=touch_element.attr("data-schedule-id");
+				var prev_date=start_map_details[0];
+				var start_position =start_map_details[1];
+				var current_date=current_block_map_id.split("_")[0];
+
+				if(!is_same_position){
+
+					var start_left_side_id =manageCurrentTouchElem().startLeftSideId;
+					cacheData().get(CACHE_UNDO_ACTION).undo.push({
+
+						"type"              :"move",
+						"start_left_side_id":start_left_side_id,
+						"prev_date"         :prev_date,
+						"position"          :start_position,
+						"schedule_id"       :schedule_id
+					});
+				}
+
+				if(is_same_position){
+
+					// 履歴取得
+					var start_left_side_id =manageCurrentTouchElem().startLeftSideId;
+					cacheData().get(CACHE_UNDO_ACTION).undo.push({
+
+						"type":"move_multi",
+						"main":{
+
+							"start_left_side_id":start_left_side_id,
+							"prev_date"         :prev_date,
+							"position"          :start_position,
+							"schedule_id"       :schedule_id
+						},
+						"multi":move_histories
+					});
+				}
+
+				priceHiddenByPostionningDiffrentDay.call(touch_element,current_date);
+				updateRoomRestCount.call(schedule_top,prev_date   ,effect_room_max_count);
+				updateRoomRestCount.call(schedule_top,current_date,effect_room_max_count);
+
+				actionUndoView.call(action_undo);
+
+				//save date history
+				var map_detail=current_map.attr("data-id").split("_");
+
+				beforeunLoadEvent();
+
+				//edit move time.
+				touch_element.attr("data-move-time",(new Date(window["today"]["today"]).getTime()));
+			}
+
+			//■reset position.
+			//■back to the position which the position started before moving to target date.
+			var reset=function(start_block_map_id){
+
+				var target=this;
+				var start_left_side_id =manageCurrentTouchElem().startLeftSideId;
+				var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+				resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+					target.css("z-index",0);
+					resetElement.call(target,start_block_map_id);
+				});
+			}
+
+			var headDateLineMouseUpEvent=function(e,s){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+
+				if(0>["room-count-span","room-count","room-count-end-span"].indexOf(type)) return;
+
+				var schedule_head=target.parents("div[data-type=\"schedule-head\"]");
+				var ymd=schedule_head.attr("data-time");
+				var ymd_split=Number(ymd).splitYmd();
+				var day_top=window["schedule_top_inner"].find("div[data-type=\""+TYPE_DAYTOP+"\"][data-time=\""+ymd+"\"]");
+				var schedules=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+				var instance=TPL.getInstance(["remodal_room_situations"]);
+				var row_tpl=instance.get_remodal_room_situations;
+
+				var getInformations=function(ymd){
+
+					var deferred=$.Deferred();
+
+					var params={};
+					params["ymd"]=ymd;
+					apiGeoRequests.getRoomSituation(params,function(status,res){
+
+						var room_situations=res["data"]["room_situations"];
+						deferred.resolve(room_situations);
+					});
+	
+					return deferred.promise();
+				}
+
+				var useRoomIDs=function(informations){
+
+					var deferred=$.Deferred();
+
+					var room_ids=[];
+					schedules.each(function(){
+
+						var room_id=$(this).parent().attr("data-room-id");
+						room_ids.push(room_id);
+					});
+
+					return deferred.resolve(informations,room_ids);
+				}
+
+				var setLayouts=function(informations,room_ids){
+
+					var deferred=$.Deferred();
+
+					var fragment=document.createDocumentFragment();
+					var room;
+					var situation;
+					var is_select;
+					var room_remarks;
+					var bgcolor;
+					var fontcolor;
+					var elements={};
+					var situation_id;
+					var situation_inspected  ="<?php echo K9MasterRoomSituation::$SITUATION_INSPECTED; ?>";
+					var situation_unavailable="<?php echo K9MasterRoomSituation::$SITUATION_UNAVAILABLE; ?>";
+					var schedule_block;
+					var schedule;
+					var reserve_id;
+					var schedule_id;
+					var information;
+
+					for(var room_id in informations){
+					
+						room=informations[room_id]["room"];
+						situation=informations[room_id]["situation"];
+						situation_id=situation["situation_id"];
+						is_select=room_ids.indexOf(room_id)>-1;
+
+						switch(true){
+						
+							case([situation_inspected,situation_unavailable].indexOf(situation_id)>-1):
+								room_remarks=situation["remarks"];
+								break;
+							default:
+								room_remarks=situation["remarks"];
+								break;
+						}
+
+						room_remarks=room_remarks.length>0?room_remarks:"&nbsp;";
+						bgcolor  =is_select?"rgba(0,0,0,0.3)":situation["bgcolor"];
+						fontcolor=is_select?"rgba(255,255,255,1)":situation["fontcolor"];
+						html=instance.replaceTPL(row_tpl,{
+						
+							"room_num"             :room["room_num"],
+							"room_floor"           :room["room_floor"],
+							"room_type"            :room["room_type"],
+							"room_situation"       :situation["situation"],
+							"room_remark"          :room_remarks,
+							"bg_color"             :bgcolor,
+							"font_color"           :fontcolor
+						});
+
+						//append.
+						elements[parseInt(room_id)]=$(html);
+						for(var room_id in elements) fragment.appendChild(elements[room_id].get(0));
+					}
+
+					return deferred.resolve(fragment);
+				}
+
+				getInformations(ymd).
+				then(useRoomIDs).
+				then(setLayouts).
+				done(function(fragment){
+
+					var view_ymd=viewYmd(ymd_split[0],ymd_split[1],ymd_split[2]);
+					var main_title="<?php echo __("空室状況"); ?>("+view_ymd+")";
+					var message=fragment;
+					remodalAlert("available_room",main_title,message,{
+				
+						"yes"  :function(){},
+						"no"   :function(){},
+						"close":function(){}
+					});
+				});
+				return;
+			}
+
+			var headLineMouseUpEvent=function(e,s){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+
+				if(is_sp){
+
+					var allow_point=ALLOW_MOVE_TOUCH_POINT;
+					var diff_y=Math.abs(Math.abs(getPageY(e))-Math.abs(s["startPageY"]));
+					var diff_x=Math.abs(Math.abs(getPageX(e))-Math.abs(s["startPageX"]));
+					if(diff_x>allow_point || diff_y>allow_point) return;
+				}
+
+				if(type==BTN_ACTION_UNDO_SPAN){
+
+					target=target.parent();
+					actionUndo.call(target);
+					return;
+				}
+
+				if(type==BTN_ACTION_FORWARD_SPAN){
+
+					target=target.parent();
+					actionForward.call(target);
+					return;
+				}
+
+				if(type==BTN_ACTION_UNDO){
+
+					actionUndo.call(target);
+					return;
+				}
+
+				if(type==BTN_ACTION_FORWARD){
+
+					actionForward.call(target);
+					return;
+				}
+
+				if(type==TYPE_SCHEDULE_DAY_BTN){
+
+					var data_url=target.attr("data-url");
+					var day_tops=window["schedule_top_inner"].find("div[data-type=\""+TYPE_DAYTOP+"\"]:visible");
+					var start_date=day_tops.eq(0).attr("data-time");
+					var url=BASE_URL+data_url+"/"+start_date;
+
+					if(isScheduleEdit()){
+
+						var main_title="<?php echo __("お知らせ"); ?>";
+						var message="<?php echo __("予約情報が更新されています"); ?><br />";
+						message+="<?php echo __("他のページへ遷移致しますか？"); ?>";
+						remodalAlert("modal",main_title,message,{
+					
+							"yes"  :function(){
+
+								$(window).off("beforeunload");
+								location.href=url;
+							},
+							"no"   :function(){},
+							"close":function(){}
+						});
+						return;
+					}
+
+					$(window).off("beforeunload");
+					location.href=url;
+					return;
+				}
+
+				if(type==TYPE_SCHEDULE_WEEK_BTN){
+
+					var data_url=target.attr("data-url");
+					var day_tops=window["schedule_top_inner"].find("div[data-type=\""+TYPE_DAYTOP+"\"]:visible");
+					var start_date=day_tops.eq(0).attr("data-time");
+					var start_date_ary=Number(start_date).splitYmd();
+					var url=BASE_URL+data_url+"/"+start_date_ary[0]+start_date_ary[1];
+
+					if(isScheduleEdit()){
+
+						var main_title="<?php echo __("お知らせ"); ?>";
+						var message="<?php echo __("予約情報が更新されています"); ?><br />";
+						message+="<?php echo __("他のページへ遷移致しますか？"); ?>";
+						remodalAlert("modal",main_title,message,{
+					
+							"yes"  :function(){
+
+								$(window).off("beforeunload");
+								location.href=url;
+							},
+							"no"   :function(){},
+							"close":function(){}
+						});
+						return;
+					}
+
+					$(window).off("beforeunload");
+					location.href=url;
+					return;
+				}
+
+				if(type==TYPE_SCHEDULE_MONTH_BTN){
+
+					var data_url=target.attr("data-url");
+					var day_tops=window["schedule_top_inner"].find("div[data-type=\""+TYPE_DAYTOP+"\"]:visible");
+					var start_date=day_tops.eq(0).attr("data-time");
+					var start_date_ary=Number(start_date).splitYmd();
+					var url=BASE_URL+data_url+"/"+start_date_ary[0]+start_date_ary[1];
+
+					if(isScheduleEdit()){
+
+						var main_title="<?php echo __("お知らせ"); ?>";
+						var message="<?php echo __("予約情報が更新されています"); ?><br />";
+						message+="<?php echo __("他のページへ遷移致しますか？"); ?>";
+						remodalAlert("modal",main_title,message,{
+					
+							"yes"  :function(){
+
+								$(window).off("beforeunload");
+								location.href=url;
+							},
+							"no"   :function(){},
+							"close":function(){}
+						});
+						return;
+					}
+
+					$(window).off("beforeunload");
+					location.href=url;
+					return;
+				}
+
+				if([BTN_SCHEDULE_PREV_BUTTON,BTN_SCHEDULE_PREV_BUTTON_SPAN].indexOf(type)>-1){
+
+						scheduleBtnLeftEvent(e,1,function(){
+
+								setCurrentDay();
+						});
+						return;
+				}
+
+				if([BTN_SCHEDULE_NEXT_BUTTON,BTN_SCHEDULE_NEXT_BUTTON_SPAN].indexOf(type)>-1){
+
+						scheduleBtnRightEvent(e,1,function(){
+
+								setCurrentDay();
+						});
+						return;
+				}
+
+				if([BTN_SCHEDULE_WEEK_PREV_BUTTON,BTN_SCHEDULE_WEEK_PREV_BUTTON_SPAN].indexOf(type)>-1){
+
+						scheduleBtnLeftEvent(e,7,function(){
+
+								setCurrentDay();
+						});
+						return;
+				}
+
+				if([BTN_SCHEDULE_WEEK_NEXT_BUTTON,BTN_SCHEDULE_WEEK_NEXT_BUTTON_SPAN].indexOf(type)>-1){
+
+						scheduleBtnRightEvent(e,7,function(){
+
+								setCurrentDay();
+						});
+						return;
+				}
+			};
+
+			var mouseUpEventLeftSide=function(e,callback){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+
+				if(type=="credit-select"){
+
+					<?php if(!SETTING_EDIT){ ?>
+		
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					callback();
+					return;
+		
+					<?php } ?>
+
+
+					if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+						__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+						callback();
+						return;
+					}
+
+					contextActions.checkAuthority(limited_second).then(function(status){
+					
+						if(!status){
+
+							callback();
+							return;
+						}
+
+						var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+						var schedule_id      =schedule_site_box.attr("data-schedule-id");
+						var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+						var reservation_hash=informations[schedule_id]["reservation"]["hash"];
+						var reserve_id=informations[schedule_id]["reservation"]["id"];
+						creditSituation(reservation_hash,reserve_id);
+						callback();
+					});
+					return;
+				}
+
+
+				if(type=="meal-select"){
+
+					<?php if(!SETTING_EDIT){ ?>
+
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					callback();
+					return;
+
+					<?php } ?>
+
+					if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+						__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+						callback();
+						return;
+					}
+
+					contextActions.checkAuthority(limited_second).then(function(status){
+					
+						if(!status){
+
+							callback();
+							return;
+						}
+
+						var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+						var reserve_id       =schedule_site_box.attr("data-reservation-id");
+						var guest_id         =schedule_site_box.attr("data-guest-id");
+						var ymd              =schedule_site_box.attr("data-time");
+						var schedule_id      =schedule_site_box.attr("data-schedule-id");
+						var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+						var reservation_hash=informations[schedule_id]["reservation"]["hash"];
+
+						mealSetting.call(target,reservation_hash);
+						callback();
+					});
+					return;
+				}
+
+				if(type=="diposit-invoice"){
+
+					<?php if(!SETTING_EDIT){ ?>
+
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					callback();
+					return;
+
+					<?php } ?>
+
+					var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+					var schedule_id      =schedule_site_box.attr("data-schedule-id");
+					var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+					var reservation_hash=informations[schedule_id]["reservation"]["hash"];
+					invoiceDiposit(reservation_hash);
+
+					callback();
+					return;
+				}
+
+				if(type=="price-invoice"){
+
+					<?php if(!SETTING_EDIT){ ?>
+
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					callback();
+					return;
+
+					<?php } ?>
+
+					var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+					var schedule_id      =schedule_site_box.attr("data-schedule-id");
+					var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+					var reservation_hash=informations[schedule_id]["reservation"]["hash"];
+
+					invoiceRecode(reservation_hash);
+					callback();
+					return;
+				}
+
+				if(type=="reservation-checkin"){
+
+					<?php if(!SETTING_EDIT){ ?>
+
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					callback();
+					return;
+
+					<?php } ?>
+
+					if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+					
+						__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+						callback();
+						return;
+					}
+
+					var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+					var reserve_id       =schedule_site_box.attr("data-reservation-id");
+					var guest_id         =schedule_site_box.attr("data-guest-id");
+					var schedule_id      =schedule_site_box.attr("data-schedule-id");
+					var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+					var reservation_hash=informations[schedule_id]["reservation"]["hash"];
+					var staytype=informations[schedule_id]["reservation"]["staytype"];
+					viewCheckinRemodal.call(schedule_site_box,reserve_id,reservation_hash,function(status,message){
+
+						if(!status){
+						
+							__alert(message);
+							return;
+						}
+
+						scheduleReload();
+
+					});
+
+					callback();
+					return;
+				}
+
+				if(type=="reservation-already-checkout"){
+				
+					__alert("<?php echo __("チェックアウト済み"); ?>");
+					callback();
+					return;
+				}
+
+				if(type=="reservation-checkout"){
+
+					<?php if(!SETTING_EDIT){ ?>
+
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					callback();
+					return;
+
+					<?php } ?>
+
+					if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+						__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+						callback();
+						return;
+					}
+
+					var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+					var reserve_id       =schedule_site_box.attr("data-reservation-id");
+					var guest_id         =schedule_site_box.attr("data-guest-id");
+					var schedule_id      =schedule_site_box.attr("data-schedule-id");
+					var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+					var reservation_hash=informations[schedule_id]["reservation"]["hash"];
+					viewCheckoutRemodal.call(schedule_site_box,reserve_id,reservation_hash,function(status,data){
+
+						if(!status){
+						
+							__alert(data);
+							return;
+						}
+
+						afterCheckoutSettings(reservation_hash,data);
+					});
+
+					callback();
+					return;
+				}
+
+				if(type=="guest-info"){
+
+					var site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+					var schedule_id=site_box.attr("data-schedule-id");
+					var all_reservation_info=cacheData().get(CACHE_SCHEDULE_INFO);
+					var guest_hash=all_reservation_info[schedule_id]["guest"]["hash"];
+
+					guestInfo.call(target,guest_hash);
+					callback();
+					return;
+				}
+
+				if(type=="price-total"){
+
+					var site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+					var schedule_id=site_box.attr("data-schedule-id");
+					var all_reservation_info=cacheData().get(CACHE_SCHEDULE_INFO);
+					var reservation_hash=all_reservation_info[schedule_id]["reservation"]["hash"];
+					priceTotal.call(target,reservation_hash);
+					callback();
+					return;
+				}
+
+				if(type=="schedule-reservation-edit-btn"){
+
+					<?php if(!SETTING_EDIT){ ?>
+
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					callback();
+					return;
+
+					<?php } ?>
+
+					if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+		
+						__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+						callback();
+						return;
+					}
+
+					var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+					var ymd=schedule_site_box.attr("data-time");
+					var schedule_id      =schedule_site_box.attr("data-schedule-id");
+					var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+					var reservation_hash=informations[schedule_id]["reservation"]["hash"];
+					var base_url="<?php echo "K9Reservation".DS."index".DS; ; ?>";
+
+					var params=[];
+					params.push(informations[schedule_id]["room"]["id"]);
+					params.push(ymd);
+					params.push(reservation_hash);
+					base_url+=params.join("/");
+					location.href=base_url;
+					return;
+				}
+
+				if(type=="purchase-search-cancel"){
+
+					var day_tops=window["schedule_top_inner"].children("div[data-type=\""+TYPE_DAYTOP+"\"]");
+					var schedules=day_tops.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+					purchaseOpacityEnable(schedules);
+
+					var parent=target.parent();
+					allCancelSearchButtons.call(parent,undefined,undefined,undefined);	
+
+					callback();
+					return;
+				}
+
+				if(type=="booking-search"){
+
+					var bookingnum=window.prompt('<?php echo __("Booking Numberを入力して下さい"); ?>')
+					if(!bookingnum){
+					
+						//no answer.
+						callback();
+						return;
+					}
+
+					bookingnum=bookingnum.trim();
+					if(1>bookingnum.length){
+					
+						callback();
+						return;
+					}
+
+					var day_tops=schedule_top_inner.children("div[data-type=\""+TYPE_DAYTOP+"\"]").filter(function(){
+					
+						return $(this).isDisplay();
+					});
+
+					var current_day=day_tops.eq(0).attr("data-time");
+
+					//■権限再確認
+					var params={"data":{}};
+					params["data"]["bookingnum"]=bookingnum;
+					params["data"]["current_day"]=current_day;
+					apiGeoRequests.searchWithBookingNum(params,function(status,res){
+
+						if(!status){
+						
+							alert(res["message"]);
+							callback();
+							return;
+						}
+
+						var start_day =res["data"]["date"]["start_day"];
+						var day_diff  =res["data"]["date"]["day_diff"];
+						var reserve_id=res["data"]["reservation"]["id"];
+
+						var move=function(day_diff,callback){
+
+							switch(true){
+							
+								case(day_diff>0):
+									scheduleBtnRightEvent(null,day_diff,function(){ callback(); });
+									break;
+								case(0>day_diff):
+									scheduleBtnLeftEvent(null,Math.abs(day_diff),function(){ callback(); });
+									break;
+								default:
+									callback();
+									break;
+							}
+						}
+
+						move(day_diff,function(){
+
+							window["schedule_top_inner"].scrollTop(0);
+							var day_top=window["schedule_top_inner"].children("div[data-type=\""+TYPE_DAYTOP+"\"][data-time=\""+start_day+"\"]");
+							var target=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"][data-reservation-id=\""+reserve_id+"\"]");
+							var scroll_top=Math.abs(target.offset().top-window["schedule_head"].offset().top-target.height()-10);
+							window["schedule_top_inner"].scrollTop(scroll_top);
+							callback();
+						});
+
+						return;
+					});
+					return;
+				}
+
+				if(type=="purchase-search"){
+
+					var purchase_flg=0;
+					var day_tops=window["schedule_top_inner"].children("div[data-type=\""+TYPE_DAYTOP+"\"]");
+					var schedules=day_tops.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+
+					purchaseOpacityEnable(schedules);
+					purchaseOpacityEnable(schedules,purchase_flg);
+
+					var parent=target.parents("div[data-type=\"room-search-buttons\"]");
+					allCancelSearchButtons.call(parent,purchase_flg);	
+
+					callback();
+					return;
+				}
+	
+				if(type==BTN_ACTION_START){
+
+					<?php if(!SETTING_EDIT){ ?>
+
+					__alert("<?php echo __("編集する権限がありません"); ?>");
+					callback();
+					return;
+
+					<?php } ?>
+
+					var action_button=window["schedule_action_button"];
+					actionActionStart.call(action_button,user_id,function(){
+					
+						callback();
+					});
+					return;
+				}
+
+				if(type==BTN_ACTION_SAVE){
+
+					if(!isScheduleEdit()){
+
+						contextActions.checkAuthority(limited_second).then(function(status){
+
+							actionActionInitSave(user_id,function(){
+
+								cacheData().get(CACHE_UNDO_ACTION).undo=[];
+								cacheData().get(CACHE_UNDO_ACTION).forward=[];
+								actionForwardView.call(action_forward);
+								actionUndoView.call(action_undo);
+								callback();
+							});
+						});
+						return;
+					}
+
+					actionActionSave(function(){
+					
+						callback();
+					});	
+					return;
+				}
+
+				callback();
+			}
+
+			var allLeftSideEvents=function(){
+
+				var target=this;
+
+				if(is_sp){
+
+					var start="mousedown";
+					if(is_sp) start="touchstart";
+					target.off(start).one(start,function(e){
+
+						var self=$(this);
+						var fn=arguments.callee;
+						self.data("e",e);
+						self.one(e.type,fn);
+					});
+				}
+
+				var end="mouseup";
+				if(is_sp) end="touchend";
+				target.off(end).one(end,function(e){
+
+					var self=$(this);
+					var fn=arguments.callee;
+
+					if(is_sp){
+
+						var start_event=self.data("e");
+						if(isDiffPageXY(start_event,e,ALLOW_MOVE_TOUCH_POINT)){
+
+							self.one(e.type,fn);
+							return;
+						}
+					}
+
+					mouseUpEventLeftSide(e,function(){
+
+						self.one(e.type,fn);
+					});
+
+					return true;
+				});
+			}
+
+			var scheduleMouseDownEvent=function(e,options,callback){
+
+				var self=this;
+				var touch_element=$(e.target);
+				var type=touch_element.attr("data-type");
+
+				var t1=TYPE_SCHEDULE_BLOCK;
+				var schedule_map=(checkScheduleBlockElem(type)?touch_element:touch_element.parents("div[data-type=\""+t1+"\"]"));
+				if(1>schedule_map.size()){
+
+					callback();
+					return;
+				}
+
+				var data_id=schedule_map.attr("data-id");
+				self.data("data_id",data_id);
+
+				var t3=TYPE_UNAVAILABLE_SCHEDULE;
+				var unavailable_schedule=schedule_map.children("div[data-type=\""+t3+"\"]");
+				if(unavailable_schedule.size()>0){
+
+					var current_date=schedule_map.parent().attr("data-time");
+					replaceSideScheduleEmpty.call(schedule_aside,current_date);
+					callback();
+					return;
+				}
+
+				var t2=TYPE_SCHEDULE;
+				var schedule=schedule_map.children("div[data-type=\""+t2+"\"]");
+				var is_schedule=(schedule.size()>0 && schedule.is(":visible"));
+
+				if(!is_schedule){
+
+					callback();
+					return;
+				}
+
+				//■例外の処理(テキストドラッグによる誤動作により)
+				if(schedule_map.children("div[data-type=\""+t1+"\"]").size()>1){
+
+					var data_id=schedule_map.attr("data-id");
+					reset.call(schedule,data_id);
+					callback();
+					return;
+				}
+
+				//■select reserve_id for sp of touch event.
+				var reserve_id=schedule.attr("data-reservation-id");
+				var select_reserve_ids=self.data("select_reserve_id");
+				select_reserve_ids=(select_reserve_ids==undefined?[]:select_reserve_ids);
+				if(0>select_reserve_ids.indexOf(reserve_id)) select_reserve_ids.push(reserve_id);
+				self.data("select_reserve_id",select_reserve_ids);
+
+				var reserve_id=schedule.attr("data-reservation-id");
+				var schedule_day_top=schedule_map.parent();
+				schedule_top_inner.find("div[data-reservation-id=\""+reserve_id+"\"]").css("opacity","0.6");
+
+				//■register the element touched.
+				manageTouch().register(schedule);
+
+				//■register the map's id.
+				var current_map_id=manageCurrentTouchElem().register(schedule).getScheduleBaseBlockId();
+				manageMoveJudge().register(current_map_id);
+
+				callback();
+			}
+
+			var scheduleContentBoxMouseDownEvent=function(e,callback){
+
+				var touch_element=$(e.target);
+				var type=touch_element.attr("data-type");
+				callback();
+			}
+
+			var scheduleContentBoxMouseUpEvent=function(e,s){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+
+				var allow_point=ALLOW_MOVE_TOUCH_POINT;
+				var diff_x=Math.abs(Math.abs(getPageX(e))-Math.abs(s["startPageX"]));
+				var diff_y=Math.abs(Math.abs(getPageY(e))-Math.abs(s["startPageY"]));
+				var is_diff=(diff_x>allow_point || diff_y>allow_point);
+
+				var is_touch_on=manageTouch().isOn();
+				var touch_element=manageTouch().touchElement;
+				var is_managed=cacheData().get(MANAGED_AUTHORITY).is_managed;
+				var is_on_content_box=(target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]").size()>0);
+				if(!is_on_content_box) return;
+			}
+
+			var scheduleContentBoxEvents=function(){
+
+				var start="mousedown";
+				var move ="mousemove";
+				var end  ="mouseup";
+
+				if(is_sp){
+
+					var start="touchstart";
+					var move ="touchmove";
+					var end  ="touchend";
+				}
+
+				var target=this;
+				target.off(start).one(start,function(e){
+
+					var self=$(this);
+					var fn=arguments.callee;
+					self.data("e",e);
+					scheduleContentBoxMouseDownEvent(e,function(){
+
+						self.one(e.type,fn);
+					});
+					return true;
+				});
+
+				target.off(end).on(end,function(e){
+
+					var target=$(this);
+					var start=target.data("e");
+					var start_position_id=-1;
+
+					if(!start || start["target"]==undefined || !(start instanceof jQuery.Event)) return;
+					var schedule_map=$(start.target).parents("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+					if(schedule_map.size()>0) start_position_id=schedule_map.attr("data-id").split("_")[1];
+
+					target.removeData("e");
+					scheduleContentBoxMouseUpEvent(e,{
+
+						"startPageX":getPageX(start),
+						"startPageY":getPageY(start)
+					});
+
+					return false;
+				});
+			}
+
+			var scheduleBlockEvents=function(){
+
+				var start="mousedown";
+				var move ="mousemove";
+				var end  ="mouseup";
+
+				if(is_sp){
+
+					var start="touchstart";
+					var move ="touchmove";
+					var end  ="touchend";
+				}
+
+				var target=this;
+				target.off(start).one(start,function(e){
+
+					var target=$(this);
+					var schedule_map=$(e.target);
+					var type=schedule_map.attr("data-type");
+					var fn=arguments.callee;
+					var tap_timer=target.data("tap_timer");
+					var day_top=schedule_map.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+					var start_day=day_top.attr("data-time");
+
+					var touch_num=1;
+					if(is_sp) touch_num=e.originalEvent.touches.length;
+
+					if(tap_timer!=undefined) clearInterval(tap_timer);
+					target.data("e",e);
+					target.data("current_event",e);
+					target.data("start_time",new Date(window["today"]["today"]).getTime());
+					target.data("touch_num",touch_num);
+					target.data("start_day",start_day);
+					manageTouch().clear();
+
+					scheduleMouseDownEvent.call(target,e,{"touchNum":touch_num},function(){
+
+						target.one(e.type,fn);
+					});
+
+					if(is_smart) return true;
+					if((touch_num>1) || (is_tablet && !cacheData().get(MANAGED_AUTHORITY).is_managed)) return true;
+
+					if(is_tablet){
+
+						var t1=TYPE_SCHEDULE_BLOCK;
+						var schedule_map=(checkScheduleBlockElem(type)?schedule_map:schedule_map.parents("div[data-type=\""+t1+"\"]"));
+						if(schedule_map.children("div[data-type=\""+TYPE_SCHEDULE+"\"]").size()>0) return false;
+					}
+
+					return true;
+				});
+
+				target.off(end).on(end,function(e){
+
+					var target=$(this);
+					var start=target.data("e");
+					var start_position_id=-1;
+					var touch_num=target.data("touch_num");
+					var select_reserve_ids=target.data("select_reserve_id");
+					var last_move_data_id=target.data("data_id");
+					var tap_timer=target.data("tap_timer");
+					if(tap_timer!=undefined) clearTimeout(tap_timer);
+
+					target.removeData("e");
+					target.removeData("current_event");
+					target.removeData("start_day");
+					target.removeData("touch_num");
+					target.removeData("select_reserve_id");
+					target.removeData("data_id");
+					target.removeData("start_time");
+					target.removeData("tap_timer");
+
+					if(!start || !start["target"] || !(start instanceof jQuery.Event)) return false;
+
+					var start_date=0;
+					var start_elem=$(start.target);
+					var schedule_map=start_elem.parents("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+					if(schedule_map.size()>0){
+
+						start_position_id=schedule_map.attr("data-id").split("_")[1];
+						start_date=schedule_map.parent().attr("data-time");
+					}
+
+					var start_reserve_id=-1;
+					if(checkScheduleTargetElem(start_elem.attr("data-type"))) start_reserve_id=start_elem.attr("data-reservation-id");
+					scheduleMouseUpEvent.call(target,e,{
+
+						"startDate"      :start_date,
+						"startPositionID":start_position_id,
+						"startSelectReserveIDs":select_reserve_ids,
+						"startPageX":getPageX(start),
+						"startPageY":getPageY(start),
+						"lastMoveDataId":last_move_data_id,
+						"touchNum":touch_num
+					});
+
+					return true;
+				});
+			}
+
+			var scheduleHeadDateLineEvents=function(){
+
+				var start="mousedown";
+				var move ="mousemove";
+				var end  ="mouseup";
+
+				if(is_sp){
+
+					var start="touchstart";
+					var move ="touchmove";
+					var end  ="touchend";
+				}
+
+				var target=this;
+				target.off(end).on(end,function(e){
+
+					var target=$(this);
+					var start=target.data("e");
+
+					if(!start || start["target"]==undefined || !(start instanceof jQuery.Event)) return;
+
+					target.removeData("e");
+					headDateLineMouseUpEvent(e,{
+
+						"startPageX":getPageX(start),
+						"startPageY":getPageY(start)
+					});
+					return true;
+				});
+
+				target.off(start).one(start,function(e){
+
+					var self=$(this);
+					var fn=arguments.callee;
+					self.data("e",e);
+					self.one(e.type,fn);
+					return true;
+				});
+			}
+
+			var scheduleHeadEvents=function(){
+
+				var start="mousedown";
+				var move ="mousemove";
+				var end  ="mouseup";
+
+				if(is_sp){
+
+					var start="touchstart";
+					var move ="touchmove";
+					var end  ="touchend";
+				}
+
+				var target=this;
+				target.off(end).on(end,function(e){
+
+					var target=$(this);
+					var start=target.data("e");
+
+					if(!start || start["target"]==undefined || !(start instanceof jQuery.Event)) return;
+
+					target.removeData("e");
+					headLineMouseUpEvent(e,{
+
+						"startPageX":getPageX(start),
+						"startPageY":getPageY(start)
+					});
+					return true;
+				});
+
+				target.off(start).one(start,function(e){
+
+					var self=$(this);
+					var fn=arguments.callee;
+
+					self.data("e",e);
+					self.one(e.type,fn);
+					return true;
+				});
+			};
+
+			//■move to map element.
+			var resetElement=function(start_map_id,callback){
+
+				var touch_element=this;
+				var schedule_map=schedule_top_inner.find("div[data-id=\""+start_map_id+"\"]");
+				schedule_map.append(touch_element);
+				if(!$.isFunction(callback)) return;
+				touch_element.ready(function(){
+
+					callback();
+				});
+			}
+
+			//■reset the schedule before elements was moved.
+			var resetMapElement=function(start_left_side_id,current_left_side_id,callback){
+
+				//■when same position.
+				if(current_left_side_id==start_left_side_id){
+
+					callback(0);
+					return;
+				}
+
+				//■time difference.
+				var diff=Number(current_left_side_id).diffDate(start_left_side_id);
+
+				//■move to left.
+				if(current_left_side_id>start_left_side_id){
+
+					scheduleBtnLeftEvent(null,diff,function(){
+
+						callback(1);
+					});
+					return;
+				}
+
+				//■move to right.
+				scheduleBtnRightEvent(null,diff,function(){
+
+					callback(-1);
+				});
+			}
+
+			var actionForward=function(){
+
+					var action_forward=this;
+					var forward_histories=cacheData().get(CACHE_UNDO_ACTION).forward;
+					var fn=arguments.callee;
+
+					var methods={};
+					methods["paste"]=function(forward_history){
+
+						var date=forward_history["day"];
+						var position=forward_history["position"];
+						var start_left_side_id=forward_history["start_left_side_id"];
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+						var tmp_schedule_id=forward_history["tmp_schedule_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var start_block_map_id=date+"_"+position;
+							var day_top=schedule_top_inner.find("div[data-type=\""+TYPE_DAYTOP+"\"][data-time=\""+date+"\"]");
+							var current_schedule=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"][data-schedule-id=\""+tmp_schedule_id+"\"]");
+							if(1>current_schedule.size() || current_schedule.is(":visible")){
+
+								if(forward_histories.length>0) fn.call(action_forward);
+								return;
+							}
+
+							current_schedule.show();
+							updateRoomRestCount.call(schedule_top,date,effect_room_max_count);
+
+							cacheData().get(CACHE_UNDO_ACTION).undo.push(forward_history);
+							actionForwardView.call(action_forward);
+							actionUndoView.call(action_undo);
+							beforeunLoadEvent();
+						});
+					};
+
+					methods["site_remove"]=function(forward_history){
+
+						var start_left_side_id=forward_history["start_left_side_id"];
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+						var reserve_id=forward_history["reserve_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var schedule_ids=cacheData().get(CACHE_SITE_REMOVE_VALUE).schedules[reserve_id];
+
+							var selectors=[];
+							for(var i in schedule_ids){
+
+								var schedule_id=schedule_ids[i];
+								selectors.push("div[data-type=\""+TYPE_SCHEDULE+"\"][data-schedule-id=\""+schedule_id+"\"]:visible");
+							}
+
+							var schedules=schedule_top_inner.find(selectors.join(","));
+							schedules.each(function(){
+
+								var schedule=$(this);
+								var day_top=schedule.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+								var day=day_top.attr("data-time");
+								schedule.hide();
+								updateRoomRestCount.call(schedule_top,day,effect_room_max_count);
+							});
+
+							cacheData().get(CACHE_SITE_REMOVE_VALUE).reserve_ids.push(reserve_id);
+							cacheData().get(CACHE_UNDO_ACTION).undo.push(forward_history);
+							actionForwardView.call(action_forward);
+							actionUndoView.call(action_undo);
+						});
+					}
+
+					methods["remove"]=function(forward_history){
+
+						var date=forward_history["day"];
+						var position=forward_history["position"];
+						var start_left_side_id=forward_history["start_left_side_id"];
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+						var schedule_id=forward_history["schedule_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var start_block_map_id=date+"_"+position;
+							var day_top=schedule_top_inner.find("div[data-type=\""+TYPE_DAYTOP+"\"][data-time=\""+date+"\"]");
+							var current_schedule=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"][data-schedule-id=\""+schedule_id+"\"]");
+
+							if(1>current_schedule.size() || !current_schedule.is(":visible")){
+
+								if(forward_histories.length>0) fn.call(action_forward);
+								return;
+							}
+
+							current_schedule.hide();
+							updateRoomRestCount.call(schedule_top,date,effect_room_max_count);
+
+							cacheData().get(CACHE_UNDO_ACTION).undo.push(forward_history);
+							actionForwardView.call(action_forward);
+							actionUndoView.call(action_undo);
+							beforeunLoadEvent();
+						});
+					};
+
+					methods["move_multi"]=function(forward_history){
+
+						var main=forward_history["main"];
+						var multi=forward_history["multi"];
+
+						var t1=TYPE_SCHEDULE;
+						var touch_element=schedule_top_inner.find("div[data-type=\""+t1+"\"][data-schedule-id=\""+main["schedule_id"]+"\"]");
+						var current_map_id=touch_element.parent().attr("data-id");
+						var current_map_details=current_map_id.split("_");
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+						var schedule_id=main["schedule_id"];
+						var current_date=current_map_details[0];
+						var current_position=current_map_details[1];
+						var prev_date=main["prev_date"];
+
+						var start_left_side_id=main["start_left_side_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var t1=TYPE_SCHEDULE;
+							var touch_element=schedule_top_inner.find("div[data-type=\""+t1+"\"][data-schedule-id=\""+main["schedule_id"]+"\"]");
+							var start_block_map_id=main["prev_date"]+"_"+main["position"];
+							var map_detail=start_block_map_id.split("_");
+
+							//before after.
+							beforeunLoadEvent();
+
+							touch_element.css("z-index",0);
+							resetElement.call(touch_element,start_block_map_id,function(){
+
+								priceHiddenByPostionningDiffrentDay.call(touch_element,map_detail[0]);
+								updateRoomRestCount.call(schedule_top,current_date,effect_room_max_count);
+								updateRoomRestCount.call(schedule_top,prev_date,effect_room_max_count);
+
+								var undo_cache={};
+								undo_cache["type"]="move_multi";
+								undo_cache["main"]={};
+								undo_cache["main"]["start_left_side_id"]=current_left_side_id;
+								undo_cache["main"]["prev_date"]  =current_date;
+								undo_cache["main"]["position"]   =current_position;
+								undo_cache["main"]["schedule_id"]=schedule_id;
+								undo_cache["multi"]=[];
+								for(var i in multi){
+
+									if(!multi.hasOwnProperty(i)) continue;
+									var day =multi[i]["day"];
+									var to  =multi[i]["from"];
+									var from=multi[i]["to"];
+									var to_map_id=day+"_"+to;
+									var from_map_id=day+"_"+from;
+									var schedule_map=schedule_top_inner.find("div[data-id=\""+from_map_id+"\"]");
+									var schedule=schedule_map.children("div[data-schedule-id=\""+multi[i]["schedule_id"]+"\"]");
+									resetElement.call(schedule,to_map_id,function(){
+
+										priceHiddenByPostionningDiffrentDay.call(schedule,day);
+									});
+
+									undo_cache["multi"].push({
+
+										"schedule_id":multi[i]["schedule_id"],
+										"from":multi[i]["to"],
+										"to"  :multi[i]["from"],
+										"day" :day
+									});
+								}
+
+								cacheData().get(CACHE_UNDO_ACTION).undo.push(undo_cache);
+
+								actionForwardView.call(action_forward);
+								actionUndoView.call(action_undo);
+
+								// before after.
+								beforeunLoadEvent();
+							});
+						});
+					}
+
+					methods["move"]=function(forward_history){
+
+						var t1=TYPE_SCHEDULE;
+						var touch_element=schedule_top_inner.find("div[data-type=\""+t1+"\"][data-schedule-id=\""+forward_history["schedule_id"]+"\"]");
+						var current_map_id=touch_element.parent().attr("data-id");
+						var current_map_details=current_map_id.split("_");
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+						var schedule_id=forward_history["schedule_id"];
+						var current_date=current_map_details[0];
+						var current_position=current_map_details[1];
+						var prev_date=forward_history["prev_date"];
+						cacheData().get(CACHE_UNDO_ACTION).undo.push({
+
+							"type"              :"move",
+							"start_left_side_id":current_left_side_id,
+							"prev_date"         :current_date,
+							"position"          :current_position,
+							"schedule_id"       :schedule_id
+						});
+
+						actionUndoView.call(action_undo);
+						actionForwardView.call(action_forward);
+
+						var start_left_side_id=forward_history["start_left_side_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var t1=TYPE_SCHEDULE;
+							var touch_element=schedule_top_inner.find("div[data-type=\""+t1+"\"][data-schedule-id=\""+forward_history["schedule_id"]+"\"]");
+							var start_block_map_id=forward_history["prev_date"]+"_"+forward_history["position"];
+							var map_detail=start_block_map_id.split("_");
+
+							//before after.
+							beforeunLoadEvent();
+
+							touch_element.css("z-index",0);
+							resetElement.call(touch_element,start_block_map_id,function(){
+
+								priceHiddenByPostionningDiffrentDay.call(touch_element,map_detail[0]);
+								updateRoomRestCount.call(schedule_top,current_date,effect_room_max_count);
+								updateRoomRestCount.call(schedule_top,prev_date,effect_room_max_count);
+							});
+						});
+					}
+
+					var forward_history=forward_histories.pop();
+					actionForwardView.call(action_forward);
+					methods[forward_history["type"]](forward_history);
+			}
+
+			var actionUndo=function(){
+
+					var action_undo=this;
+					var undo_histories=cacheData().get(CACHE_UNDO_ACTION).undo;
+					var undo_history=undo_histories.pop();
+					var fn=arguments.callee;
+
+					var methods={};
+					methods["paste"]=function(undo_history){
+
+						var date=undo_history["day"];
+						var position=undo_history["position"];
+						var start_left_side_id=undo_history["start_left_side_id"];
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+						var tmp_schedule_id=undo_history["tmp_schedule_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var start_block_map_id=date+"_"+position;
+							var day_top=schedule_top_inner.find("div[data-type=\""+TYPE_DAYTOP+"\"][data-time=\""+date+"\"]");
+							var current_schedule=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"][data-schedule-id=\""+tmp_schedule_id+"\"]");
+							if(1>current_schedule.size() || !current_schedule.is(":visible")){
+
+								//何もアクションが発生しなかった場合、次を行う
+								if(undo_histories.length>0) fn.call(action_undo);
+								return;
+							}
+
+							current_schedule.hide();
+							updateRoomRestCount.call(schedule_top,date,effect_room_max_count);
+
+							cacheData().get(CACHE_UNDO_ACTION).forward.push(undo_history);
+							actionForwardView.call(action_forward);
+							actionUndoView.call(action_undo);
+							beforeunLoadEvent();
+						});
+					};
+
+					methods["site_remove"]=function(undo_history){
+
+						var start_left_side_id=undo_history["start_left_side_id"];
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+						var reserve_id=undo_history["reserve_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var schedule_ids=cacheData().get(CACHE_SITE_REMOVE_VALUE).schedules[reserve_id];
+							var index=cacheData().get(CACHE_SITE_REMOVE_VALUE).reserve_ids.indexOf(reserve_id);
+							cacheData().get(CACHE_SITE_REMOVE_VALUE).reserve_ids.splice(index,1);
+
+							var selectors=[];
+							for(var i in schedule_ids){
+
+								var schedule_id=schedule_ids[i];
+								selectors.push("div[data-type=\""+TYPE_SCHEDULE+"\"][data-schedule-id=\""+schedule_id+"\"]:hidden");
+							}
+
+							var schedules=schedule_top_inner.find(selectors.join(","));
+							schedules.each(function(){
+
+								var schedule=$(this);
+								var day_top=schedule.parents("div[data-type=\""+TYPE_DAYTOP+"\"]");
+								var day=day_top.attr("data-time");
+								schedule.show();
+								updateRoomRestCount.call(schedule_top,day,effect_room_max_count);
+							});
+
+							cacheData().get(CACHE_UNDO_ACTION).forward.push(undo_history);
+							actionForwardView.call(action_forward);
+							actionUndoView.call(action_undo);
+						});
+					}
+
+					methods["remove"]=function(undo_history){
+
+						var date=undo_history["day"];
+						var position=undo_history["position"];
+						var start_left_side_id=undo_history["start_left_side_id"];
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+						var schedule_id=undo_history["schedule_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var start_block_map_id=date+"_"+position;
+							var day_top=schedule_top_inner.find("div[data-type=\""+TYPE_DAYTOP+"\"][data-time=\""+date+"\"]");
+							var current_schedule=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"][data-schedule-id=\""+schedule_id+"\"]");
+							if(1>current_schedule.size() || current_schedule.is(":visible")){
+
+								if(undo_histories.length>0) fn.call(action_undo);
+								return;
+							}
+
+							current_schedule.show();
+							updateRoomRestCount.call(schedule_top,date,effect_room_max_count);
+
+							cacheData().get(CACHE_UNDO_ACTION).forward.push(undo_history);
+							actionForwardView.call(action_forward);
+							actionUndoView.call(action_undo);
+							beforeunLoadEvent();
+						});
+					};
+
+					methods["move_multi"]=function(undo_history){
+
+						var main =undo_history["main"];
+						var multi=undo_history["multi"];
+
+						var t1=TYPE_SCHEDULE;
+						var touch_element=schedule_top_inner.find("div[data-type=\""+t1+"\"][data-schedule-id=\""+main["schedule_id"]+"\"]");
+						var current_map_id=touch_element.parent().attr("data-id");
+						var current_map_details=current_map_id.split("_");
+						var schedule_id=main["schedule_id"];
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+
+						var current_date=current_map_details[0];
+						var current_position=current_map_details[1];
+						var prev_date=undo_history["prev_date"];
+
+						var start_left_side_id=main["start_left_side_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							priceHiddenByPostionningDiffrentDay.call(touch_element,map_detail[0]);
+							updateRoomRestCount.call(schedule_top,current_date,effect_room_max_count);
+							updateRoomRestCount.call(schedule_top,prev_date,effect_room_max_count);
+
+							var start_block_map_id=main["prev_date"]+"_"+main["position"];
+							var map_detail=start_block_map_id.split("_");
+
+							touch_element.css("z-index",0);
+							resetElement.call(touch_element,start_block_map_id,function(){
+
+								var forward_cache={};
+								forward_cache["type"]="move_multi";
+								forward_cache["main"]={};
+								forward_cache["main"]["start_left_side_id"]=current_left_side_id;
+								forward_cache["main"]["prev_date"]  =current_date;
+								forward_cache["main"]["position"]   =current_position;
+								forward_cache["main"]["schedule_id"]=schedule_id;
+								forward_cache["multi"]=[];
+								for(var i in multi){
+
+									if(!multi.hasOwnProperty(i)) continue;
+									var day =multi[i]["day"];
+									var to  =multi[i]["from"];
+									var from=multi[i]["to"];
+									var to_map_id=day+"_"+to;
+									var from_main_id=day+"_"+from;
+									var schedule_map=schedule_top_inner.find("div[data-id=\""+from_main_id+"\"]");
+									var schedule=schedule_map.children("div[data-schedule-id=\""+multi[i]["schedule_id"]+"\"]");
+									resetElement.call(schedule,to_map_id);
+
+									forward_cache["multi"].push({
+
+										"schedule_id":multi[i]["schedule_id"],
+										"from":multi[i]["to"],
+										"to"  :multi[i]["from"],
+										"day" :day
+									});
+								}
+
+								cacheData().get(CACHE_UNDO_ACTION).forward.push(forward_cache);
+
+								actionForwardView.call(action_forward);
+								actionUndoView.call(action_undo);
+
+								// before after.
+								beforeunLoadEvent();
+							});
+						});
+					}
+
+					methods["move"]=function(undo_history){
+
+						var t1=TYPE_SCHEDULE;
+						var touch_element=schedule_top_inner.find("div[data-type=\""+t1+"\"][data-schedule-id=\""+undo_history["schedule_id"]+"\"]");
+						var current_map_id=touch_element.parent().attr("data-id");
+						var current_map_details=current_map_id.split("_");
+						var schedule_id=undo_history["schedule_id"];
+						var current_left_side_id=manageScheduleDate(schedule_head).getPreviousDate();
+
+						var current_date=current_map_details[0];
+						var current_position=current_map_details[1];
+						var prev_date=undo_history["prev_date"];
+
+						cacheData().get(CACHE_UNDO_ACTION).forward.push({
+
+							"type"              :"move",
+							"start_left_side_id":current_left_side_id,
+							"prev_date"         :current_date,
+							"position"          :current_position,
+							"schedule_id"       :schedule_id
+						});
+
+						actionForwardView.call(action_forward);
+						actionUndoView.call(action_undo);
+
+						var start_left_side_id=undo_history["start_left_side_id"];
+						resetMapElement(start_left_side_id,current_left_side_id,function(){
+
+							var start_block_map_id=undo_history["prev_date"]+"_"+undo_history["position"];
+							var map_detail=start_block_map_id.split("_");
+
+							// before after.
+							beforeunLoadEvent();
+
+							touch_element.css("z-index",0);
+							resetElement.call(touch_element,start_block_map_id,function(){
+
+								priceHiddenByPostionningDiffrentDay.call(touch_element,map_detail[0]);
+								updateRoomRestCount.call(schedule_top,current_date,effect_room_max_count);
+								updateRoomRestCount.call(schedule_top,prev_date,effect_room_max_count);
+							});
+						});
+					}
+
+					methods[undo_history["type"]](undo_history);
+			}
+
+			//■initial data for side menu.
+			var date=manageScheduleDate(schedule_head).getPreviousDate();
+			replaceSideScheduleEmpty.call(schedule_aside,date);
+
+			//■set rigth click.
+			if(!is_sp) addContextMenu();
+
+			//■add these events.(mouse:over,down,up)
+
+			var t2=TYPE_SCHEDULE_HEAD_MIDDLE_LINE;
+			if(!("schedule-head-middle-line" in window))
+			window["schedule-head-middle-line"]=window["schedule_content_box"].find("div[data-type=\""+t2+"\"]");
+
+			var t4=BTN_SCHEDULE_PREV_BUTTON;
+			if(!("schedule-head-prev" in window))
+			window["schedule-head-prev"]=window["schedule_content_box"].find("div[data-type=\""+t4+"\"]");
+
+			var t5=BTN_SCHEDULE_NEXT_BUTTON;
+			if(!("schedule-head-next" in window))
+			window["schedule-head-next"]=window["schedule_content_box"].find("div[data-type=\""+t5+"\"]");
+
+			var t6=BTN_SCHEDULE_WEEK_PREV_BUTTON;
+			if(!("schedule-head-week-prev" in window))
+			window["schedule-head-week-prev"]=window["schedule_content_box"].find("div[data-type=\""+t6+"\"]");
+
+			var t7=BTN_SCHEDULE_WEEK_NEXT_BUTTON;
+			if(!("schedule-head-week-next" in window))
+			window["schedule-head-week-next"]=window["schedule_content_box"].find("div[data-type=\""+t7+"\"]");
+
+			var t8=BTN_ACTION_UNDO;
+			if(!("schedule-action-undo" in window))
+			window["schedule-action-undo"]=window["schedule_content_box"].find("div[data-type=\""+t8+"\"]");
+
+			var t9=BTN_ACTION_FORWARD;
+			if(!("schedule-action-forward" in window))
+			window["schedule-action-forward"]=window["schedule_content_box"].find("div[data-type=\""+t9+"\"]");
+
+			scheduleHeadDateLineEvents.call(window["schedule_head"]);
+			scheduleHeadEvents.call(window["schedule-head-middle-line"]);
+			scheduleHeadEvents.call(window["schedule-head-prev"]);
+			scheduleHeadEvents.call(window["schedule-head-next"]);
+			scheduleHeadEvents.call(window["schedule-head-week-prev"]);
+			scheduleHeadEvents.call(window["schedule-head-week-next"]);
+			scheduleHeadEvents.call(window["schedule-action-undo"]);
+			scheduleHeadEvents.call(window["schedule-action-forward"]);
+
+			scheduleBlockEvents.call(window["schedule_top_inner"]);
+			scheduleContentBoxEvents.call(window["schedule_container_top"]);
+			allLeftSideEvents.call(window["schedule_left_side"]);
+
+			//■開始時の日別reserve_id.
+			var day_tops=schedule_top_inner.children("div[data-type=\""+TYPE_DAYTOP+"\"]");
+			cacheDefauldSetScheduleIds.call(day_tops);
+
+			updateRoomRestCount.call(schedule_top,registed_dates,effect_room_max_count);
+
+			if($.isFunction(callback)) callback();
+		}
+
+		promiseLayoutHidden().
+		then(promiseAddScheduleHead).
+		then(promiseAddActionButton).
+		then(promiseAddScheduleTimeElements).
+		then(promiseLayoutShow).
+		then(promiseLastUpdateUser).
+		then(promiseSituationColors).
+		done(promiseMakeFinal);
+	}
+
+	var makeTmpScheduleId=function(schedule_id){
+
+		var tmp_schedule_id=TMP_SCHEDULE_ID_PRIFIX+schedule_id+"_"+new Date(window["today"]["today"]).getTime();
+		return tmp_schedule_id;
+	}
+
+	make(function(){
+
+		setCurrentDay();
+		scheduleRefreshOvertime(limited_second);
+
+		$(window).on("resize",function(){
+
+			resizeContainerAll();
+			resizeScheduleMapSize();
+
+		}).trigger("resize");
+
+		cacheData().set(MANAGED_LIMITED_TIMER,{"timer":window["schedule_log"]["edit_time_expired_ms"]});
+
+		var win=$(window);
+		var initial_scroll_point=win.scrollTop();
+		var def_current_offset_top =window["schedule_top_inner"].height();
+		win.data("prev_scroll_point",initial_scroll_point);
+		win.on("scroll",function(){
+
+			arrangeScheduleSizeByResize(def_current_offset_top,def_current_offset_top);
+		});
+
+		window["schedule_top_inner"].mousemove(function(e){
+		
+			var self=$(this);
+			var target=$(e.target);
+			var type  =target.attr("data-type");
+			var schedule_block=(type==TYPE_SCHEDULE_BLOCK)?target:target.parents("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"]");
+			if(1>schedule_block.size()) return;
+
+			var data_id=schedule_block.attr("data-id");
+			var before_id=self.data("data-id");
+			var is_diff=(before_id!=data_id);
+			if(!is_diff) return;
+
+			var before_prebgcolor=self.data("prebgcolor");
+			var prebgcolor=schedule_block.css("backgroundColor");
+			self.find("div[data-type=\""+TYPE_SCHEDULE_BLOCK+"\"][data-id=\""+before_id+"\"]").css("background-color",before_prebgcolor);
+			schedule_block.css("background-color","mistyrose");
+			self.data("data-id",data_id);
+			self.data("prebgcolor",prebgcolor);
+		})
+
+		addScheduleRoomLi.call(schedule_side_memo,rooms,function(){
+
+			window["schedule_top_inner"].on("scroll",function(){
+
+				window["schedule_side_memo"].scrollTop($(this).scrollTop());
+			});
+
+			if(!is_sp){
+
+				var win=$(window);
+				var initial_scroll_point=win.scrollTop();
+				var def_current_memo_height=window["schedule_side_memo"].height();
+				var def_current_offset_top =window["schedule_top_inner"].height();
+				win.data("prev_scroll_point",initial_scroll_point);
+				win.on("scroll",function(){
+
+					arrangeScheduleSizeByResize(def_current_offset_top,def_current_memo_height);
+				});
+			}
+		});
+
+		if(!isAuthority(limited_second)) return;
+		addActionButton.call(window["schedule_action_button"],1,function(){
+
+			bodyColor(1);
+			cacheData().set(MANAGED_AUTHORITY,{"is_managed":true});
+		});
+	});
+
+	//■managed right click.
+	var addContextMenu=function(){
+
+		var context_menu=html.find("div[data-type=\"context-menu\"]");
+		window["schedule_content_box"].contextMenu(context_menu,contextActions);
+	}
+
+	var cacheDefauldSetScheduleIds=function(){
+
+		var day_tops=this;
+		var schedule_ids=defaultSetScheduleIds.call(day_tops);
+		$.extend(cacheData().get(CACHE_INITIAL_SCHEDULE_IDS),schedule_ids);
+	}
+
+	var defaultSetScheduleIds=function(index,schedule_ids){
+
+			var day_tops=this;
+			index=(index==undefined?0:index);
+			schedule_ids=(schedule_ids==undefined?{}:schedule_ids);
+			var day_top=day_tops.eq(index);
+			if(1>day_top.size()) return schedule_ids;
+			var day=day_top.attr("data-time");
+			schedule_ids[day]=[];
+
+			//■削除も含める(削除されている筈は無い前提)
+			var schedules=day_top.find("div[data-type=\""+TYPE_SCHEDULE+"\"]");
+			schedules.each(function(){
+
+					var schedule=$(this);
+					var schedule_id=schedule.attr("data-schedule-id");
+					schedule_ids[day].push(schedule_id);
+			});
+
+			var fn=arguments.callee;
+			return fn.call(day_tops,++index,schedule_ids);
+	}
+
+});
+
+</script>
+
+<div class="container-fluid schedule-no-drag" data-type="schedule-container-top">
+	<div class="content">
+		<div class="l-contents l-schedule cf" data-type="schedule-l-contents">
+			<div id="left-block" style="position:relative;top:0px;" data-type="schedule-left-side">
+				<div id="set-up">
+					<div class="set-up-btn hover-img" data-type="action-button"></div><!--/.set-up-btn-->
+						<div data-type="schedule-modified-information"></div>
+				</div><!--/.set-up-->
+				<?php echo $this->element("schedule_aside"); ?>
+			</div><!--/.left-block-->
+			<div class="l-main">
+				<div class="content-box" data-type="content-box">
+					<ul id="schedule-btn-list" data-type="schedule-side-memo"></ul>
+					<div id="s_body">
+						<div id="schedule_top" data-type="schedule-top" style="position:relative;">
+
+							<div data-type="situation-labels" style="height:25px;top:81px;"><div data-type="situation-label-parent" class="situation-label-parent"></div></div>
+
+							<div id="schedule_btn_line" class="cf control-arrow">
+
+								<div class="row-fluid" style="height:40px" data-type="schedule-head-top-line">
+									<div class="schedule_btn_left preview btn pull-left" data-type="schedule-week-btn-left">
+										<span data-type="schedule-week-btn-left-span" class="fa fa-angle-double-left"></span> <?php echo __("前の週");?></div>
+									<span class="date-info pull-left" data-type="schedule-header-ymd"></span>
+									<div class="schedule_btn_right next btn pull-right" data-type="schedule-week-btn-right"><?php echo __("次の週");?> <span data-type="schedule-week-btn-right-span" class="fa fa-angle-double-right"></span></div>
+								</div>
+								<div class="row-fluid">
+									<?php echo $this->element("schedule_date_switch"); ?>
+								</div>
+
+								<div class="row-fluid" style="height:40px" data-type="schedule-head-bottom-line">
+									<div class="schedule_btn_left preview btn pull-left" data-type="schedule-btn-left">
+										<span data-type="schedule-btn-left-span" class="fa fa-angle-left"></span> <?php echo __("前の日"); ?></div>
+									<div id="new-btn">
+										<div class="item-btn btn01 hover-img" data-type="action-undo" style="display:none;">
+											<span data-type="action-undo-span"><?php echo __("戻る"); ?></span></div>
+										<div class="item-btn btn02 hover-img" data-type="action-forward" style="display:none;">
+											<span data-type="action-forward-span"><?php echo __("進む"); ?></span></div>
+									</div><!--/.new-btn-->
+									<div class="schedule_btn_right next btn pull-right" data-type="schedule-btn-right">
+										<?php echo __("次の日"); ?> <span data-type="schedule-btn-right-span" class="fa fa-angle-right"></span></div>
+								</div>
+							</div><!--/.schedule_btn_line-->
+
+							<ul id="schedule-btn-list-mb" data-type="schedule-side-memo"></ul>
+							<!--END HTML FOR MOBLIE-->
+							<div id="schedule_top_head" data-type="schedule-top-head"></div>
+							<div id="schedule_top_inner" data-type="schedule-top-inner"></div>
+						</div>
+						<!-- / #schedule_top -->
+					</div>
+					<!-- / #s_body -->
+				</div>
+				<!-- / .content-box -->
+			</div>
+			<!--<aside class="l-side"></aside>-->
+			<!-- / .l-contents l-schedule cf -->
+		</div><!-- / .l-contents l-schedule cf -->
+	</div><!--/.content-->
+</div><!--/.container-->
+<style>
+pre{display:none!important;}
+</style>
+<div style="display:none;" data-type="context-menus">
+	<div id="context_menu" data-type="context-menu">
+		<ul>
+			<li id="copy" data-type="context-copy"><img src="img/icon/copy_48.gif"style="width:16px;heigth:16px;"/>COPY</li>
+			<li id="remove" data-type="context-remove"><img src="img/icon/site_remove_48.gif"style="width:16px;heigth:16px;"/><?php echo __("宿泊削除"); ?></li>
+			<li id="site_remove" data-type="context-site-remove"><img src="img/icon/schedule_remove_48.gif"style="width:16px;heigth:16px;"/><?php echo __("全宿泊削除"); ?></li>
+			<li id="paste" data-type="context-paste"><img src="img/icon/paste_48.gif"style="width:16px;heigth:16px;"/>PASTE</li>
+			<li id="site" data-type="context-site-add"><img src="img/icon/reservation_48.gif"style="width:16px;heigth:16px;"/><?php echo __("新規宿泊"); ?></li>
+			<li id="edit" data-type="context-site-edit"><img src="img/icon/reservation_48.gif"style="width:16px;heigth:16px;"/><?php echo __("宿泊編集"); ?></li>
+			<li id="unavailable" data-type="context-site-unavailable"><img src="img/icon/stop_48.gif"style="width:16px;heigth:16px;"/><?php echo __("部屋使用停止"); ?></li>
+			<li id="diposit" data-type="context-diposit"><img src="img/icon/diposit_48.gif"style="width:16px;heigth:16px;"/><?php echo __("デポジット"); ?></li>
+		</ul>
+	</div>
+</div>
+
+<script id="tpl_schedule_guest_name" type="text/tmpl">
+<span data-type="schedule-worker" style="color:<<guest_font_color>>;" data-guest-id="<<guest_id>>"><<guest_name>></span>
+</script>
+
+<script id="tpl_schedule_day" type="text/tmpl">
+<div class="schedule_day_top" data-type="day-top" data-time="<<time>>"></div>
+</script>
+
+<script id="tpl_schedule_block" type="text/tmpl">
+<div class="schedule_block" data-type="schedule-block" data-block-type="<<block_type>>" data-room-id="<<room_id>>" data-id="<<id>>" style="position:relative;"></div>
+</script>
+
+<script id="tpl_schedule_price" type="text/tmpl">
+<span data-type="data-price" data-price-type="<<price_type>>" data-price-type-id="<<price_type_id>>" style="color:<<price_type_color>>;font-weight:<<price_type_bold>>;text-decoration:<<price_type_decoration>>;"><<room_price>></span>
+</script>
+
+<script id="tpl_schedule_room_type" type="text/tmpl">
+<div style="background-color:rgba(0,0,0,0.6);padding-left:5%;" data-room-id="<<room_id>>"><span style="font-weight:bold;font-size:1em;color:#fff;" ><<room_type>></span></div>
+</script>
+
+<script id="tpl_schedule" type="text/tmpl">
+<div class="schedule" data-type="schedule" data-room-type-id="<<room_type_id>>" data-purchase-flg="<<purchase_flg>>" data-schedule-id="<<schedule_id>>" data-reservation-id="<<reserve_id>>" data-room-id="<<room_id>>" style="color:<<fontcolor>>;background-color:<<color>>!important;position:absolute;">
+	<div style="background-color:rgba(255,255,255,0.6);padding-left:5%;"><span style="font-weight:bold;font-size:1.1em;"><<reserve_id>></span>.(<<price>>)</div>
+	<<guest_name>><br />
+	<<room>>
+</div>
+</script>
+
+<script id="tpl_unavailable_schedule" type="text/tmpl">
+<div class="schedule" data-type="unavailable-schedule" data-id="<<data_id>>" style="color:<<fontcolor>>;background-color:<<bgcolor>>!important;position:absolute;"></div>
+</script>
+
+<script id="tpl_schedule_head" type="text/tmpl">
+	<div class="schedule_head" data-time="<<time>>" data-type="schedule-head">
+		<<view_md>>(<<week>>)
+		<span data-type="room-count" data-toggle="modal" data-target="#modalWorkersFree"><<message>></span>
+	</div>
+</script>
+
+<script id="tpl_schedule_head_saturday" type="text/tmpl">
+	<div class="schedule_head" data-time="<<time>>" data-type="schedule-head">
+		<span class="sat"><<view_md>>(<<week>>)</span>
+		<span data-type="room-count" data-toggle="modal" data-target="#modalWorkersFree"><<message>></span>
+	</div>
+</script>
+
+<script id="tpl_schedule_head_sunday" type="text/tmpl">
+	<div class="schedule_head" data-time="<<time>>" data-type="schedule-head">
+		<span class="sun"><<view_md>>(<<week>>)</span>
+		<span data-type="room-count" data-toggle="modal" data-target="#modalWorkersFree"><<message>></span>
+	</div>
+</script>
+
+<script id="tpl_schedule_modal_customer_list" type="text/tmpl">
+<dt><<name>></dt>
+<dd><button class="item-btn-sel" id="item-btn-sel-<<customer_id>>" data-customer-id="<<customer_id>>">選択</button></dd>
+</script>
+
+<style>
+
+div[data-type=content-box]{
+	user-select:none;
+	-webkit-user-select:none;
+	-moz-user-select:none;
+	-ms-user-select:none;
+	-o-user-select:none;
+}
+
+</style>
+
+<!-- you can change class name here whatever you want. -->
+<?php /* for smart phone */ ?>
+<script id="tpl_schedule_context_sp_tap_sp" type="text/tmpl">
+<div id="schedule-context-sp-tap" data-sp-scroll="YES" data-type="schedule-context-sp-tap">
+	<div id="copy" data-type="context-copy"><img src="img/icon/copy_48.gif"/>Copy</div>
+	<div id="remove" data-type="context-remove"><img src="img/icon/site_remove_48.gif"/>単日削除</div>
+	<div id="site_remove" data-type="context-site-remove"><img src="img/icon/schedule_remove_48.gif"/>全日程削除</div>
+	<div id="paste" data-type="context-paste"><img src="img/icon/paste_48.gif"/>貼り付け</div>
+	<div id="site" data-type="context-site-add"><img src="img/icon/add_48.gif"/>現場追加</div>
+	<div id="edit" data-type="context-site-edit"><img src="img/icon/edit_48.gif"/>現場編集</div>
+    <div id="close" data-type="context-site-close"><img src="img/icon/close_48.gif"/>閉じる</div>
+	<div id="unavailable" data-type="context-site-unavailable"><img src="img/icon/add_48.gif"/><?php echo __("部屋使用停止");?></div>
+	<div id="diposit" data-type="context-diposit"><img src="img/icon/add_48.gif"/><?php echo __("デポジット");?></div>
+</div>
+</script>
+
+<script id="tpl_print_base_layout_date" type="text/tmpl">
+<span><<start_year>>年<<start_month>>月<<start_day>>日～<<end_year>>年<<end_month>>月<<end_day>>日</span>
+</script>
+
+<script id="tpl_print_base_layout_dateline" type="text/tmpl">
+<div class="pri_head">
+	<a class="pri-link" href="#"><<month>>/<<day>> (<<week>>)</a>
+</div>
+</script>
+
+<script id="tpl_print_base_layout_schedule" type="text/tmpl">
+<div class="sche-child" style="background-color: <<bg_color>>!important" data-type="schedule-enable">
+	<div class="spin-around spin-<<spin>>"></div>
+	<<title>> (<<area>>)
+	<div class="pri-worker-space" data-type="print-worker"></div>
+	<<remark>>
+</div>
+</script>
+
+<script id="tpl_print_base_layout_schedule_empty" type="text/tmpl">
+<div class="sche-child" style="background-color: <<bg_color>>!important" data-type="schedule-disable"></div>
+</script>
+
+<script id="tpl_print_base_layout_worker" type="text/tmpl">
+<span class="pri-worker"><<name>></span>
+</script>
+
+<script id="tpl_print_base_layout_dayparent" type="text/tmpl">
+<div class="sche-col-day" data-type="print-schedules"></div>
+</script>
+
+<script id="tpl_print_base_layout" type="text/tmpl">
+<div data-type="print-base-layout" class="print_base_layout" id="print_base_layout">
+	<div data-type="schedule-data-line-container" class="print-content">
+		<div class="sitedaily-title-pri">
+			<div class="space-2"></div>
+			<div class="printer-title space-10" data-type="print-date"></div>
+		</div>
+		<div class="sitedaily-conte-pri">
+			<div class="space-10 cont-space">
+				<div class="sche-space">
+					<div class="sitedaily-pri-head" data-type="print-dateline"></div>
+					<div class="sitedaily-pri-cont" data-type="print-scheduleline"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="text-right print-footer">
+		<button class="back-btn" data-type="print-out-no">閉じる</button>
+		<button class="submit-btn" data-type="print-out-yes">印刷する</button>
+	</div>
+</div>
+</script>
+
+<script id="tpl_schedule_head_room_count_end" type="text/tmpl">
+<span style="color:red;font-weight:bold;" data-type="room-count-end-span"><?php echo __("終了済み"); ?></span>
+</script>
+
+<script id="tpl_schedule_head_room_count" type="text/tmpl">
+<span data-type="room-count-span"><?php echo __("残り<<count>>室"); ?></span>
+</script>
+
+<script id="tpl_schedule_head_room_undercount" type="text/tmpl">
+<span style="color:red;" data-type="room-count-span">残り<<count>>室</span>
+</script>
+
+<script id="tpl_remodal_room_situations" type="text/tmpl">
+<div class="remodal-room-available" style="background-color:<<bg_color>>;color:<<font_color>>;">
+	<div class="remodal-room-available-roomnum"><<room_num>>(<<room_floor>>)</div>
+	<div class="remodal-room-available-roomtype"><<room_type>></div>
+	<div class="remodal-room-available-roomsituation"><<room_situation>></div>
+	<div class="remodal-room-available-roomsituation-remark"><<room_remark>></div>
+</div>
+</script>
+
+<script id="tpl_situation_label" type="text/tmpl">
+<div class="situation-label" data-situation-type="<<type>>" style="color:<<fontcolor>>;line-height:2.2;width:<<size>>%;background-color:<<bgcolor>>;"><<title>></div>
+</script>
+	

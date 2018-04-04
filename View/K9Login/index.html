@@ -1,0 +1,47 @@
+<div class="content" id="login-page">
+      <div class="container">
+        <div class="row">
+            <div class="login">
+                <h1 class="login-logo"><img src="./assets/img/logo/login_logo_02.png" alt="" /></h1>
+                <form method="post" name="login_form" class="form-signin" action="" >
+
+					<?php
+
+					$login_ability=["type"       =>"text",
+								    "class"      =>"form-control",
+							  	    "id"         =>"inputId",
+							  	    "placeholder"=>"メールアドレス",
+							  	    "autofocus"  =>"autofocus",
+							  	    "required"   =>true,
+							  	    "div"        =>false,
+							  	    "label"      =>[
+							  	      "class"    =>"sr-only",
+							  	   	  "text"     =>"ID（メールアドレス）"
+							  	    ]
+					];
+
+					$pass_ability =["type"       =>"password",
+								    "class"      =>"form-control",
+							  	    "id"         =>"inputPassword",
+							  	    "placeholder"=>"パスワード",
+							  	    "required"   =>true,
+							  	    "div"        =>false,
+							  	    "label"      =>[
+							  	      "class"    =>"sr-only",
+							  	      "text"     =>"パスワード"
+							  	    ]
+					];
+
+
+					echo $this->Form->input('username',$login_ability);
+					echo $this->Form->input('password',$pass_ability);
+
+					?>
+
+                    <label class="sr-only error-text"><?php print_r( $this->Session->flash())?></label>
+                    <button class="btn btn-lg btn-primary btn-block hover-img" type="submit">ログイン</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

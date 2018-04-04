@@ -1,0 +1,2254 @@
+<?php $controller=strtolower($this->params["controller"]);?>
+<?php echo $this->element("schedule_apis/common"); ?>
+<?php echo $this->element("schedule_functions/common"); ?>
+
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/k9style.php">
+
+<script>
+var TYPE_SCHEDULE_SIDE_MEMO="schedule-side-memo";
+var TYPE_SCHEDULE_TOP="schedule-top";
+var TYPE_DAYTOP        ="day-top";
+var TYPE_SCHEDULE_PARENT="schedule-parent";
+var TYPE_SCHEDULE_CONTAINER="schedule-top-inner";
+var TYPE_SCHEDULE_HEAD="schedule-head";
+var TYPE_SCHEDULE_YMD="schedule-ymd";
+var TYPE_SCHEDULE_CONTAINER_TOP="schedule-container-top";
+var TYPE_SCHEDULE_SIDE_DATE ="schedule-site-date";
+var TYPE_SCHEDULE_SIDE_BOX  ="schedule-site-box";
+var TYPE_SCHEDULE="schedule";
+var TYPE_UNAVAILABLE_SCHEDULE="unavailable-schedule";
+var TYPE_SCHEDULE_DUMMY="schedule-dummy";
+var TYPE_SCHEDULE_CONTAINER_YM="schedule-container-ym";
+var TYPE_SCHEDULE_MODIFIED="schedule-modified-information";
+var TYPE_SCHEDULE_MODIFIED_PARSITE="schedule-modified-parsite-information";
+var TYPE_SCHEDULE_DAY_BTN="schedule-switch-sitedaily";
+var TYPE_SCHEDULE_WEEK_BTN="schedule-switch-site";
+var TYPE_SCHEDULE_MONTH_BTN="schedule-switch-sitemonthly";
+var TYPE_SCHEDULE_L_CONTENTS="schedule-l-contents";
+var TYPE_SCHEDULE_CONTENT_BOX="content-box";
+var TYPE_SCHEDULE_GMAP="schedule-gmap";
+var TYPE_SCHEDULE_SIDE_BOX  ="schedule-site-box";
+var TYPE_SCHEDULE_HEAD_TOP_LINE="schedule-head-top-line";
+var TYPE_SCHEDULE_HEAD_BOTTOM_LINE="schedule-head-bottom-line";
+var TYPE_SCHEDULE_HEADER_YMD="schedule-header-ymd";
+var TYPE_SCHEDULE_MODAL="schedule-site-modal";
+var TYPE_SCHEDULE_DATE_RANGE="header-date-range";
+var TYPE_SCHEDULE_HEAD_MIDDLE_LINE="schedule-head-middle-line";
+
+var FIELD_ERROR_C_CODE  ="rgba(244,201,203,1)";
+var FIELD_SUCCESS_C_CODE="rgba(255,255,255,1)";
+var CACHE_CUSTOMER_INFORMATIONS="cache_customer_informations";
+var CACHE_EDIT_INFORMATION="cache_edit_information";
+var LOCAL_STORAGE_TIMEKEY="time_key";
+
+var TYPE_SCHEDULE_GOTO_MEDIA="schedule-goto-media-btn";
+var TYPE_SCHEDULE_SIDE_SITE_WORKER_EDIT="schedule-site-edit-workers-btn";
+var TYPE_SCHEDULE_SIDE_SITE_EDIT="schedule-site-edit-btn";
+
+var BTN_ACTION_BUTTON="action-button";
+var BTN_SCHEDULE_PREV_BUTTON="schedule-btn-left";
+var BTN_SCHEDULE_NEXT_BUTTON="schedule-btn-right";
+var BTN_SEARCH_ROOM_NUM="room-num-search";
+var BTN_SEARCH_ROOM_TYPE="room-type-search";
+
+var BTN_SCHEDULE_PREV_BUTTON_SPAN="schedule-btn-left-span";
+var BTN_SCHEDULE_NEXT_BUTTON_SPAN="schedule-btn-right-span";
+
+var BTN_ACTION_SAVE="action-save";
+var BTN_ACTION_START="action-start";
+
+var BLOCK_NUM='<?php echo $schedule_block_num; ?>';
+var MEMO_LIST_NUM=BLOCK_NUM;
+
+var INCHAGE_A="schedule-site-incharge-a";
+var INCHAGE_SPAN="schedule-site-incharge-span";
+var INCHAGE_P="schedule-site-incharge-p";
+
+var CACHE_LAST_EDIT_TIME="cache_last_edit_time";
+var CACHE_SITE_NINKU_VALUE="cache_site_ninku_value";
+var MANAGED_AUTHORITY="managed_authority";
+var MANAGED_LIMITED_TIMER="managed_limited_timer";
+var CACHE_SEARCH_ACTION="cache_search_action";
+var CACHE_SCHEDULE_INFO="cache_schedule_info";
+
+var CACHE_MEMO="cache_memo";
+
+var TYPE_SCHEDULE_MEMO_LI="schedule-memo-li";
+
+var color_list=JSON.parse('<?php echo $color_list;?>');
+var limited_second='<?php echo EDIT_EFFECTIVE_SECOND;?>';
+
+var is_edit="<?php echo $is_edit;?>";
+is_edit=parseInt(is_edit);
+
+var is_authority="<?php echo $is_authority;?>";
+is_authority=parseInt(is_authority);
+
+var holidays=JSON.parse('<?php echo $holidays; ?>');
+
+var current_ym='<?php echo $start_date; ?>';
+var current_date=new Date(Number(current_ym+"01").addMinutesZero());
+
+var user_id='<?php echo $user_id; ?>';
+var first_name='<?php echo $first_name; ?>';
+var color_list=JSON.parse('<?php echo $color_list;?>');
+var last_modified_user=JSON.parse('<?php echo $last_modified_user; ?>');
+var informations=JSON.parse('<?php echo $informations; ?>');
+var unavailable =JSON.parse('<?php echo $unavailable; ?>');
+var is_sp=isSp();
+
+var rooms=JSON.parse('<?php echo $rooms; ?>');
+var effect_room_max_count=0;
+var effect_rooms=JSON.parse('<?php echo $effect_rooms; ?>');
+if(effect_rooms["1"]!=undefined) effect_room_max_count+=Object.keys(effect_rooms["1"]).length;
+if(effect_rooms["2"]!=undefined) effect_room_max_count+=Object.keys(effect_rooms["2"]).length;
+var effect_room_types=JSON.parse('<?php echo $effect_room_types; ?>');
+
+var situations=JSON.parse('<?php echo $situations; ?>');
+
+var authority="<?php echo $authority; ?>";
+var master_authorities=JSON.parse('<?php echo mstepJsonEncode($master_authorities); ?>');
+
+var weekDayList=["<?php echo __("日"); ?>",
+				 "<?php echo __("月"); ?>",
+				 "<?php echo __("火"); ?>",
+				 "<?php echo __("水"); ?>",
+				 "<?php echo __("木"); ?>",
+				 "<?php echo __("金"); ?>",
+				 "<?php echo __("土"); ?>"];
+
+
+window["schedule_log"]={};
+window["schedule_log"]["last_start_user"]     ="<?php echo $last_start_user; ?>";
+window["schedule_log"]["edit_time_expired_ms"]="<?php echo $edit_time_expired_ms; ?>";
+window["schedule_log"]["last_edit_time"]      ="<?php echo $last_edit_time; ?>";
+
+window["today"]={};
+window["today"]["today"]="<?php echo $today; ?>";
+window["today"]["date"] =new Date(window["today"]["today"]);
+window["today"]["ymd"]=window["today"]["date"].getYmdByMs().join("");
+
+var checkScheduleElem=function(type){
+
+	return type==TYPE_SCHEDULE;
+}
+
+function addScrollBar(){
+
+	var count = 0;
+	var rowparent=$('<div data-type="row-child-1" class="row row-child-item row-child-1"></div><div data-type="row-child-2" class="row row-child-item row-child-2"></div><div class="row row-child-item row-child-3" data-type="row-child-3"></div>');
+	var schedule_content=this;
+	var schedule_maps=schedule_content.find("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]");
+	schedule_content.append(rowparent);
+	rowparent.ready(function(){
+
+		var child1=schedule_content.children("div[data-type=row-child-1]");
+		var child2=schedule_content.children("div[data-type=row-child-2]");
+		var child3=schedule_content.children("div[data-type=row-child-3]");
+
+		schedule_maps.each(function(index, el) {
+
+			if(count < 14){
+
+					$(this).appendTo(child1);
+			}
+			else if(count >= 14 && count < 28){
+
+					$(this).appendTo(child2);
+			}
+			else{
+
+					$(this).appendTo(child3);
+			}
+			count++;
+		});
+
+		if(count==28) {
+
+				child3.remove();
+		}
+	});
+}
+
+function setPosition(){
+																																															   //>
+	var i;
+	var schedules=this.find("p[data-type=\""+TYPE_SCHEDULE+"\"]");
+	var schedule_ymd=this.find("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]");
+	schedule_ymd.each(function(){
+
+		  var target=$(this);
+		  var schedule_parent=target.children("div[data-type=\""+TYPE_SCHEDULE_PARENT+"\"]");
+		  var schedule_ymd=schedule_parent.parent();
+		  var ymd=schedule_ymd.attr("data-time");
+		  var ymd_ary=Number(ymd).splitYmd();
+		  var ym=ymd_ary[0]+ymd_ary[1];
+		  var day=parseInt(ymd_ary[2]);
+		  var instance=TPL.getInstance("schedule_p_dummy");
+		  var tpl=instance.get_schedule_p_dummy;
+		  var schedule_block_num=parseInt(BLOCK_NUM)-1;
+		  var dummy_tpl;
+		  var dummy_html;
+		  var room_id;
+		  var room_ids=Object.keys(rooms);
+
+		  var __insertAfter=function(room_ids,max_count,callback){
+
+				var schedule_parent=this;
+				var fragment=document.createDocumentFragment();
+				var counter=0;
+				while(true){
+
+					room_id=room_ids.shift();
+					dummy_tpl=instance.replaceTPL(tpl,{
+					
+						"room_id"   :room_id,
+						"block_type":rooms[room_id]["type"],
+					});
+
+					dummy_html=$(dummy_tpl);
+					fragment.appendChild(dummy_html.get(0));
+					counter++;
+					if(counter>max_count) break;
+				}
+
+				schedule_parent.append(fragment);
+				html.ready(function(){
+
+					callback();
+				});
+		  }
+
+		  var __insertSchedule=function(ym,ymd){
+
+				var schedule_parent=this;
+				var schedules=!!window["informations"][ym]?window["informations"][ym]:{};
+				var informations=(schedules[ymd]==undefined?{}:schedules[ymd]);
+				var dummys=schedule_parent.children("[data-type=\""+TYPE_SCHEDULE_DUMMY+"\"]");
+			    var unavailable_schedules=window["unavailable"][ymd];
+				var instance=TPL.getInstance(["schedule","unavailable_schedule"]);
+			    var tpl;
+			    var html;
+			    var room_id;
+
+				for(var schedule_id in informations){
+
+					  if(!informations.hasOwnProperty(schedule_id)) continue;
+					  var information=informations[schedule_id];
+
+					  var reserve_id=information["reservation"]["id"];
+					  var schedule_id=information["schedule"]["id"];
+					  var color=information["schedule"]["color"];
+					  var fontcolor=information["schedule"]["fontcolor"];
+					  var position_num=information["schedule"]["position_num"];
+					  var name=(information["guest"]["first_name"].length>0?information["guest"]["first_name"]:"<?php echo __("未設定"); ?>");
+					  var price=information["room"]["room_price"];
+					  room_id=information["room"]["id"];
+					  var room_type_id=information["room"]["room_type_id"];
+					  var room_price_type  =information["room"]["room_price_status"];
+					  var type=information["room"]["type"];
+					  var is_purchase=information["payment"]["is_purchase"];
+					  tpl=instance.replaceTPL(instance.get_schedule,{
+
+						  "room_id"    :room_id,
+						  "room_type_id":room_type_id,
+						  "reserve_id" :reserve_id,
+						  "schedule_id":schedule_id,
+						  "color"      :color,
+						  "name"       :name,
+						  "price"      :price,
+						  "block_type" :type,
+						  "price_color":fontcolor,
+						  "is_purchase":(is_purchase+""),
+						  "fontcolor"  :fontcolor
+					  });
+
+					  html=$(tpl);
+					  dummys.filter("p[data-room-id=\""+room_id+"\"]").replaceWith(html);
+				}
+
+			    if(unavailable_schedules==undefined) return;
+
+			    for(var data_id in unavailable_schedules){
+
+			        unavailable_schedules[data_id]
+			        tpl=instance.get_unavailable_schedule;
+			        room_id=unavailable_schedules[data_id]["data"]["room_id"];
+			        html=instance.replaceTPL(tpl,{
+			        
+						"data_id"  :data_id,
+			       	 	"room_id"  :room_id,
+			       	 	"fontcolor":unavailable_schedules[data_id]["situation"]["fontcolor"],
+			       	 	"bgcolor"  :unavailable_schedules[data_id]["situation"]["bgcolor"],
+			        });
+
+			        html=$(html);
+			        dummys.filter("p[data-room-id=\""+room_id+"\"]").replaceWith(html);
+			    }
+		  }
+
+		  switch(true){
+			  case(day>=1 && 15>day):
+			  var max_count=schedule_block_num;
+			  __insertAfter.call(schedule_parent,room_ids,max_count,function(){ __insertSchedule.call(schedule_parent,ym,ymd); });
+		  break;
+			  case(day>=15 && 29>day):
+			  var max_count=schedule_block_num;
+			  __insertAfter.call(schedule_parent,room_ids,max_count,function(){ __insertSchedule.call(schedule_parent,ym,ymd); });
+		  break;
+			  default:
+			  var max_count=schedule_block_num;
+			  __insertAfter.call(schedule_parent,room_ids,max_count,function(){ __insertSchedule.call(schedule_parent,ym,ymd); });
+		  break;
+		  }
+	})
+}
+
+function addBorderRight(){
+	$('.schedule-map').each(function(index, el) {
+		if(!$(this).find('.schedule-parent').length){
+			$(this).append('<div class="schedule-parent"></div>');
+		}
+	});
+	var schedule_content=this;
+	var __maxHeight = 0;
+	var child=schedule_content.children("div[data-type=row-child-item]");
+	child.each(function(index, el) {
+		$(this).find('.schedule-parent').each(function(index, el) {
+			if( __maxHeight <= parseInt($(this).height()) ){
+				__maxHeight = $(this).height();
+			}
+		});
+		$(this).find('.schedule-parent').css('height', __maxHeight + 'px');
+		__maxHeight = 0;
+	});
+	// $('.schedule-parent p').each(function(index, el) {
+	// 	var color = $(this).css( "background-color" );
+	// 	if(color == "rgb(255, 255, 255)" || color == "#ffffff"){
+	// 		$(this).css('color', '#333');
+	// 	}
+	// });
+}
+
+$(function(){
+
+	window["html"]=$("html");
+	window["body"]=html.find("body");
+	window["schedule_container_top"]=window["body"].find("div[data-type=\""+TYPE_SCHEDULE_CONTAINER_TOP+"\"]");
+	window["action_lastmodified"]=schedule_container_top.find("div[data-type=\""+TYPE_SCHEDULE_MODIFIED+"\"]");
+	window["schedule_top_inner"]=body.find("div[data-type=\""+TYPE_SCHEDULE_CONTAINER+"\"]");
+	window["schedule_left_side"]=window["schedule_container_top"].find("div[data-type=\"schedule-left-side\"]");
+	window["schedule_content_box"]  =window["body"].find("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+	window["schedule_action_button"]=window["schedule_container_top"].find("div[data-type=\""+BTN_ACTION_BUTTON+"\"]");
+	window["schedule-head-top"] =window["schedule_content_box"].find("div[data-type=\""+TYPE_SCHEDULE_TOP+"\"]");
+	window["schedule-head-top-line"]=window["schedule_content_box"].find("div[data-type=\""+TYPE_SCHEDULE_HEAD_TOP_LINE+"\"]");
+	window["schedule-btn-left"]    =window["schedule-head-top-line"].find("div[data-type=\""+BTN_SCHEDULE_PREV_BUTTON+"\"]");
+	window["schedule-btn-right"]   =window["schedule-head-top-line"].find("div[data-type=\""+BTN_SCHEDULE_NEXT_BUTTON+"\"]");
+	window["schedule_side_memo"]    =window["schedule_container_top"].find("ul[data-type=\""+TYPE_SCHEDULE_SIDE_MEMO+"\"]");
+
+	window["schedule-head-middle-line"]=window["schedule_content_box"].find("div[data-type=\""+TYPE_SCHEDULE_HEAD_MIDDLE_LINE+"\"]");
+	window["schedule-head-bottom-line"] =window["schedule_content_box"].find("div[data-type=\""+TYPE_SCHEDULE_HEAD_BOTTOM_LINE+"\"]");
+	window["schedule-head-ymd"]=window["schedule_content_box"].find("span[data-type=\""+TYPE_SCHEDULE_HEADER_YMD+"\"]");
+	window["schedule-head-date-range"]=window["body"].find("span[data-type=\""+TYPE_SCHEDULE_DATE_RANGE+"\"]");
+
+	var body_bg_color=window["body"].css("background-color");
+	window["body"].data("background-color",body_bg_color);
+
+	window["select_date"]={};
+	window["select_date"]["date"]=current_date;
+	window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+	var clickEnd=deviceClickEventEnd();
+
+	<?php echo $this->element("schedule_header_date_selections/{$controller}"); ?>
+
+	var schedule_aside=body.find("aside");
+	var action_button=window["schedule_container_top"].find("div[data-type=\""+BTN_ACTION_BUTTON+"\"]");
+
+	cacheData().set(MANAGED_AUTHORITY,{"is_managed":false});
+	cacheData().set(CACHE_EDIT_INFORMATION,JSON.parse('<?php echo $edit_informations; ?>'));
+	cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":window["schedule_log"]["last_edit_time"] });
+	cacheData().set(CACHE_SEARCH_ACTION,{"is_purchase":1});
+
+	var scheduleReload=function(){
+
+		var ymd_split=window["select_date"]["ymd"];
+		var ym=ymd_split[0]+ymd_split[1];
+		var base_url="<?php echo "K9SiteMonthly".DS."index".DS; ; ?>";
+		base_url+=ym;
+		location.href=base_url;
+	}
+
+	var changeInformationFormatToDate=function(informations){
+
+		var res={};
+		for(var date in informations){
+
+			var __informations=informations[date];
+			var ymd=Number(date).splitYmd();
+			var ym=ymd[0]+ymd[1];
+			if(!res[ym]) res[ym]=[];
+			for(var i in __informations){
+
+				var schedule_id=__informations[i]["schedule"]["id"];
+				var start_month_prefix=__informations[i]["schedule"]["start_month_prefix"];
+				var start_day=__informations[i]["schedule"]["start_day"];
+				var ymd=(start_month_prefix+Number(start_day).addZero());
+				if(!res[start_month_prefix][ymd]) res[start_month_prefix][ymd]={};
+				res[start_month_prefix][ymd][schedule_id]=__informations[i];
+			}
+		}
+
+		return res;
+	}
+
+	window["informations"]=changeInformationFormatToDate(informations);
+	window["unavailable"] =unavailable;
+
+	var getCurrentYmdFromTheSide=function(schedule_id){
+
+		var select_date=window["select_date"]["date"];
+		var current_ym_ary=window["select_date"]["ymd"];
+		var current_ym=current_ym_ary[0]+current_ym_ary[1];
+		var schedule_container_ym=window["schedule_top_inner"].find("div[data-type=\""+TYPE_SCHEDULE_CONTAINER_YM+"\"]");
+		var scheduel_container_target_ym=schedule_container_ym.filter("div[data-time=\""+current_ym+"\"]");
+		var schedule=scheduel_container_target_ym.find("p[data-schedule-id=\""+schedule_id+"\"]");
+		var schedule_ymd=schedule.parents("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]");
+		return schedule_ymd.attr("data-time");
+	}
+
+	addActionButton.call(window["schedule_action_button"],0);
+
+	var make=function(date,schedules,callback){
+
+		var elem=window["schedule_top_inner"];
+		var current_days=date.getMonthDays();
+		var ym=date.getFullYear()+Number(date.getMonth()+1).addZero();
+
+		var promiseSetScheduleYm=function(){
+
+			var deferred=$.Deferred();
+			setScheduleYm.call(elem,ym,function(schedule_ym){
+
+				deferred.resolve({
+
+					"schedule_ym":schedule_ym
+				});
+			});
+
+			return deferred.promise();
+		};
+
+		var promiseSetScheduleYmd=function(args){
+
+			var deferred=$.Deferred();
+			var schedule_ym=args["schedule_ym"];
+			setScheduleYmd.call(schedule_ym,current_days,schedules,function(){
+
+				deferred.resolve(args);
+			});
+
+			return deferred.promise();
+		};
+
+		var promiseSituationColors=function(args){
+
+			var deferred=$.Deferred();
+
+			var instance=TPL.getInstance(["situation_label"]);
+			var situation_labels=window["schedule-head-top"].children("div[data-type=\"situation-labels\"]");
+			var situation_parent=situation_labels.children("div").eq(0);
+			var fragment=document.createDocumentFragment();
+			var situation_tpl=instance.get_situation_label;
+			var situation_html;
+			var width=Math.floor(100/Object.keys(situations).length)-1;
+
+			for(var type in situations){
+
+				situation_html=instance.replaceTPL(situation_tpl,{
+				
+					"size"     :width,
+					"bgcolor"  :situations[type]["bgcolor"],
+					"fontcolor":situations[type]["fontcolor"],
+					"title"    :situations[type]["type"],
+					"type"     :type
+				});
+
+				fragment.appendChild($(situation_html).get(0));
+			}
+
+			situation_parent.append(fragment);
+
+			return deferred.resolve(args);
+		}
+
+		var promiseSetMakeFinal=function(args){
+
+			var deferred=$.Deferred();
+			var schedule_ym=args["schedule_ym"];
+			addScrollBar.call(schedule_ym);
+			setPosition.call(schedule_ym);
+			$('.row-child-item').off('scroll').on('scroll',function(event) {
+				var __top = $(this).scrollTop();
+				var __flag = $(this).attr('data-type');
+				$(__flag.replace('row-child-','ul.memo-row-')).scrollTop(__top);
+			}).trigger('scroll');
+			addBorderRight.call(schedule_ym);
+			fixDateSidebar.call(schedule_ym);
+			if(!is_sp) addContextMenu();
+			if($.isFunction(callback)) callback();
+			return deferred.resolve({}).promise();
+		}
+
+		promiseSetScheduleYm().
+		then(promiseSetScheduleYmd).
+		then(promiseSituationColors).
+		done(promiseSetMakeFinal);
+	}
+
+	var fixDateSidebar = function(){
+
+		var day_head = "<div class='row head-row-child'></div>";
+		$(this).find('.row-child-item').each(function(index, el) {
+
+			$(day_head).insertBefore($(this));
+			$(this).prev().addClass('head-' + $(this).attr('data-type'));
+		});
+
+		var head_row1 = $(this).find('.head-row-child-1');
+		var head_row2 = $(this).find('.head-row-child-2');
+		var head_row3 = $(this).find('.head-row-child-3');
+		$(this).find('.schedule-head').each(function(index, el) {
+			switch(true){
+				case(index < 14):
+					$(this).appendTo(head_row1);
+					break;
+				case(index >= 14 && index < 28):
+					$(this).appendTo(head_row2);
+					break;
+				case(index >= 28):
+					$(this).appendTo(head_row3);
+					break;
+			}
+		});
+	}
+
+	var scheduleBtnLeftEvent=function(callback){
+
+		var select_date=window["select_date"]["date"];
+		var current_ym=window["select_date"]["ymd"][0]+window["select_date"]["ymd"][1];
+		var current_elems=schedule_top_inner.children();
+		current_elems.filter("div[data-time=\""+current_ym+"\"]").hide();
+
+		var __select_date=new Date(Number(current_ym+"01").addMinutesZero());
+		var prev_ymd=__select_date.addMonthSeparately(-1);
+		var prev_ym=prev_ymd[0]+prev_ymd[1];
+		var cache_view=current_elems.filter("div[data-time=\""+prev_ym+"\"]");
+
+		var fn=arguments.callee;
+		if(cache_view.size()>0){
+
+			cache_view.show();
+			cache_view.find('.row-child-item').trigger('scroll')
+			window["select_date"]["date"]=__select_date;
+			window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+			if($.isFunction(callback)) callback();
+			return;
+		}
+
+		if(window["informations"][prev_ym]==undefined){
+
+			var params={}
+			params["date"]=prev_ymd[0]+prev_ymd[1];
+			apiGeoRequests.getMonthlySubDateApi(params,function(status,res){
+
+				var informations=res["data"]["informations"];
+				var unavailable =res["data"]["unavailable"];
+				var current_informations=window["informations"];
+				var current_unavailable=window["unavailable"];
+				var add_informations=changeInformationFormatToDate(informations);
+
+				$.extend(current_unavailable,unavailable,true);
+				$.extend(current_informations,add_informations,true);
+
+				window["unavailable"] =current_unavailable;
+				window["informations"]=current_informations;
+
+				var edit_informations=res["data"]["edit_informations"];
+				$.extend(cacheData().get(CACHE_EDIT_INFORMATION),edit_informations);
+
+				fn(callback);
+			});
+			return;
+		}
+
+		window["select_date"]["date"]=__select_date;
+		window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+		var schedules=!!window["informations"][prev_ym]?window["informations"][prev_ym]:{};
+		var date=new Date(Number(prev_ymd[0]+prev_ymd[1]+"01").addMinutesZero());
+		make(date,schedules,function(){
+
+			var target=schedule_top_inner.children("div[data-time=\""+prev_ym+"\"]");
+
+			var search_history=cacheData().get(CACHE_SEARCH_ACTION);
+			if(1>search_history["is_purchase"]) purchaseOpacityEnable(schedules,search_history["is_purchase"]);
+
+			if($.isFunction(callback)) callback();
+		});
+	}
+
+	var scheduleBtnRightEvent=function(callback){
+
+			var select_date=window["select_date"]["date"];
+			var current_ym=window["select_date"]["ymd"][0]+window["select_date"]["ymd"][1];
+			var current_elems=window["schedule_top_inner"].children();
+			current_elems.filter("div[data-time=\""+current_ym+"\"]").hide();
+			//current_elems.filter("div[data-time=\""+current_ym+"\"]").remove();
+			var __select_date=new Date(Number(current_ym+"01").addMinutesZero());
+			var next_ymd=__select_date.addMonthSeparately(1);
+			var next_ym=next_ymd[0]+next_ymd[1];
+			var cache_view=current_elems.filter("div[data-time=\""+next_ym+"\"]");
+			var fn=arguments.callee;
+			if(cache_view.size()>0){
+
+				cache_view.show();
+				cache_view.find('.row-child-item').trigger('scroll')
+				window["select_date"]["date"]=__select_date;
+				window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+				if($.isFunction(callback)) callback();
+				return;
+			}
+
+			if(window["informations"][next_ym]==undefined){
+
+				var params={}
+				params["date"]=next_ymd[0]+next_ymd[1];
+				apiGeoRequests.getMonthlyAddDateApi(params,function(status,res){
+
+					var informations=res["data"]["informations"];
+					var unavailable =res["data"]["unavailable"];
+					var current_informations=window["informations"];
+					var current_unavailable=window["unavailable"];
+					var add_informations=changeInformationFormatToDate(informations);
+
+					$.extend(current_unavailable,unavailable,true);
+					$.extend(current_informations,add_informations,true);
+					window["informations"]=current_informations;
+					window["unavailable"]=current_unavailable;
+
+					var edit_informations=res["data"]["edit_informations"];
+					$.extend(cacheData().get(CACHE_EDIT_INFORMATION),edit_informations);
+					fn(callback);
+				});
+				return;
+			}
+
+			window["select_date"]["date"]=__select_date;
+			window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+			var schedules=!!window["informations"][next_ym]?window["informations"][next_ym]:{};
+			var date=new Date(Number(next_ymd[0]+next_ymd[1]+"01").addMinutesZero());
+			make(date,schedules,function(){
+
+				var target=schedule_top_inner.children("div[data-time=\""+next_ym+"\"]");
+
+				var search_history=cacheData().get(CACHE_SEARCH_ACTION);
+				if(1>search_history["is_purchase"]) purchaseOpacityEnable(schedules,search_history["is_purchase"]);
+
+				if($.isFunction(callback)) callback();
+			});
+	}
+
+	// add schedule ymd.
+	var setScheduleYmd=function(dates,schedules,callback){
+
+		if(1>dates.length){
+
+			callback();
+			return;
+		}
+
+		var elem=this;
+		var instance=TPL.getInstance("schedule_ymd");
+		var fn=arguments.callee;
+		var ymd=dates.shift();
+		var tpl=instance.replaceTPL(instance.get_schedule_ymd,{ "ymd":ymd });
+		var html=$(tpl);
+		elem.append(html);
+
+		html.ready(function(){
+
+			setScheduleHead.call(html,ymd,function(){
+
+				var informations=(schedules[ymd]==undefined?{}:schedules[ymd]);
+				setScheduleParent.call(html,informations,function(){
+
+					fn.call(elem,dates,schedules,callback);
+				});
+			});
+		});
+	}
+
+	var setScheduleParent=function(schedules,callback){
+
+		var elem=this;
+		var instance=TPL.getInstance("schedule_parent");
+		var tpl=instance.get_schedule_parent;
+		var html=$(tpl);
+		elem.append(html);
+		html.ready(function(){
+
+			if(1>Object.keys(schedules).length){
+
+				callback();
+				return;
+			}
+
+			callback();
+		});
+	}
+
+	var setScheduleHead=function(ymd,callback){
+
+		var elem=this;
+		var instance=TPL.getInstance(["schedule_head","schedule_head_saturday","schedule_head_sunday"]);
+		var ymd_split=Number(ymd).splitYmd();
+		var date=new Date(ymd_split.join("/")+" 00:00:00");
+		var year=ymd_split[0];
+		var year_holidays=holidays[year];
+		var tpl="";
+
+		switch(date.getDay()){
+			case(0):
+			tpl=instance.get_schedule_head_sunday;
+		break;
+			case(6):
+			tpl=instance.get_schedule_head_saturday;
+		break;
+			default:
+			tpl=instance.get_schedule_head;
+		break;
+		}
+
+		if(year_holidays !== undefined && year_holidays.indexOf(ymd) !== -1) tpl=instance.get_schedule_head_sunday;
+
+		var view_day  =ymd_split[2];
+		var view_month=ymd_split[1];
+		view_day      =view_day.indexOf("0")==0?view_day.substr(1):view_day;
+		view_month    =view_month.indexOf("0")==0?view_month.substr(1):view_month;
+		var view_md=viewYmd(null,view_month,view_day);
+
+		var tpl=instance.replaceTPL(tpl,{
+
+			"year" :ymd_split[0],
+			"month":ymd_split[1],
+			"day"  :ymd_split[2],
+			"view_md":view_md,
+			"ymd"  :ymd,
+			"weekday":date.getWeek(weekDayList)
+		});
+
+		var html=$(tpl);
+		elem.append(html);
+		html.ready(function(){
+
+			callback();
+		});
+	}
+
+	// add schedule maps.
+	var setScheduleYm=function(ym,callback){
+
+		var elem=this;
+		var instance=TPL.getInstance("schedule_ym");
+		var fn=arguments.callee;
+		var tpl=instance.replaceTPL(instance.get_schedule_ym,{
+
+			"ym":ym
+		});
+
+		var html=$(tpl);
+		elem.append(html);
+		html.ready(function(){
+
+			callback.call(elem,html);
+		});
+	}
+
+	if(!!last_modified_user["user"]){
+
+		updateToInchageMessage({
+
+			"first_name"  :last_modified_user["user"]["first_name"],
+			"last_edit_ms":last_modified_user["last_edit_ms"]
+		});
+	}
+
+	var changeLeftSideInformations=function(callback){
+
+		var target=this;
+		var data_type=target.attr("data-type");
+
+		var schedule_head=target.parents("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]");
+		var fn=arguments.callee;
+		var schedule_id=target.attr("data-schedule-id");
+		var reserve_id=target.attr("data-reservation-id");
+		var ymd=schedule_head.attr("data-time");
+		var ymd_ary=Number(ymd).splitYmd();
+	
+		if(TYPE_UNAVAILABLE_SCHEDULE==data_type){
+
+			replaceSideScheduleEmpty.call(schedule_aside.empty(),ymd,function(html){});
+			return;
+		}
+
+		if(TYPE_SCHEDULE!=data_type) return;
+
+		var schedule_head=target.parents("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]");
+		var fn=arguments.callee;
+		var schedule_id=target.attr("data-schedule-id");
+		var reserve_id=target.attr("data-reservation-id");
+		var ymd_ary=Number(schedule_head.attr("data-time")).splitYmd();
+		var ym=ymd_ary[0]+ymd_ary[1];
+		var ymd=ym+ymd_ary[2];
+		var information=window["informations"][ym][ymd][schedule_id];
+		var site_detail=information["site_detail"];
+
+		var all_viewer_reserve_ids=[];
+		var schedule_ymd=schedule_top_inner.find("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]:visible");
+		schedule_ymd.each(function(){
+
+			var schedule_ymd=$(this);
+			var schedules=schedule_ymd.find("p[data-type=\""+TYPE_SCHEDULE+"\"]");
+			schedules.each(function(){
+
+				var schedule=$(this);
+				var reserve_id=schedule.attr("data-reserve-id");
+				if(all_viewer_reserve_ids.indexOf(reserve_id)>-1) return;
+				all_viewer_reserve_ids.push(reserve_id);
+			});
+		});
+
+		replaceSideSchedule.call(schedule_aside,ymd,information,function(main_html){
+
+			//edit date detail in side menu.
+			var target=main_html.find("div[data-type=\""+TYPE_SCHEDULE_SIDE_DATE+"\"]");
+			var date_ms=new Date(Number(ymd).addMinutesZero()).getTime();
+			replaceSideScheduleDate.call(target,date_ms,function(html){
+
+				updateToInchageMessage({
+
+					"first_name"  :last_modified_user["user"]["first_name"],
+					"last_edit_ms":last_modified_user["last_edit_ms"]
+				});
+	
+				var t1=TYPE_SCHEDULE_MODIFIED_PARSITE;
+				var action_lastmodified_parsite=schedule_container_top.find("div[data-type=\""+t1+"\"]");
+				action_lastmodified_parsite.empty();
+				var information=cacheData().get(CACHE_EDIT_INFORMATION)[reserve_id];
+				lastModifiedInformationUpdateParSite.call(action_lastmodified_parsite,information);
+			});
+		});
+	}
+
+	var getVisibleDate=function(){
+
+		var t1=TYPE_SCHEDULE_CONTAINER_YM;
+		var schedule_ym=window["schedule_top_inner"].find("div[data-type=\""+t1+"\"]:visible");
+		var date=schedule_ym.attr("data-time");
+		return date;
+	}
+
+	var setCurrentDay=function(){
+
+		var date=getVisibleDate();
+		var ymd_ary=Number(date+"01").splitYmd();
+		var ym=replaceYmForLocale(ymd_ary[0],ymd_ary[1]);
+		window["schedule-head-date-range"].html(ym);
+	}
+
+	var mouseUpEvent=function(e,s){
+
+		var touch_element=$(e.target);
+		var type=touch_element.attr("data-type");
+		var diff=Math.abs(Math.abs(getPageY(e))-Math.abs(s["startPageY"]));
+		changeLeftSideInformations.call(touch_element);
+	}
+
+	var mouseDownEvent=function(e,callback){
+
+			var self=this;
+			var target=$(e.target);
+			var type=target.attr("data-type");
+
+			var ymd=target.parents("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]").attr("data-time");
+			var position_num=target.parent().children("p").index(target);
+			var data_id=ymd+"_"+position_num;
+			self.data("data_id",data_id);
+
+			if(is_sp){
+
+					spContextActionTouchSchedule.call(self,{
+
+							"start_position_id":data_id
+
+					},function(status,last_data_id){
+
+							if(!status) return;
+
+							switch(type){
+
+									case("schedule"):
+
+									var content_box=target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+									var schedule_id=target.attr("data-schedule-id");
+									var site_id    =target.attr("data-site-id");
+									var last_data_id_split=last_data_id.split("_");
+									content_box.data("data_id",last_data_id);
+									spContextModalWindow.call(content_box,{
+
+											"schedule_id" :schedule_id,
+											"site_id"     :site_id,
+											"position_num":last_data_id_split[1],
+											"day"         :last_data_id_split[0],
+									});
+
+							break;
+									case("schedule-dummy"):
+
+									var content_box=target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+									var last_data_id_split=last_data_id.split("_");
+									content_box.data("data_id",last_data_id);
+									spContextModalWindow.call(content_box,{
+
+											"schedule_id" :false,
+											"site_id"     :false,
+											"position_num":last_data_id_split[1],
+											"day"         :last_data_id_split[0],
+									});
+
+							break;
+							}
+
+					});
+			}
+
+			callback();
+	}
+
+	var actionStart=function(callback){
+
+			if(!is_edit){
+
+					callback(false,1,{
+
+							"title"  :"管理権限のあるアカウントでは有りません",
+							"message":"お手元のアカウントではこちらの操作は行えません"
+					});
+					return;
+			}
+
+			var params={};
+			params["user_id"]=user_id;
+			params["last_edit_time"]=cacheData().get(CACHE_LAST_EDIT_TIME).last_edit_time;
+			params["local_time_key"]=localKeyTime(LOCAL_STORAGE_TIMEKEY);
+			apiGeoRequests.editStart(params,function(status,res){
+
+					if(!status && res["type"]==0){
+
+							callback(false);
+							return;
+					}
+
+					if(!status && res["type"]==1){
+
+							callback(false,res["errorNo"],{
+
+									"title"  :res["title"],
+									"message":res["message"]
+							});
+							return;
+					}
+
+					var time_key=res["time_key"];
+					var current_time_ms=res["last_modified_ms"];
+					var last_edit_time =res["last_edit_time"];
+					var action_button=window["schedule_action_button"];
+					addActionButton.call(action_button,1,function(save_button){
+
+							localKeyTime(LOCAL_STORAGE_TIMEKEY,time_key);
+							cacheData().set(MANAGED_LIMITED_TIMER,{"timer":current_time_ms});
+							cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":last_edit_time });
+							callback(true);
+					});
+			});
+	}
+
+	var mouseUpEventLeftSide=function(e,callback){
+
+		var target=$(e.target);
+		var type=target.attr("data-type");
+		console.log(type);
+
+		if(type=="reservation-already-checkout"){
+		
+			__alert("<?php echo __("チェックアウト済み"); ?>");
+			callback();
+			return;
+		}
+
+		if(type=="reservation-checkout"){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+				callback();
+				return;
+			}
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var schedule_id      =schedule_site_box.attr("data-schedule-id");
+			var ymd=schedule_site_box.attr("data-time");
+			var split_ymd=Number(ymd).splitYmd();
+			var ym=split_ymd[0]+split_ymd[1];
+			var information=window["informations"][ym][ymd][schedule_id];
+			var reserve_id=information["reservation"]["id"];
+			var reservation_hash=information["reservation"]["hash"];
+
+			viewCheckoutRemodal.call(schedule_site_box,reserve_id,reservation_hash,function(status,error){
+
+				if(!status){
+				
+					__alert(error);
+					return;
+				}
+	
+				viewCheckoutPayment(reservation_hash,function(status,data){
+
+					if(!status){
+					
+						__alert(data);
+						return;
+					}
+
+					if(Object.keys(data).length>0) __alert("<?php echo __("設定した情報が内容が正常に登録されました"); ?>");
+
+					scheduleReload();
+				});
+			});
+
+			callback();
+			return;
+		}
+
+		if(type=="reservation-checkin"){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+			
+				__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+				callback();
+				return;
+			}
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var schedule_id      =schedule_site_box.attr("data-schedule-id");
+			var ymd=schedule_site_box.attr("data-time");
+			var split_ymd=Number(ymd).splitYmd();
+			var ym=split_ymd[0]+split_ymd[1];
+			var information=window["informations"][ym][ymd][schedule_id];
+			var reserve_id=information["reservation"]["id"];
+			var reservation_hash=information["reservation"]["hash"];
+
+			viewCheckinRemodal.call(schedule_site_box,reserve_id,reservation_hash,function(status,error){
+
+				if(!status){
+				
+					__alert(error);
+					return;
+				}
+
+				scheduleReload();
+			});
+
+			callback();
+			return;
+		}
+
+		if(type=="meal-select"){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+				callback();
+				return;
+			}
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var schedule_id      =schedule_site_box.attr("data-schedule-id");
+			var ymd=schedule_site_box.attr("data-time");
+			var split_ymd=Number(ymd).splitYmd();
+			var ym=split_ymd[0]+split_ymd[1];
+			var information=window["informations"][ym][ymd][schedule_id];
+			var reservation_hash=information["reservation"]["hash"];
+
+			mealSetting.call(target,reservation_hash);
+			callback();
+			return;
+		}
+
+		if(type=="credit-select"){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+				callback();
+				return;
+			}
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var schedule_id      =schedule_site_box.attr("data-schedule-id");
+			var ymd=schedule_site_box.attr("data-time");
+			var split_ymd=Number(ymd).splitYmd();
+			var ym=split_ymd[0]+split_ymd[1];
+			var information=window["informations"][ym][ymd][schedule_id];
+			var reservation_hash=information["reservation"]["hash"];
+			var reserve_id=information["reservation"]["id"];
+			creditSituation(reservation_hash,reserve_id);
+			callback();
+			return;
+		}
+
+		if(type=="guest-info"){
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var schedule_id=schedule_site_box.attr("data-schedule-id");
+			var ymd=schedule_site_box.attr("data-time");
+			var split_ymd=Number(ymd).splitYmd();
+			var ym=split_ymd[0]+split_ymd[1];
+			var information=window["informations"][ym][ymd][schedule_id];
+			var guest_hash=information["guest"]["hash"];
+			guestInfo.call(target,guest_hash);
+			callback();
+			return;
+		}
+
+		if(type=="price-total"){
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var schedule_id      =schedule_site_box.attr("data-schedule-id");
+			var ymd=schedule_site_box.attr("data-time");
+			var split_ymd=Number(ymd).splitYmd();
+			var ym=split_ymd[0]+split_ymd[1];
+			var information=window["informations"][ym][ymd][schedule_id];
+			var reservation_hash=information["reservation"]["hash"];
+
+			priceTotal.call(target,reservation_hash);
+			callback();
+			return;
+		}
+
+		if(type=="price-invoice"){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var schedule_id      =schedule_site_box.attr("data-schedule-id");
+			var ymd=schedule_site_box.attr("data-time");
+			var split_ymd=Number(ymd).splitYmd();
+			var ym=split_ymd[0]+split_ymd[1];
+			var information=window["informations"][ym][ymd][schedule_id];
+			var reservation_hash=information["reservation"]["hash"];
+			invoiceRecode(reservation_hash);
+			callback();
+			return;
+		}
+
+		if(type==BTN_ACTION_START){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			var action_button=window["schedule_action_button"];
+			actionActionStart.call(action_button,user_id,function(){
+			
+				callback();
+			});
+			return;
+		}
+
+		if(type==BTN_ACTION_SAVE){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			actionActionInitSave(user_id,function(){
+
+				callback();
+			});
+			return;
+		}
+
+		if(type=="schedule-reservation-edit-btn"){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+				callback();
+				return;
+			}
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var ymd=schedule_site_box.attr("data-time");
+			var schedule_id      =schedule_site_box.attr("data-schedule-id");
+			var split_ymd=Number(ymd).splitYmd();
+			var ym=split_ymd[0]+split_ymd[1];
+			var information=window["informations"][ym][ymd][schedule_id];
+			var reservation_hash=information["reservation"]["hash"];
+			var base_url="<?php echo "K9Reservation".DS."index".DS; ; ?>";
+
+			var params=[];
+			params.push(information["room"]["id"]);
+			params.push(ymd);
+			params.push(reservation_hash);
+			base_url+=params.join("/");
+			location.href=base_url;
+
+			callback();
+			return;
+		}
+
+		if(type=="schedule-reservation-edit-btn"){
+
+			<?php if(!SETTING_EDIT){ ?>
+
+			__alert("<?php echo __("編集する権限がありません"); ?>");
+			callback();
+			return;
+
+			<?php } ?>
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				__alert("<?php echo __("「操作する」を押して下さい"); ?>");
+				callback();
+				return;
+			}
+
+			var schedule_site_box=target.parents("div[data-type=\"schedule-site-box\"]");
+			var ymd=schedule_site_box.attr("data-time");
+			var schedule_id      =schedule_site_box.attr("data-schedule-id");
+			var informations=cacheData().get(CACHE_SCHEDULE_INFO);
+			var reservation_hash=informations[schedule_id]["reservation"]["hash"];
+			var base_url="<?php echo "K9Reservation".DS."index".DS; ; ?>";
+
+			var params=[];
+			params.push(informations[schedule_id]["room"]["id"]);
+			params.push(ymd);
+			params.push(reservation_hash);
+			base_url+=params.join("/");
+			location.href=base_url;
+			return;
+		}
+
+		if(type=="purchase-search-cancel"){
+
+			var schedule_yms=window["schedule_top_inner"].children("div[data-type=\""+TYPE_SCHEDULE_CONTAINER_YM+"\"]");
+			var schedules=schedule_yms.find("p[data-type=\""+TYPE_SCHEDULE+"\"]");
+	
+			roomOpacityEnable(schedules);
+
+			var parent=target.parent();
+			allCancelSearchButtons.call(parent,undefined,undefined,undefined);	
+
+			callback();
+			return;
+		}
+
+		if(type=="purchase-search"){
+
+			var purchase_flg=0;
+			var schedule_yms=window["schedule_top_inner"].children("div[data-type=\""+TYPE_SCHEDULE_CONTAINER_YM+"\"]");
+			var schedules=schedule_yms.find("p[data-type=\""+TYPE_SCHEDULE+"\"]");
+	
+			purchaseOpacityEnable(schedules);
+			purchaseOpacityEnable(schedules,purchase_flg);
+
+			var parent=target.parents("div[data-type=\"room-search-buttons\"]");
+			allCancelSearchButtons.call(parent,purchase_flg);	
+
+			callback();
+			return;
+		}
+	
+		callback();
+	}
+
+	var allLeftSideEvents=function(){
+
+		var target=this;
+
+		if(is_sp){
+
+			var start="mousedown";
+			if(is_sp) start="touchstart";
+			target.off(start).one(start,function(e){
+
+				var self=$(this);
+				var fn=arguments.callee;
+				self.data("e",e);
+				self.one(e.type,fn);
+			});
+		}
+
+		var end="mouseup";
+		if(is_sp) end="touchend";
+		target.off(end).one(end,function(e){
+
+			var self=$(this);
+			var fn=arguments.callee;
+
+			if(is_sp){
+
+				var start_event=self.data("e");
+				if(isDiffPageXY(start_event,e,ALLOW_MOVE_TOUCH_POINT)){
+
+						self.one(e.type,fn);
+						return;
+				}
+			}
+
+			mouseUpEventLeftSide(e,function(){
+
+				self.one(e.type,fn);
+			});
+
+			return true;
+		});
+	}
+
+	var spContextModalWindow=function(params){
+
+			var content_box=this;
+			var body=window["body"];
+			var schedule_id=params["schedule_id"];
+			var position=params["position_num"];
+			var site_id     =params["site_id"];
+			var day=params["day"];
+			var is_schedule=(!!site_id);
+
+			if(is_schedule){
+
+					contextActions.edit.call(content_box,{
+
+							"position":position,
+							"day":day
+					});
+					return;
+			}
+
+			contextActions.site.call(content_box,{
+
+					"position":position,
+					"day":day
+			});
+	}
+
+	var spContextActionTouchSchedule=function(params,callback){
+
+			var self=this;
+			if(!is_edit) return false;
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return false;
+
+			var start_position_id=params["start_position_id"];
+			return setTimeout(function(){
+
+					var last_data_id=self.data("data_id");
+
+					if(last_data_id==undefined){
+
+							callback(false);
+							return;
+					}
+
+					if(self.data("start_time")==undefined){
+
+							callback(false);
+							return;
+					}
+
+					if(last_data_id!=start_position_id){
+
+							callback(false);
+							return;
+					}
+
+					callback(true,last_data_id);
+
+			},1000);
+	}
+
+	var scheduleBlockEvents=function(){
+
+			var target=this;
+			var start="mousedown";
+			var move ="mousemove";
+			var end  ="mouseup";
+
+			if(is_sp){
+
+					var start="touchstart";
+					var move ="touchmove";
+					var end  ="touchend";
+			}
+
+			target.off(start).one(start,function(e){
+
+					var self=$(this);
+					var fn=arguments.callee;
+					var touch_num=1;
+					if(is_sp) touch_num=e.originalEvent.touches.length;
+
+					if(is_sp && touch_num>1){
+
+							target.one(e.type,fn);
+							return true;
+					}
+
+					self.data("e",e);
+					self.data("touch_num",touch_num);
+					self.data("start_time",new Date().getTime());
+
+					mouseDownEvent.call(self,e,function(){
+
+							self.one(e.type,fn);
+					});
+
+					if(touch_num>1 && !cacheData().get(MANAGED_AUTHORITY).is_managed) return true;
+					if(is_sp && touch_num==1) return true;
+					return true;
+			});
+
+			if(is_sp){
+
+					target.off(move).on(move,function(e){
+
+							var self=$(this);
+							var touch=e.originalEvent.touches[0];
+							var target=$(document.elementFromPoint(touch.clientX,touch.clientY));
+							var type=target.attr("data-type");
+
+							var start_event=self.data("e");
+							if(isDiffPageXY(start_event,e,ALLOW_MOVE_TOUCH_POINT)){
+
+									var tap_timer=self.data("tap_timer");
+									if(tap_timer!=undefined) clearInterval(tap_timer);
+									self.removeData("start_time");
+									self.removeData("tap_timer");
+							}
+
+							if(0>[TYPE_SCHEDULE,TYPE_SCHEDULE_DUMMY].indexOf(type)) return;
+							var ymd=target.parents("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]").attr("data-time");
+							var position_num=target.parent().children("p").index(target);
+							var data_id=ymd+"_"+position_num;
+							self.data("data_id",data_id);
+					});
+			}
+
+			target.off(end).on(end,function(e){
+
+					var self=$(this);
+					var start=self.data("e");
+					var touch_num=self.data("touch_num");
+
+					if(!start || start["target"]==undefined || !(start instanceof jQuery.Event)) return;
+
+					self.removeData("e");
+					self.removeData("touch_num");
+					self.removeData("start_time");
+					self.removeData("data_id");
+
+					if(isDiffPageXY(start,e,ALLOW_MOVE_TOUCH_POINT)) return true;
+
+					mouseUpEvent(e,{
+
+							"startPageX":getPageX(start),
+							"startPageY":getPageY(start),
+							"touchNum":touch_num
+					});
+					return true;
+			});
+	}
+
+	var headLineMouseUpEvent=function(e,s){
+
+			var target=$(e.target);
+			var type=target.attr("data-type");
+
+			if(is_sp){
+
+					var allow_point=ALLOW_MOVE_TOUCH_POINT;
+					var diff_y=Math.abs(Math.abs(getPageY(e))-Math.abs(s["startPageY"]));
+					var diff_x=Math.abs(Math.abs(getPageX(e))-Math.abs(s["startPageX"]));
+					if(diff_x>allow_point || diff_y>allow_point) return;
+			}
+
+			if(type==TYPE_SCHEDULE_DAY_BTN){
+
+					var data_url=target.attr("data-url");
+					var ymd_ary=window["select_date"]["ymd"];
+					var url=BASE_URL+data_url+"/"+ymd_ary[0]+ymd_ary[1]+"01";
+					location.href=url;
+					return;
+			}
+
+			if(type==TYPE_SCHEDULE_WEEK_BTN){
+
+					var data_url=target.attr("data-url");
+					var ymd_ary=window["select_date"]["ymd"];
+					var url=BASE_URL+data_url+"/"+ymd_ary[0]+ymd_ary[1];
+					location.href=url;
+					return;
+			}
+
+			if(type==TYPE_SCHEDULE_MONTH_BTN){
+
+					var data_url=target.attr("data-url");
+					var ymd_ary=window["select_date"]["ymd"];
+					var url=BASE_URL+data_url;
+					location.href=url;
+					return;
+			}
+
+			if([BTN_SCHEDULE_PREV_BUTTON,BTN_SCHEDULE_PREV_BUTTON_SPAN].indexOf(type)>-1){
+
+					widthScrollBar();
+					scheduleBtnLeftEvent(function(){
+
+							setCurrentDay();
+					});
+					return;
+			}
+
+			if([BTN_SCHEDULE_NEXT_BUTTON,BTN_SCHEDULE_NEXT_BUTTON_SPAN].indexOf(type)>-1){
+
+					widthScrollBar();
+					scheduleBtnRightEvent(function(){
+
+							setCurrentDay();
+					});
+					return;
+			}
+	}
+
+	var scheduleHeadBtnsEvents=function(){
+
+		var start="mousedown";
+		var move ="mousemove";
+		var end  ="mouseup";
+
+		if(is_sp){
+
+			var start="touchstart";
+			var move ="touchmove";
+			var end  ="touchend";
+		}
+
+		var target=this;
+		target.off(end).on(end,function(e){
+
+			var target=$(this);
+			var start=target.data("e");
+
+			if(!start || start["target"]==undefined || !(start instanceof jQuery.Event)) return;
+			target.removeData("e");
+			headLineMouseUpEvent(e,{
+
+				"startPageX":getPageX(start),
+				"startPageY":getPageY(start)
+			});
+			return true;
+		});
+
+		target.off(start).one(start,function(e){
+
+			var self=$(this);
+			var fn=arguments.callee;
+
+			self.data("e",e);
+			self.one(e.type,fn);
+			return true;
+		});
+	}
+
+	window["sendRecordDataForSubscribe"]=function(data){
+	
+		var deferred=$.Deferred();
+		var informations=window["informations"];
+		var dates=Object.keys(informations);
+		var start_date=dates[0]+"01";
+		var end_ym=dates[dates.length-1];
+		var end_date_day=new Date(Number(dates[dates.length-1]).addMinutesZero()).getLastDayInaMonth();
+		var end_date=end_ym+end_date_day;
+		var range={"start":start_date,"end":end_date};
+	
+		sendRecordData(data,range,function(status,data){
+	
+			if(!status){
+	
+				deferred.resolve(status,data);
+				return;
+			}
+
+			var informations  =data["informations"];
+			var last_edit_time=data["last_edit_time"];
+			var ninku_situations=data["ninku_situations"];
+			var current_informations=window["informations"];
+
+			var add_informations=changeInformationFormatToDate(informations);
+			$.extend(current_informations,add_informations,true);
+			window["informations"]=current_informations;
+
+			var edit_information=data["edit_information"];
+			$.extend(cacheData().get(CACHE_EDIT_INFORMATION),edit_information);
+
+			// update ninku situations.
+			updateNinkuCacheValues(ninku_situations);
+
+			cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":last_edit_time });
+			localKeyTime(LOCAL_STORAGE_TIMEKEY,(parseInt(last_edit_time)/1000)+"");
+
+			var schedule_ym=window["schedule_top_inner"].children("div[data-type=\""+TYPE_SCHEDULE_CONTAINER_YM+"\"]:visible");
+			var date=(schedule_ym.attr("data-time")+"01");
+			replaceSideScheduleEmpty.call(schedule_aside.empty(),date,function(html){
+
+				deferred.resolve(status,data);
+			});
+		});
+
+		return deferred.promise();
+	}
+
+	var date=current_ym+"01";
+	replaceSideScheduleEmpty.call(schedule_aside,date,function(html){
+
+		var schedules=(window["informations"][current_ym]==undefined?{}:window["informations"][current_ym]);
+		var date=new Date(Number(current_ym+"01").addMinutesZero());
+		make(date,schedules,function(){
+
+			scheduleHeadBtnsEvents.call(window["schedule-btn-left"]);
+			scheduleHeadBtnsEvents.call(window["schedule-btn-right"]);
+			scheduleHeadBtnsEvents.call(window["schedule-head-bottom-line"]);
+			scheduleHeadBtnsEvents.call(window["schedule-head-middle-line"]);
+
+			scheduleBlockEvents.call(window["schedule_top_inner"]);
+			allLeftSideEvents.call(window["schedule_left_side"]);
+			setCurrentDay();
+
+			scheduleRefreshOvertime(limited_second);
+
+			if(!isAuthority(limited_second)) return;
+			addActionButton.call(window["schedule_action_button"],1,function(){
+
+				bodyColor(1);
+
+				cacheData().set(MANAGED_LIMITED_TIMER,{"timer":window["schedule_log"]["edit_time_expired_ms"]});
+				cacheData().set(MANAGED_AUTHORITY,{"is_managed":true});
+			});
+		});
+	});
+
+	// add schedule maps.
+	var setScheduleMap=function(days,callback){
+
+		if(1>days.length){
+
+			callback();
+			return
+		}
+
+		var elem=this;
+		var day=days.shift();
+		var date=new Date(Number(day).addMinutesZero());
+		var instance=TPL.getInstance("schedule_map");
+		var tpl=instance.replaceTPL(instance.get_schedule_map,{
+
+			"time"   :day,
+			"month"  :date.getMonth()+1,
+			"day"    :date.getDate(),
+			"weekday":date.getWeek(weekDayList)
+		});
+
+		var fn=arguments.callee;
+		var html=$(tpl);
+		elem.append(html);
+		html.ready(function(){
+
+			fn.call(elem,days,callback);
+		});
+	}
+
+	var contextActions={
+
+		"onContextMenu":function(e){
+
+			var target=$(e.target);
+			var data_type=target.attr("data-type");
+			if(TYPE_SCHEDULE==data_type){
+
+				if(!is_edit) return false;
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+					var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+					message+="<?php echo __("「操作する」を押して下さい"); ?>";
+					__alert(message);
+					return false;
+				}
+				return true;
+			}
+
+			if(TYPE_UNAVAILABLE_SCHEDULE==data_type){
+			
+				if(!is_edit) return false;
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+					var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+					message+="<?php echo __("「操作する」を押して下さい"); ?>";
+					__alert(message);
+					return false;
+				}
+
+				return true;
+			}
+
+			if(TYPE_SCHEDULE_DUMMY==data_type){
+
+				if(!is_edit) return true;
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+					var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+					message+="<?php echo __("「操作する」を押して下さい"); ?>";
+					__alert(message);
+					return false;
+				}
+				return true;
+			}
+
+			return false;
+		},
+		"onShowMenu":function(e,menu){
+
+			var target=$(e.target);
+			var data_type=target.attr("data-type");
+			var data_block_type=target.attr("data-block-type");
+			var is_rest=data_block_type=="etc";
+
+			if(TYPE_SCHEDULE==data_type){
+
+				var schedule_ymd=target.parents("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]");
+				var ymd=schedule_ymd.attr("data-time");
+				var position=target.parent().children("p").index(target);
+				var schedule_id=target.attr("data-schedule-id");
+				var data_id=ymd+"_"+position;
+				var content_box=target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+				content_box.data("data_id",data_id);
+				menu.find("li[data-type=\"context-site-add\"]").hide();
+				menu.find("li[data-type=\"context-site-unavailable\"]").hide();
+				return menu;
+			}
+
+			if(TYPE_UNAVAILABLE_SCHEDULE==data_type){
+
+				var schedule_ymd=target.parents("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]");
+				var ymd=schedule_ymd.attr("data-time");
+
+				var position=target.parent().children("p").index(target);
+				var schedule_id=target.attr("data-schedule-id");
+				var data_id=ymd+"_"+position;
+				var content_box=target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+				content_box.data("data_id",data_id);
+	
+				menu.find("li[data-type=\"context-site-add\"]").hide();
+				menu.find("li[data-type=\"context-site-edit\"]").hide();
+				menu.find("li[data-type=\"context-diposit\"]").hide();
+				return menu;
+			}
+
+			if(TYPE_SCHEDULE_DUMMY==data_type){
+
+				var schedule_ymd=target.parents("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"]");
+				var ymd=schedule_ymd.attr("data-time");
+				var position=target.parent().children("p").index(target);
+				var data_id=ymd+"_"+position;
+				var content_box=target.parents("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+				content_box.data("data_id",data_id);
+				menu.find("li[data-type=\"context-site-edit\"]").hide();
+				menu.find("li[data-type=\"context-diposit\"]").hide();
+
+				if(is_rest) menu.find("li[data-type=\"context-site-unavailable\"]").hide();
+				return menu;
+			}
+		},
+		"site":function(params){
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+				message+="<?php echo __("「操作する」を押して下さい"); ?>";
+				__alert(message);
+				return;
+			}
+
+			var content_box=this;
+			var ymd=params["day"];
+
+			if(!params["reserve_id"] && window["today"]["ymd"]>ymd){
+
+				var message="<?php echo __("当日以降の日付は指定出来ません"); ?>";
+				__alert(message);
+				return;
+			}
+
+			var position=params["position"];
+			var schedule_ymd=content_box.find("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"][data-time=\""+ymd+"\"]");
+			var schedule_parent=schedule_ymd.children("div[data-type=\""+TYPE_SCHEDULE_PARENT+"\"]");
+			var schedule_dummy=schedule_parent.children("p").eq(position);
+
+			var ymd_split=Number(ymd).splitYmd();
+			var ym=ymd_split[0]+ymd_split[1];
+			var room_id=schedule_dummy.attr("data-room-id");
+			var schedule_id=params["schedule_id"]==undefined?false:params["schedule_id"];
+			var reserve_id =params["reserve_id"]==undefined?false:params["reserve_id"];
+
+			var reservation_hash="";
+			if(!!schedule_id) reservation_hash=window["informations"][ym][ymd][schedule_id]["reservation"]["hash"];
+
+			var base_url="<?php echo "K9Reservation".DS."index".DS; ; ?>";
+
+			var params=[];
+			params.push(room_id);
+			params.push(ymd);
+			if(reservation_hash.length>0) params.push(reservation_hash);
+			base_url+=params.join("/");
+			location.href=base_url;
+		},
+		"diposit":function(data){
+
+			alert("ok");
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+				message+="<?php echo __("「操作する」を押して下さい"); ?>";
+				__alert(message);
+				return;
+			}
+	
+		},
+		"unavailable":function(data){
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+				message+="<?php echo __("「操作する」を押して下さい"); ?>";
+				__alert(message);
+				return;
+			}
+
+			var content_box=this;
+			var data_id=content_box.data("data_id");
+			var data_id_split=data_id.split("_");
+			var start=data_id_split[0];
+
+			if(window["today"]["ymd"]>start){
+
+				var message="<?php echo __("本日より過去の日付は選択出来ません"); ?>";
+				__alert(message);
+				return;
+			}
+
+			var index=data_id_split[1];
+			var day_top=window["schedule_top_inner"].find("div[data-type=\"schedule-ymd\"][data-time=\""+start+"\"]");
+			var p=day_top.find("p").eq(index);
+			var roomid=p.attr("data-room-id");
+			var fn=arguments.callee;
+			var is_unvailable=p.attr("data-type")==TYPE_UNAVAILABLE_SCHEDULE;
+
+			if(data==undefined && is_unvailable){
+
+				var params={"data":{}};
+				params["data"]["data_id"]=p.attr("data-id");
+				apiGeoRequests.getUnavailabledata(params,function(status,res){
+				
+					fn.call(content_box,res["data"]);
+				});
+				return;
+			}
+
+			var id;
+			var end;
+			var remarks;
+			var reason_id;
+			if(data!=undefined){
+			
+				id     =data["data_id"];
+				start  =data["start_date"];
+				end    =data["end_date"];
+				reason_id=data["reason_id"];
+				remarks=data["remarks"];
+			}
+
+			var params={};
+			params["roomid"]   =roomid;
+			params["start"]    =start;
+			params["end"]      =end;
+			params["remarks"]  =remarks;
+			params["reason_id"]=reason_id;
+			unavailableRoom(id,params,function(is_update){
+
+				if(is_update) return;
+				scheduleReload();
+			});
+		},
+		"diposit":function(params){
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+				message+="<?php echo __("「操作する」を押して下さい"); ?>";
+				__alert(message);
+				return;
+			}
+
+			var content_box=this;
+			var ymd=params["day"];
+			var position=params["position"];
+			var schedule_ymd=content_box.find("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"][data-time=\""+ymd+"\"]");
+			var schedule_parent=schedule_ymd.children("div[data-type=\""+TYPE_SCHEDULE_PARENT+"\"]");
+			var schedule=schedule_parent.children("p").eq(position);
+			var schedule_id=schedule.attr("data-schedule-id").replace("_","");
+			var blocktype=schedule.attr("data-block-type");
+			var is_rest=(blocktype=="etc");
+			var staytype=(is_rest)?"rest":"stay";
+			diposit(schedule_id,ymd,staytype,function(is_edit){
+			
+				if(!is_edit) return;
+				scheduleReload();
+			});
+		},
+		"edit":function(params){
+
+			if(!cacheData().get(MANAGED_AUTHORITY).is_managed){
+
+				var message="<?php echo __("編集可能な状態では有りません"); ?><br />";
+				message+="<?php echo __("「操作する」を押して下さい"); ?>";
+				__alert(message);
+				return;
+			}
+
+			var content_box=this;
+			var ymd=params["day"];
+			var position=params["position"];
+			var schedule_ymd=content_box.find("div[data-type=\""+TYPE_SCHEDULE_YMD+"\"][data-time=\""+ymd+"\"]");
+			var schedule_parent=schedule_ymd.children("div[data-type=\""+TYPE_SCHEDULE_PARENT+"\"]");
+			var schedule=schedule_parent.children("p").eq(position);
+			var schedule_id=schedule.attr("data-schedule-id");
+			var reserve_id=schedule.attr("data-reservation-id");
+
+			params["reserve_id"]=reserve_id;
+			params["schedule_id"]=schedule_id;
+			contextActions.site.call(content_box,params);
+		},
+		"bindings":{
+
+			"site":function(t,callback){
+
+				var content_box=$(t);
+				var data_id=content_box.data("data_id");
+				var data_id_split=data_id.split("_");
+				var ymd=data_id_split[0];
+				var index=data_id_split[1];
+				contextActions.site.call(content_box,{
+
+					"day":ymd,
+					"position":index,
+					"reserve_id":""
+				});
+			},
+			"diposit":function(t){
+
+				var content_box=$(t);
+				var data_id=content_box.data("data_id");
+				var data_id_split=data_id.split("_");
+				var ymd=data_id_split[0];
+				var index=data_id_split[1];
+				contextActions.diposit.call(content_box,{
+
+					"day":ymd,
+					"position":index
+				});
+			},
+			"edit":function(t){
+
+				var content_box=$(t);
+				var data_id=content_box.data("data_id");
+				var data_id_split=data_id.split("_");
+				var ymd=data_id_split[0];
+				var index=data_id_split[1];
+				contextActions.edit.call(content_box,{
+
+					"day":ymd,
+					"position":index
+				});
+			},
+			"unavailable":function(t){
+
+				var content_box=$(t);
+				var data_id=content_box.data("data_id");
+				var data_id_split=data_id.split("_");
+				var ymd=data_id_split[0];
+				var index=data_id_split[1];
+				contextActions.unavailable.call(content_box);
+			},
+		}
+	}
+
+	//■managed right click.
+	var addContextMenu=function(){
+
+		var context_menu=html.find("div[data-type=\"context-menu\"]");
+		window["schedule_content_box"].contextMenu(context_menu,contextActions);
+	}
+
+	addScheduleRoomLi.call(schedule_side_memo,rooms,function(){
+
+	});
+
+});
+
+</script>
+
+<script type="text/javascript">
+	function widthScrollBar(){
+
+		var mar = parseInt($('.row-child-item').width()) - parseInt($('.row-child-item').prop("clientWidth"));
+		if(!$('style.scrollW').length)
+			$(body).append('<style class="scrollW">.head-row-child{padding-right: '+mar+'px}</style>');
+	}
+	$(window).resize(function(event) {
+		widthScrollBar();
+	});
+</script>
+
+<script id="tpl_schedule_ym" type="text/tmpl">
+<div data-type="schedule-container-ym" data-time="<<ym>>" id="schedule-content"></div>
+</script>
+
+<script id="tpl_schedule_ymd" type="text/tmpl">
+<div class="schedule-map" data-type="schedule-ymd" data-time="<<ymd>>"></div>
+</script>
+
+<script id="tpl_schedule_head" type="text/tmpl">
+<div class="schedule-head" data-type="schedule-head">
+<a class="hover-img" href="SiteDaily/index/<<year>><<month>><<day>>" onclick="return false;"><span><<view_md>>(<<weekday>>)</span></a>
+</div>
+</script>
+
+<script id="tpl_schedule_head_saturday" type="text/tmpl">
+<div class="schedule-head" data-type="schedule-head">
+<a class="hover-img" href="SiteDaily/index/<<year>><<month>><<day>>" onclick="return false;"><span class="saturday"><<view_md>>(<<weekday>>)</span></a>
+</div>
+</script>
+
+<script id="tpl_schedule_head_sunday" type="text/tmpl">
+<div class="schedule-head" data-type="schedule-head">
+<a class="hover-img" href="SiteDaily/index/<<year>><<month>><<day>>" onclick="return false;"><span class="sunday"><<view_md>>(<<weekday>>)</span></a>
+</div>
+</script>
+
+<script id="tpl_schedule_parent" type="text/tmpl">
+<div class="schedule-parent" data-type="schedule-parent" style="overflow:hidden;"></div>
+</script>
+
+<script id="tpl_schedule" type="text/tmpl">
+<p style="color:<<fontcolor>>;background-color:<<color>>;" data-purchase-flg="<<is_purchase>>" data-block-type="<<block_type>>" data-room-type-id="<<room_type_id>>" data-room-id="<<room_id>>" data-type="schedule" data-reservation-id="<<reserve_id>>" data-schedule-id="<<schedule_id>>"><<name>>(<span style="color:<<price_color>>;"><<price>></span>)</p>
+</script>
+
+<script id="tpl_unavailable_schedule" type="text/tmpl">
+<p style="color:<<fontcolor>>;background-color:<<bgcolor>>;" data-id="<<data_id>>" data-block-type="unavailable" data-room-id="<<room_id>>" data-type="unavailable-schedule"></p>
+</script>
+
+<script id="tpl_schedule_p_dummy" type="text/tmpl">
+<p style="color:#fff;border-bottom:1px #eee solid;" data-type="schedule-dummy" data-block-type="<<block_type>>" data-room-id="<<room_id>>"></p>
+</script>
+
+<div class="container-fluid" data-type="schedule-container-top">
+	<div class="content">
+		<div class="l-contents l-schedule cf" data-type="schedule-l-contents">
+			<div id="left-block" style="position:relative;top:0px;" data-type="schedule-left-side">
+				<div id="set-up">
+					<div class="set-up-btn hover-img" data-type="action-button">
+						<a data-type="action-save" href="javascript:void(0);">段取をする</a>
+					</div><!--/.set-up-btn-->
+					<div data-type="schedule-modified-information"></div>
+				</div><!--/.set-up-->
+				<?php echo $this->element("schedule_aside"); ?>
+			</div><!--/.left-block-->
+			<div class="l-main">
+				<div class="content-box" data-type="content-box">
+					<div class="memo-monthly">
+						<ul class="memo-row memo-row-1" data-type="schedule-side-memo"></ul>
+						<ul class="memo-row memo-row-2" data-type="schedule-side-memo"></ul>
+						<ul class="memo-row memo-row-3" data-type="schedule-side-memo"></ul>
+					</div>
+					<div id="s_body">
+						<div id="schedule_top" data-type="schedule-top" style="position:relative;">
+
+							<div data-type="situation-labels" style="height:20px;top:42px;"><div data-type="situation-label-parent" class="situation-label-parent"></div></div>
+
+							<div id="schedule_btn_line" class="cf control-arrow">
+								<div class="row-fluid" data-type="schedule-head-top-line">
+									<div class="schedule_btn_left preview btn pull-left" data-type="schedule-btn-left"><span class="fa fa-angle-left"></span><?php echo __("前の月"); ?></div>
+									<span class="date-info pull-left" data-type="schedule-header-ymd"></span>
+									<div class="schedule_btn_right next btn pull-right" data-type="schedule-btn-right"><?php echo __("次の月"); ?><span class="fa fa-angle-right"></span></div>
+								</div>
+								<div class="row-fluid">
+									<?php echo $this->element("schedule_date_switch"); ?>
+								</div>
+							</div>
+							<div id="schedule-container" data-type="schedule-top-inner" style="position:relative;"></div>
+						</div> <!-- / #schedule_top -->
+					</div><!-- / #s_body -->
+				</div> <!-- / .content-box -->
+			</div><!-- /.l-main -->
+		</div><!-- / .l-contents l-schedule cf -->
+	</div><!--/.content-->
+</div><!--/.container-->
+
+<div style="display:none;" data-type="context-menus">
+	<div id="context_menu" data-type="context-menu">
+		<ul>
+			<li id="site" data-type="context-site-add"><img src="img/icon/paste.gif"/><?php echo __("新規宿泊"); ?></li>
+			<li id="edit" data-type="context-site-edit"><img src="img/icon/paste.gif"/><?php echo __("宿泊編集"); ?></li>
+			<li id="unavailable" data-type="context-site-unavailable"><img src="img/icon/paste.gif"/><?php echo __("部屋使用停止"); ?></li>
+			<li id="diposit" data-type="context-diposit"><img src="img/icon/paste.gif"/><?php echo __("デポジット"); ?></li>
+		</ul>
+	</div>
+</div>
+
+<script>
+	(function($){
+		$(window).on("load",function(){
+			$('.head-row-child').width( $('.row-child-item').prop("clientWidth") );
+			$(window).resize(function(event) {
+
+				$(document).find('.schedule-container-ym:visible .row-child-item').each(function(i, elem){
+					var __head=$(elem).prev();
+					__head.width( $(elem).prop("clientWidth") );
+				});
+
+			});
+		});
+	})(jQuery);
+</script>
+
+<script id="tpl_print_base_layout_date" type="text/tmpl">
+<span><<year>>年<<month>>月</span>
+</script>
+
+<script id="tpl_print_base_layout_schedule_main" type="text/tmpl">
+<div class="pri-row pri-row-<<row>>" data-type="print-schedule-main">
+	<div class="tit-head" data-type="print-dateline-parent"></div>
+	<div class="monthly-content" data-type="print-montly-content"></div>
+</div>
+</script>
+
+<script id="tpl_print_base_layout_schedule_date" type="text/tmpl">
+<div class="tit-item" data-time="<<ymd>>"><<month>>/<<day>>(<<week>>)</div>
+</script>
+
+<script id="tpl_print_base_layout_dateparent" type="text/tmpl">
+<div class="tic-col" data-type="print-dateparent"></div>
+</script>
+
+<script id="tpl_print_base_layout_schedule" type="text/tmpl">
+<p class="monthly-sche-row" style="background-color: <<bg_color>>!important"><<title>></p>
+</script>
+
+<script id="tpl_print_base_layout_schedule_empty" type="text/tmpl">
+<p class="monthly-sche-row"></p>
+</script>
+
+<script id="tpl_print_base_layout" type="text/tmpl">
+<div data-type="print-base-layout" class="print_base_layout" id="print_base_layout">
+	<div data-type="schedule-data-line-container" class="print-content">
+		<div class="printer-title" data-type="print-date"></div>
+		<div class="content-printout">
+			<div class="memo-list-pri">
+			</div>
+			<div class="sitemonthly-pri" data-type="print-main-content"></div>
+		</div>
+	</div>
+	<div class="text-right print-footer">
+		<button class="back-btn" data-type="print-out-no">閉じる</button>
+		<button class="submit-btn" data-type="print-out-yes">印刷する</button>
+	</div>
+</div>
+</script>
+
+<script id="tpl_situation_label" type="text/tmpl">
+<div class="situation-label" data-situation-type="<<type>>" style="color:<<fontcolor>>;line-height:1.8;width:<<size>>%;background-color:<<bgcolor>>;"><<title>></div>
+</script>
+	

@@ -1,0 +1,498 @@
+<script>
+
+apiGeoRequests.registerAPI=function(method,params){
+
+	var self=this;
+	var controller=params["controller"];
+	var action    =params["action"];
+
+	self[method]=function(data,callback){
+
+		var obj= new self();
+		obj.setBaseURL(BASE_URL);
+		obj.setURL(self[method].makeURL());
+		var params=self.ajaxBaseParams;
+		params["loadingOff"]=((data["loadingOff"]==undefined)?false:data["loadingOff"]);
+		var responseHandler=(!!self["responseHandler"]&&$.isFunction(self["responseHandler"]))?self["responseHandler"]:false;
+
+		data["token"]='<?php echo $token; ?>';
+		data["last_edit_time"]=cacheData().get(CACHE_LAST_EDIT_TIME).last_edit_time;
+		data["local_time_key"]=localKeyTime(LOCAL_STORAGE_TIMEKEY);
+
+		obj.request(data,params,function(status,res){
+
+			if(res["is_reload"]!=undefined && parseInt(res["is_reload"])>0){
+			
+				alert(res["message"]);
+				reloadUnbindUnload();
+				return;
+			}
+
+			if(responseHandler) responseHandler(status,res,callback);
+		})
+	}
+
+	self[method].makeURL=function(){
+
+		var base_url=controller+"/"+action;
+		return base_url;
+	}
+}
+
+apiGeoRequests.registerAPI("getMonthlySubDateApi",{
+
+	"controller":"K9ScheduleSaveManagers",
+	"action"    :"saveSchedule"
+});
+
+apiGeoRequests.registerAPI("getMonthlySubDateApi",{
+
+	"controller":"K9SiteMonthly",
+	"action"    :"getSubDateApi"
+});
+
+apiGeoRequests.registerAPI("getMonthlyDateRange",{
+
+	"controller":"K9SiteMonthly",
+	"action"    :"getDateRange"
+});
+
+apiGeoRequests.registerAPI("getMonthlyAddDateApi",{
+
+	"controller":"K9SiteMonthly",
+	"action"    :"getAddDateApi"
+});
+
+apiGeoRequests.registerAPI("saveSchedule",{
+
+	"controller":"K9ScheduleSaveManagers",
+	"action"    :"saveSchedule"
+});
+
+apiGeoRequests.registerAPI("getSubDateApi",{
+
+	"controller":"K9Site",
+	"action"    :"getSubDateApi"
+});
+
+apiGeoRequests.registerAPI("getDateRange",{
+
+	"controller":"K9Site",
+	"action"    :"getDateRange"
+});
+
+apiGeoRequests.registerAPI("getAddDateApi",{
+
+	"controller":"K9Site",
+	"action"    :"getAddDateApi"
+});
+
+apiGeoRequests.registerAPI("initScheduleLog",{
+
+	"controller":"K9SiteManagesInitialEditTimes",
+	"action"    :"initScheduleLog"
+});
+
+apiGeoRequests.registerAPI("editStart",{
+
+	"controller":"K9SiteManagesEditAuthorities",
+	"action"    :"editStart?"+new Date().getTime()
+});
+
+apiGeoRequests.registerAPI("reservationRestSubscribe",{
+
+	"controller":"K9ReservationRestSubscribe",
+	"action"    :"reservationSubscribe"
+});
+
+apiGeoRequests.registerAPI("reservationSubscribe",{
+
+	"controller":"K9ReservationSubscribe",
+	"action"    :"reservationSubscribe"
+});
+
+apiGeoRequests.registerAPI("getReservationInformations",{
+
+	"controller":"K9ReserveInformations",
+	"action"    :"getReservationInformations"
+});
+
+apiGeoRequests.registerAPI("getPriceHistory",{
+
+	"controller":"K9PriceSituations",
+	"action"    :"getPriceHistory"
+});
+
+apiGeoRequests.registerAPI("getPriceRate",{
+
+	"controller":"K9SavePriceRate",
+	"action"    :"getPriceRate"
+});
+
+apiGeoRequests.registerAPI("savePriceRate",{
+
+	"controller":"K9SavePriceRate",
+	"action"    :"savePriceRate"
+});
+
+apiGeoRequests.registerAPI("removePriceRate",{
+
+	"controller":"K9RemovePriceRate",
+	"action"    :"removePriceRate"
+});
+
+apiGeoRequests.registerAPI("checkPriceRate",{
+
+	"controller":"K9CheckPriceRate",
+	"action"    :"checkPriceRate"
+});
+
+apiGeoRequests.registerAPI("searchGuest",{
+
+	"controller":"K9ReservationSubscribe",
+	"action"    :"searchGuest"
+});
+
+apiGeoRequests.registerAPI("getEmployees",{
+
+	"controller":"K9Employees",
+	"action"    :"getEmployees"
+});
+
+apiGeoRequests.registerAPI("getPassword",{
+
+	"controller":"K9Employees",
+	"action"    :"getPassword"
+});
+
+apiGeoRequests.registerAPI("getHistory",{
+
+	"controller":"K9GuestHistories",
+	"action"    :"getHistory"
+});
+
+apiGeoRequests.registerAPI("getSettings",{
+
+	"controller":"K9Settings",
+	"action"    :"getSettings"
+});
+
+apiGeoRequests.registerAPI("saveSetting",{
+
+	"controller":"K9Settings",
+	"action"    :"saveSetting"
+});
+
+apiGeoRequests.registerAPI("saveBaseRoomTypePrice",{
+
+	"controller":"K9RoomTypeBasePrice",
+	"action"    :"saveBaseRoomTypePrice"
+});
+
+apiGeoRequests.registerAPI("saveBaseRoomPrice",{
+
+	"controller":"K9RoomBasePrice",
+	"action"    :"saveBaseRoomPrice"
+});
+
+apiGeoRequests.registerAPI("saveEmployee",{
+
+	"controller":"K9Employees",
+	"action"    :"saveEmployee"
+});
+
+apiGeoRequests.registerAPI("getRoomSituation",{
+
+	"controller":"K9RoomSituations",
+	"action"    :"getRoomSituation"
+});
+
+apiGeoRequests.registerAPI("saveRoomSituation",{
+
+	"controller":"K9RoomSituations",
+	"action"    :"saveRoomSituation"
+});
+
+apiGeoRequests.registerAPI("checkin",{
+
+	"controller":"K9Checkin",
+	"action"    :"checkin"
+});
+
+apiGeoRequests.registerAPI("checkout",{
+
+	"controller":"K9Checkout",
+	"action"    :"checkout"
+});
+
+apiGeoRequests.registerAPI("invoiceItem",{
+
+	"controller":"K9Invoice",
+	"action"    :"invoice"
+});
+
+apiGeoRequests.registerAPI("invoiceDiposit",{
+
+	"controller":"K9DipositReports",
+	"action"    :"invoice"
+});
+
+apiGeoRequests.registerAPI("checkRoomTypeAvailable",{
+
+	"controller":"K9ReservationSubscribe",
+	"action"    :"checkRoomTypeAvailable"
+});
+
+apiGeoRequests.registerAPI("checkRoomAvailable",{
+
+	"controller":"K9ReservationSubscribe",
+	"action"    :"checkRoomAvailable"
+});
+
+apiGeoRequests.registerAPI("guestSearch",{
+
+	"controller":"K9GuestSearch",
+	"action"    :"guestSearch"
+});
+
+apiGeoRequests.registerAPI("saveGuestInformation",{
+
+	"controller":"K9GuestInformations",
+	"action"    :"saveGuestInformation"
+});
+
+apiGeoRequests.registerAPI("getOrderInformations",{
+
+	"controller":"K9OrderInformations",
+	"action"    :"getOrderInformations"
+});
+
+apiGeoRequests.registerAPI("orderSubscribe",{
+
+	"controller":"K9OrderInformations",
+	"action"    :"orderSubscribe"
+});
+
+apiGeoRequests.registerAPI("getMasterData",{
+
+	"controller":"K9BasePrices",
+	"action"    :"getMasterData"
+});
+
+apiGeoRequests.registerAPI("masterPriceSubscribe",{
+
+	"controller":"K9BasePrices",
+	"action"    :"masterPriceSubscribe"
+});
+
+apiGeoRequests.registerAPI("checkRestRoomTypeAvailable",{
+
+	"controller":"K9ReservationRestSubscribe",
+	"action"    :"checkRestRoomTypeAvailable"
+});
+
+apiGeoRequests.registerAPI("checkRestRoomAvailable",{
+
+	"controller":"K9ReservationRestSubscribe",
+	"action"    :"checkRestRoomAvailable"
+});
+
+apiGeoRequests.registerAPI("masterItemSubscribe",{
+
+	"controller":"K9MasterItems",
+	"action"    :"masterItemSubscribe"
+});
+
+apiGeoRequests.registerAPI("getCreditSituation",{
+
+	"controller":"K9Credits",
+	"action"    :"getCreditSituation"
+});
+
+apiGeoRequests.registerAPI("creditSubscribe",{
+
+	"controller":"K9Credits",
+	"action"    :"creditSubscribe"
+});
+
+apiGeoRequests.registerAPI("paymentWaySubscribe",{
+
+	"controller":"K9CheckoutPayment",
+	"action"    :"paymentWaySubscribe"
+});
+
+apiGeoRequests.registerAPI("getCheckoutPayment",{
+
+	"controller":"K9CheckoutPayment",
+	"action"    :"getCheckoutPayment"
+});
+
+apiGeoRequests.registerAPI("getOutputPayment",{
+
+	"controller":"K9OutputPayments",
+	"action"    :"getOutputPayment"
+});
+
+apiGeoRequests.registerAPI("outputPaymentSubscribe",{
+
+	"controller":"K9OutputPayments",
+	"action"    :"outputPaymentSubscribe"
+});
+
+apiGeoRequests.registerAPI("dailyReport",{
+
+	"controller":"K9DailyReport",
+	"action"    :"report"
+});
+
+apiGeoRequests.registerAPI("getInvoice",{
+
+	"controller":"K9ReportInvoice",
+	"action"    :"report"
+});
+
+apiGeoRequests.registerAPI("reportByMonth",{
+
+	"controller":"K9DailyReport",
+	"action"    :"reportByMonth"
+});
+
+apiGeoRequests.registerAPI("getMemberList",{
+
+	"controller":"K9EmployeeAttendance",
+	"action"    :"getMemberList"
+});
+
+apiGeoRequests.registerAPI("saveAttendance",{
+
+	"controller":"K9EmployeeAttendance",
+	"action"    :"saveAttendance"
+});
+
+apiGeoRequests.registerAPI("getDepositValues",{
+
+	"controller":"K9Deposits",
+	"action"    :"getDepositValues"
+});
+
+apiGeoRequests.registerAPI("depositSubscribe",{
+
+	"controller":"K9Deposits",
+	"action"    :"depositSubscribe"
+});
+
+apiGeoRequests.registerAPI("getBalanceHistory",{
+
+	"controller":"K9BalanceEdit",
+	"action"    :"getBalanceHistory"
+});
+
+apiGeoRequests.registerAPI("getBalanceHistory",{
+
+	"controller":"K9BalanceEdit",
+	"action"    :"getBalanceHistory"
+});
+
+apiGeoRequests.registerAPI("balanceSubscribe",{
+
+	"controller":"K9BalanceEdit",
+	"action"    :"balanceSubscribe"
+});
+
+apiGeoRequests.registerAPI("cardInfoSubscribe",{
+
+	"controller":"K9SettingCardValues",
+	"action"    :"cardInfoSubscribe"
+});
+
+apiGeoRequests.registerAPI("taxSubscribe",{
+
+	"controller":"K9SettingTax",
+	"action"    :"taxSubscribe"
+});
+
+apiGeoRequests.registerAPI("getAgentInformation",{
+
+	"controller":"K9Agents",
+	"action"    :"getAgentInformation"
+});
+
+apiGeoRequests.registerAPI("agentSubscribe",{
+
+	"controller":"K9Agents",
+	"action"    :"agentSubscribe"
+});
+
+apiGeoRequests.registerAPI("getAgentMenus",{
+
+	"controller":"K9Agents",
+	"action"    :"getAgentMenus"
+});
+
+apiGeoRequests.registerAPI("agentListSubscribe",{
+
+	"controller":"K9Agents",
+	"action"    :"agentListSubscribe"
+});
+
+apiGeoRequests.registerAPI("getExtraInformations",{
+
+	"controller":"K9ExtraOrders",
+	"action"    :"getExtraInformations"
+});
+
+apiGeoRequests.registerAPI("orderItemSubscribe",{
+
+	"controller":"K9ExtraOrders",
+	"action"    :"orderItemSubscribe"
+});
+
+apiGeoRequests.registerAPI("masterItemSubscribeForRoom",{
+
+	"controller":"K9MasterItems",
+	"action"    :"masterItemSubscribeForRoom"
+});
+
+apiGeoRequests.registerAPI("searchWithBookingNum",{
+
+	"controller":"K9SearchBooking",
+	"action"    :"searchWithBookingNum"
+});
+
+apiGeoRequests.registerAPI("getUnavailableReasons",{
+
+	"controller":"K9UnavailableRooms",
+	"action"    :"getUnavailableReasons"
+});
+
+apiGeoRequests.registerAPI("unAvailableReasonSubscribe",{
+
+	"controller":"K9UnavailableRooms",
+	"action"    :"unAvailableReasonSubscribe"
+});
+
+apiGeoRequests.registerAPI("getUnavailabledata",{
+
+	"controller":"K9UnavailableRooms",
+	"action"    :"getUnavailabledata"
+});
+
+apiGeoRequests.registerAPI("unAvailableReasonRemove",{
+
+	"controller":"K9UnavailableRooms",
+	"action"    :"unAvailableReasonRemove"
+});
+
+apiGeoRequests.registerAPI("getDiposits",{
+
+	"controller":"K9Deposits",
+	"action"    :"getDiposits"
+});
+
+apiGeoRequests.registerAPI("dipositSubscribe",{
+
+	"controller":"K9Deposits",
+	"action"    :"dipositSubscribe"
+});
+
+</script>

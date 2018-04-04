@@ -1,0 +1,6 @@
+Array
+(
+    [dirname] => /
+    [basename] => 
+    [filename] => 
+)

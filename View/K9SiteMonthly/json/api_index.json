@@ -1,0 +1,21 @@
+<?php
+  $pagination['data']['informations'] = $informations;
+  $pagination['data']['last_edit_time'] = $last_edit_time;
+  $pagination['data']['base_start_date'] = $base_start_date;
+  $pagination['data']['edit_time_expired_ms'] = $edit_time_expired_ms;
+  $pagination['data']['last_start_user'] = $last_start_user;
+  $pagination['data']['last_modified_user'] = $last_modified_user;
+  $pagination['data']['is_authority'] = $is_authority;
+  $pagination['data']['weather'] = $weather;
+  $pagination['data']['worker_count'] = $worker_count;
+  $pagination['data']['remark_titles'] = $remark_titles;
+  $pagination['data']['base_start_ms'] = $base_start_ms;
+  $pagination['data']['edit_informations'] = $edit_informations;
+  $pagination['data']['client_data_sessions'] = $client_data_sessions;
+  $pagination['data']['server_time_ms'] = $server_time_ms;
+  $pagination['data']['ninku_situations'] = $ninku_situations;
+  $pagination['data']['memos'] = $memos;
+  $pagination['data']['prefs'] = $prefs;
+  $pagination['data']['incharges'] = $incharges;
+  echo json_encode(array('status'=>'YES','result'=>$pagination));
+?>

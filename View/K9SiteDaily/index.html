@@ -1,0 +1,2179 @@
+<?php $controller=strtolower($this->params["controller"]);?>
+<?php echo $this->element("schedule_apis/{$controller}"); ?>
+<?php echo $this->element("schedule_apis/common"); ?>
+<?php echo $this->element("schedule_functions/common"); ?>
+
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/k9style.php">
+
+<div class="container-fluid" data-type="schedule-container-top">
+	<div class="content">
+		<div class="l-contents l-schedule cf" data-type="schedule-l-contents">
+
+			<div id="left-block" style="position:relative;top:0px;" data-type="schedule-left-side">
+				<div id="set-up">
+					<div class="set-up-btn hover-img" data-type="action-button"></div><!--/.set-up-btn-->
+					<div data-type="schedule-modified-information"></div>
+					<div class="btn-preview-schedules"><a href="#" onclick="return false;" data-type="schedule-site-preview-btn"><span><img src="assets/img/preview.png" width="12px"></span>登録状況確認</a></div>
+				</div><!--/.set-up-->
+				<?php echo $this->element("schedule_aside"); ?>
+			</div><!--/.left-block-->
+
+			<div class="l-main" data-type="schedule-right-side">
+				<div class="content-box" data-type="content-box" id="print_target">
+					<ul class="daily-memo" id="schedule-btn-list" data-type="schedule-side-memo"></ul>
+					<div id="s_body">
+						<div id="schedule_top" data-type="schedule-top">
+							<div id="schedule_btn_line" class="cf control-arrow">
+
+								<div class="row-fluid" data-type="schedule-head-top-line">
+									<div class="schedule_btn_left preview btn pull-left" data-type="schedule-btn-left"><span data-type="schedule-btn-left-span" class="fa fa-angle-left"></span> 前の日</div>
+									<span class="date-info pull-left" data-type="schedule-header-ymd"></span>
+									<div class="schedule_btn_right next btn pull-right" data-type="schedule-btn-right">次の日 <span data-type="schedule-btn-right-span" class="fa fa-angle-right"></span></div>
+								</div>
+								<div class="row-fluid">
+									<?php echo $this->element("schedule_date_switch"); ?>
+								</div>
+
+							</div>
+							<!-- <ul class="daily-memo" id="schedule-btn-list-mb" data-type="schedule-side-memo"></ul> -->
+							<!--END HTML FOR MOBLIE-->
+							<div data-type="schedule-data-line-container"></div>
+						</div> <!-- / #schedule_top -->
+					</div><!-- / #s_body -->
+				</div> <!-- / .content-box -->
+			</div><!-- /.l-main -->
+		</div><!-- / .l-contents l-schedule cf -->
+	</div><!--/.content-->
+</div><!--/.container-->
+
+<script>
+var TYPE_DAYTOP="schedule-map";
+var TYPE_SCHEDULE="schedule-sitetitle";
+var TYPE_SCHEDULE_CONTAINER_TOP="schedule-container-top";
+var TYPE_SCHEDULE_SIDE_MEMO="schedule-side-memo";
+var TYPE_SCHEDULE_DATA_LINE_CONTAINER="schedule-data-line-container";
+var TYPE_SCHEDULE_DATA_LINE_TOP="schedule-data-time-line";
+var TYPE_SCHEDULE_HEAD_LINE="schedule-head-line";
+var TYPE_SCHEDULE_DATA_LINE="schedule-data-line";
+var TYPE_SCHEDULE_SITETITLE="schedule-sitetitle";
+var TYPE_SCHEDULE_SIDE_DATE ="schedule-site-date";
+var TYPE_SCHEDULE_MODIFIED_PARSITE="schedule-modified-parsite-information";
+var TYPE_SCHEDULE_MODIFIED="schedule-modified-information";
+var TYPE_SCHEDULE_SIDE_SITE_WORKER_EDIT="schedule-site-edit-workers-btn";
+var TYPE_SCHEDULE_GOTO_MEDIA = "schedule-goto-media-btn";
+var TYPE_SCHEDULE_SIDE_SITE_EDIT="schedule-site-edit-btn";
+var TYPE_SCHEDULE_SIDE_SITE_PREVIEW="schedule-site-preview-btn";
+var TYPE_SCHEDULE_AROUND="schedule-around";
+var TYPE_SCHEDULE_ROW="schedule-row";
+var TYPE_SCHEDULE_ROW_EMPTY="schedule-row-empty";
+var TYPE_SCHEDULE_MAP="schedule-map";
+var TYPE_SCHEDULE_CONTENT_BOX="content-box";
+var TYPE_SCHEDULE_LEFT_SIDE="schedule-left-side";
+var TYPE_SCHEDULE_MEMO_LI="schedule-memo-li";
+var TYPE_SCHEDULE_GMAP="schedule-gmap";
+var TYPE_SCHEDULE_SIDE_BOX  ="schedule-site-box";
+var TYPE_SCHEDULE_MESSAGE="schedule-message";
+var TYPE_SCHEDULE_MESSAGE_CELL="schedule-cell";
+var TYPE_SCHEDULE_HEAD_TOP_LINE="schedule-head-top-line";
+var TYPE_SCHEDULE_HEAD_BOTTOM_LINE="schedule-head-bottom-line";
+var TYPE_SCHEDULE_HEADER_YMD="schedule-header-ymd";
+var TYPE_SCHEDULE_MODAL="schedule-site-modal";
+var TYPE_SCHEDULE_DATE_RANGE="header-date-range";
+var TYPE_SCHEDULE_HEAD_MIDDLE_LINE="schedule-head-middle-line";
+
+var TYPE_SCHEDULE_DAY_BTN="schedule-switch-sitedaily";
+var TYPE_SCHEDULE_WEEK_BTN="schedule-switch-site";
+var TYPE_SCHEDULE_MONTH_BTN="schedule-switch-sitemonthly";
+
+var TYPE_SCHEDULE_L_CONTENTS="schedule-l-contents";
+var TYPE_SCHEDULE_DATA_CELL="schedule-cell";
+
+var LOCAL_STORAGE_TIMEKEY="time_key";
+
+var BTN_ACTION_BUTTON="action-button";
+var BTN_ACTION_START="action-start";
+var BTN_ACTION_SAVE ="action-save";
+
+var BTN_SCHEDULE_PREV_BUTTON="schedule-btn-left";
+var BTN_SCHEDULE_NEXT_BUTTON="schedule-btn-right";
+var BTN_SCHEDULE_PREV_BUTTON_SPAN="schedule-btn-left-span";
+var BTN_SCHEDULE_NEXT_BUTTON_SPAN="schedule-btn-right-span";
+
+var WEATHER_SPAN="weather";
+
+var INCHAGE_A="schedule-site-incharge-a";
+var INCHAGE_SPAN="schedule-site-incharge-span";
+var INCHAGE_P="schedule-site-incharge-p";
+
+var CACHE_SITE_AROUND_VALUE="cache_site_around_value";
+var CACHE_SCHEDULE_INFO="cache_schedule_info";
+var FIELD_ERROR_C_CODE  ="rgba(244,201,203,1)";
+var FIELD_SUCCESS_C_CODE="rgba(255,255,255,1)";
+var CACHE_CUSTOMER_INFORMATIONS="cache_customer_informations";
+
+var CACHE_MEMO="cache_memo";
+var CACHE_LAST_EDIT_TIME="cache_last_edit_time";
+var CACHE_EDIT_INFORMATION="cache_edit_information";
+var MANAGED_AUTHORITY="managed_authority";
+var MANAGED_LIMITED_TIMER="managed_limited_timer";
+
+var BLOCK_NUM='<?php echo $schedule_block_num; ?>';
+var MEMO_LIST_NUM=BLOCK_NUM;
+
+var authority="<?php echo $authority; ?>";
+var master_authorities=JSON.parse('<?php echo mstepJsonEncode($master_authorities); ?>');
+
+var is_edit="<?php echo $is_edit;?>";
+is_edit=parseInt(is_edit);
+
+var is_authority="<?php echo $is_authority;?>";
+is_authority=parseInt(is_authority);
+
+var holidays=JSON.parse('<?php echo $holidays; ?>');
+
+var user_id='<?php echo $user_id; ?>';
+var first_name='<?php echo $first_name; ?>';
+var color_list=JSON.parse('<?php echo $color_list;?>');
+var last_modified_user=JSON.parse('<?php echo $last_modified_user; ?>');
+var informations=JSON.parse('<?php echo $informations; ?>');
+var limited_second='<?php echo EDIT_EFFECTIVE_SECOND;?>';
+var is_sp=isSp();
+var is_tablet=(is_sp && !isSmart());
+var is_smart=(isSmart());
+
+var weekDayList=["<?php echo __("日"); ?>",
+				 "<?php echo __("月"); ?>",
+				 "<?php echo __("火"); ?>",
+				 "<?php echo __("水"); ?>",
+				 "<?php echo __("木"); ?>",
+				 "<?php echo __("金"); ?>",
+				 "<?php echo __("土"); ?>"];
+
+var rooms=JSON.parse('<?php echo $rooms; ?>');
+var effect_room_max_count=0;
+var effect_rooms=JSON.parse('<?php echo $effect_rooms; ?>');
+if(effect_rooms["1"]!=undefined) effect_room_max_count+=Object.keys(effect_rooms["1"]).length;
+if(effect_rooms["2"]!=undefined) effect_room_max_count+=Object.keys(effect_rooms["2"]).length;
+var effect_room_types=JSON.parse('<?php echo $effect_room_types; ?>');
+
+window["schedule_log"]={};
+window["schedule_log"]["last_start_user"]     ="<?php echo $last_start_user; ?>";
+window["schedule_log"]["edit_time_expired_ms"]="<?php echo $edit_time_expired_ms; ?>";
+window["schedule_log"]["last_edit_time"]      ="<?php echo $last_edit_time; ?>";
+
+//■タッチ要素
+var manageTouch=(function(){
+
+		var fn=function(selector){
+
+				if(selector instanceof jQuery){
+
+						this.touchElement=selector;
+				}
+		}
+
+		fn.prototype.isOn=function(){
+
+				return (this["touchElement"] instanceof jQuery);
+		}
+
+		fn.prototype.register=function(selector){
+
+				this.touchElement=selector;
+				return this;
+		}
+
+		fn.prototype.clear=function(){
+
+				if(!this.isOn()) return;
+				delete this["touchElement"];
+				return this;
+		}
+
+		return function(selector){
+
+				if(fn.instance instanceof fn){
+
+						return fn.instance;
+				}
+
+				var instance=new fn(selector);
+				fn.instance=instance;
+				return instance;
+		}
+}());
+
+//■領域の変更確認
+var manageMoveJudge=(function(){
+
+		var fn=function(){}
+
+		fn.prototype.register=function(id){
+
+				this.currentId=id;
+				return this;
+		}
+
+		fn.prototype.isChange=function(id){
+
+				if(id==undefined) return false;
+				if(this.currentId==id) return false;
+				return true;
+		}
+
+		fn.prototype.clear=function(){
+
+				this.currentId="";
+				return this;
+		}
+
+		return function(id){
+
+				if(fn.instance instanceof fn) return fn.instance;
+				var instance=new fn(id);
+				fn.instance=instance;
+				return instance;
+		}
+}())
+
+
+//■around_value for par site.
+cacheData().set(CACHE_SITE_AROUND_VALUE,{});
+cacheData().set(CACHE_EDIT_INFORMATION,JSON.parse('<?php echo $edit_informations; ?>'));
+
+var changeInformationFormatToDate=function(informations){
+
+	var res={};
+	for(var date in informations){
+
+		var __informations=informations[date];
+		if(!res[date]) res[date]={};
+		for(var i in __informations){
+
+			var schedule_id=__informations[i]["schedule"]["id"];
+			res[date][schedule_id]=__informations[i];
+		}
+	}
+
+	return res;
+}
+
+cacheData().set(MANAGED_AUTHORITY,{"is_managed":false});
+cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":window["schedule_log"]["last_edit_time"] });
+
+$(function(){
+
+		window["html"]                  =$("html");
+		window["body"]                  =html.find("body");
+		window["schedule_content_box"]  =window["body"].find("div[data-type=\""+TYPE_SCHEDULE_CONTENT_BOX+"\"]");
+		window["schedule_container_top"]=body.find("div[data-type=\""+TYPE_SCHEDULE_CONTAINER_TOP+"\"]");
+		window["schedule_side_memo"]    =schedule_container_top.find("ul[data-type=\""+TYPE_SCHEDULE_SIDE_MEMO+"\"]");
+		window["schedule_head_line"]    =schedule_container_top.find("div[data-type=\""+TYPE_SCHEDULE_HEAD_LINE+"\"]");
+		window["schedule_data_line"]    =schedule_container_top.find("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE+"\"]");
+		window["action_lastmodified"]   =schedule_container_top.find("div[data-type=\""+TYPE_SCHEDULE_MODIFIED+"\"]");
+		window["schedule_data_line_container"]=body.find("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_CONTAINER+"\"]");
+		window["schedule_aside"]=window["body"].find("aside");
+		window["schedule_left_side"]=window["schedule_container_top"].find("div[data-type=\""+TYPE_SCHEDULE_LEFT_SIDE+"\"]");
+		window["schedule_action_button"]=window["schedule_container_top"].find("div[data-type=\""+BTN_ACTION_BUTTON+"\"]");
+		window["schedule-head-line"]    =window["schedule_content_box"].find("div[data-type=\""+TYPE_SCHEDULE_HEAD_LINE+"\"]");
+		window["schedule-head-top-line"]=window["schedule_content_box"].find("div[data-type=\""+TYPE_SCHEDULE_HEAD_TOP_LINE+"\"]");
+		window["schedule-btn-left"] =window["schedule-head-top-line"].find("div[data-type=\""+BTN_SCHEDULE_PREV_BUTTON+"\"]");
+		window["schedule-btn-right"]=window["schedule-head-top-line"].find("div[data-type=\""+BTN_SCHEDULE_NEXT_BUTTON+"\"]");
+
+		window["schedule-head-middle-line"]=window["schedule_content_box"].find("div[data-type=\""+TYPE_SCHEDULE_HEAD_MIDDLE_LINE+"\"]");
+		window["schedule-head-bottom-line"]    =window["schedule_content_box"].find("div[data-type=\""+TYPE_SCHEDULE_HEAD_BOTTOM_LINE+"\"]");
+		window["schedule-head-ymd"]=window["schedule_content_box"].find("span[data-type=\""+TYPE_SCHEDULE_HEADER_YMD+"\"]");
+		window["schedule-head-date-range"]=window["body"].find("span[data-type=\""+TYPE_SCHEDULE_DATE_RANGE+"\"]");
+		var body_bg_color=window["body"].css("background-color");
+		window["body"].data("background-color",body_bg_color);
+
+		<?php echo $this->element("schedule_header_date_selections/{$controller}"); ?>
+
+		var start_date=Number("<?php echo $start_date; ?>").addMinutesZero();
+		window["informations"]=changeInformationFormatToDate(informations);
+		window["select_date"]={};
+		window["select_date"]["date"]=new Date(start_date);
+
+		window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+		var current_date=new Date();
+		var clickEnd=deviceClickEventEnd();
+
+		var offset_top_height=0;
+
+		addActionButton.call(window["schedule_action_button"],0);
+
+		var saveAction=function(is_dandori_done,callback){
+
+				var __getSomeData=function(){
+
+						var data={"position":{}};
+						var selectors=[];
+						var target_timelines=window["schedule_data_line_container"].children("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]");
+
+						var informations=window["informations"];
+						target_timelines.each(function(){
+
+								var timeline=$(this);
+								var ymd=timeline.attr("data-time");
+								var information=informations[ymd];
+								var schedule_data_line=timeline.children("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE+"\"]");
+								var schedule_rows=schedule_data_line.find("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+								schedule_rows.each(function(){
+
+										var schedule_row=$(this);
+										var reserve_id=schedule_row.attr("data-reservation-id");
+										var schedule_id=schedule_row.attr("data-schedule-id");
+										var position_id=schedule_row.parent().attr("data-position-id");
+
+										if(!schedule_row.attr("data-empty").isOk()){
+
+												var __information=information[schedule_id];
+												var before_position_num=__information["schedule"]["position_num"];
+												if(before_position_num==position_id) return;
+												data["position"][schedule_id]=position_id;
+										}
+								});
+						});
+
+						return data;
+				}
+
+				var fn=arguments.callee;
+				var limited_ms=(cacheData().get(MANAGED_LIMITED_TIMER).timer)+(limited_second*1000);
+				var current_ms=new Date().getTime();
+				if(current_ms>limited_ms){
+
+						//■権限再確認
+						var params={};
+						params["user_id"]       =user_id;
+						params["last_edit_time"]=cacheData().get(CACHE_LAST_EDIT_TIME).last_edit_time;
+						params["local_time_key"]=localKeyTime(LOCAL_STORAGE_TIMEKEY);
+						apiGeoRequests.editStart(params,function(status,res){
+
+								if(!status && res["type"]==0){
+
+										cacheData().set(MANAGED_AUTHORITY ,{"is_managed":false});
+										callback(false,null);
+										return;
+								}
+
+								if(!status && res["type"]==1){
+
+										cacheData().set(MANAGED_AUTHORITY ,{"is_managed":false});
+										callback(false,res["errorNo"],{
+
+												"title"  :res["title"],
+												"message":res["message"]
+										});
+										return;
+								}
+
+								//■タイマー基準時間更新
+								var time_key=res["time_key"];
+								var current_time_ms=res["last_modified_ms"];
+								var last_edit_time =res["last_edit_time"];
+								localKeyTime(LOCAL_STORAGE_TIMEKEY,time_key);
+								cacheData().set(MANAGED_LIMITED_TIMER,{"timer":current_time_ms});
+								cacheData().set(MANAGED_AUTHORITY ,{"is_managed":true});
+								cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":last_edit_time });
+								console.log("再認証OK");
+								fn(is_dandori_done,callback);
+						});
+						return;
+				}
+
+				var information_dates=Object.keys(window["informations"]);
+				var information_start_date=information_dates[0];
+				var information_end_date=information_dates[information_dates.length-1];
+				var t1=TYPE_SCHEDULE_DATA_LINE_TOP;
+				var schedule_timeline=window["schedule_data_line_container"].find("div[data-type=\""+t1+"\"]");
+				var __start_date=schedule_timeline.eq(0).attr("data-time");
+				var __end_date  =schedule_timeline.eq(schedule_timeline.size()-1).attr("data-time");
+				var start_date=Math.min(Math.min(__start_date,__end_date),information_start_date);
+				var end_date  =Math.max(Math.max(__start_date,__end_date),information_end_date);
+
+				var params={}
+				var information_dates=Object.keys(window["informations"]);
+				params["start_date"]   =start_date;
+				params["end_date"]     =end_date;
+				params["user_id"]      =user_id;
+				params["around_values"]=cacheData().get(CACHE_SITE_AROUND_VALUE);
+				params["options"]      =__getSomeData();
+				params["local_time_key"]=localKeyTime(LOCAL_STORAGE_TIMEKEY);
+				params["last_edit_time"]=cacheData().get(CACHE_LAST_EDIT_TIME).last_edit_time;
+				params["is_finish"]=(!!is_dandori_done?1:0);
+				apiGeoRequests.saveSchedule(params,function(status,res){
+
+						if(!status && res["type"]==0){
+
+								callback(false,null);
+								return;
+						}
+
+						if(!status && res["type"]==1){
+
+								callback(false,res["errorNo"],{
+
+										"title"  :res["title"],
+										"message":res["message"]
+								});
+								return;
+						}
+
+						var informations=res["informations"];
+						window["informations"]=changeInformationFormatToDate(informations);
+
+						var last_edit_time=res["last_edit_time"];
+						cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":last_edit_time });
+						localKeyTime(LOCAL_STORAGE_TIMEKEY,(parseInt(last_edit_time)/1000)+"");
+
+						var before_scroll_top=window["schedule_data_line"].scrollTop();
+						window["schedule_data_line_container"].empty();
+
+						make(function(){
+
+								window["schedule_data_line"].scrollTop(before_scroll_top);
+
+								updateToInchageMessage({
+
+									"first_name":first_name,
+									"last_modified_ms":new Date().getTime()
+								});
+
+								var current_ymd=window["select_date"]["ymd"].join("");
+								replaceSideScheduleEmpty.call(schedule_aside,current_ymd,function(html){
+
+										callback(true);
+								});
+						});
+				});
+		};
+
+		var resizeScheduleMapSize=function(){
+
+			var padding_bottom_screen_h=50;
+			var min_height=289;
+			var win_height=$(window).height();
+			window["schedule_data_line"]=$(body).find('div[data-type="schedule-data-line"]');
+			var offset_top=window["schedule_data_line"].offset().top;
+			if(offset_top>0) offset_top_height = offset_top;
+			var df_height=Math.max((win_height-offset_top_height)-padding_bottom_screen_h,min_height);
+			window["schedule_data_line"].css("height",df_height+"px");
+			window["schedule_side_memo"].css("height",df_height+"px");
+		}
+
+		var stopBtnDateByScheduleId=function(schedule_id){
+
+				var date_add=this;
+				var btns=date_add.find("li[data-type=\"schedule-date-btn\"]");
+				var target_btn=btns.filter("[data-schedule-id=\""+opening_schedule_id+"\"]");
+				var target_btn_y=target_btn.offset().top;
+				var scroll_target=target_btn.parents("div[data-type=\"schedule-site-date\"]");
+				var position_y=target_btn_y-scroll_target.offset().top;
+				scroll_target.scrollTop(position_y);
+		}
+
+		var addHeadLine=function(callback){
+
+			var schedule_head_line=this;
+			var instance=TPL.getInstance(["schedule_head_line",
+										  "schedule_head_worker_undercount",
+										  "schedule_head_worker_count"]);
+
+			var ymd_ary=window["select_date"]["ymd"];
+			var ymd=ymd_ary[0]+ymd_ary[1]+ymd_ary[2];
+			var rest_num_tpl=instance["get_schedule_head_worker_count"];
+			rest_num_tpl=instance.replaceTPL(rest_num_tpl,{
+
+				"rest_num":""
+			});
+
+			var year=ymd_ary[0];
+			var year_holidays=holidays[year];
+
+			var view_day  =ymd_ary[2];
+			var view_month=ymd_ary[1];
+			var day_num   =(window["select_date"]["date"].getDay()+"");
+
+			if(year_holidays !== undefined && year_holidays.indexOf(ymd) !== -1) day_num=0+"";
+
+			view_day      =view_day.indexOf("0")==0?view_day.substr(1):view_day;
+			view_month    =view_month.indexOf("0")==0?view_month.substr(1):view_month;
+			var tpl=instance.replaceTPL(instance.get_schedule_head_line,{
+
+				"month":ymd_ary[1],
+				"day"  :ymd_ary[2],
+				"view_month":view_month,
+				"view_day":view_day,
+				"week" :window["select_date"]["date"].getWeek(weekDayList),
+				"rest_num":rest_num_tpl,
+				"day_num":day_num,
+				"site_remark_title":"",
+				"schedule_remark_title1":"",
+				"schedule_remark_title2":"",
+				"schedule_remark_title3":""
+			});
+
+			var html=$(tpl);
+			schedule_head_line.append(html)
+			html.ready(function(){
+
+				callback();
+			});
+		}
+
+		var addDataLine=function(information,callback){
+
+				var elem=this;
+
+				if(!information){
+
+						addDataOneLine.call(elem,{},function(){
+
+								callback();
+						});
+						return;
+				}
+
+				var schedules=Object.values(information);
+
+				var values={};
+				for(var i in schedules) values[schedules[i]["schedule"]["position_num"]]=schedules[i];
+				addDataOneLine.call(elem,values,function(){
+
+						callback();
+				});
+		}
+
+		var addTimeline=function(ymd,callback){
+
+				var container_top=window["schedule_data_line_container"];
+
+				var instance=TPL.getInstance("schedule_data_time_line");
+				var tpl=instance.replaceTPL(instance.get_schedule_data_time_line,{
+
+						"ymd":ymd
+				});
+
+				var html=$(tpl);
+				container_top.append(html);
+				html.ready(function(){
+
+						callback(html);
+				});
+		}
+
+		var addDataOneLine=function(schedules,callback,position_id){
+
+				var elem=this;
+				var fn=arguments.callee;
+				position_id=(position_id==undefined?0:position_id);
+				if(BLOCK_NUM==position_id){
+
+						callback();
+						return;
+				}
+
+				var schedule=(!!schedules[position_id])?schedules[position_id]:false;
+				var schedule_map=elem.children("div[data-position-id=\""+position_id+"\"]");
+
+				if(!!schedule){
+
+						addDataLineRow.call(schedule_map,schedule,function(){
+
+								position_id++;
+								fn.call(elem,schedules,callback,position_id);
+						});
+						return;
+				}
+
+				addDataLineRowEmpty.call(schedule_map,function(){
+
+						position_id++;
+						fn.call(elem,schedules,callback,position_id);
+				});
+		}
+
+		var addDataLineRowEmpty=function(callback){
+
+				var elem=this;
+				var instance=TPL.getInstance("schedule_row_empty");
+				var tpl=instance.get_schedule_row_empty;
+				var html=$(tpl);
+				elem.append(html);
+				html.ready(function(){
+
+						if($.isFunction(callback)) callback();
+				});
+		}
+
+		var addDataLineRow=function(information,callback){
+
+				var elem=this;
+				var instance=TPL.getInstance(["schedule_row","schedule_row_sitetitle",
+								      "schedule_row_workernames",
+									  "schedule_row_area",
+									  "schedule_row_trucknames",
+									  "schedule_row_customername",
+									  "schedule_row_site_remark",
+									  "schedule_row_worker_leader",
+									  "schedule_row_worker",
+									  "schedule_row_schedule_remark1",
+									  "schedule_row_schedule_remark2",
+									  "schedule_row_schedule_remark3"]);
+
+				var site_id=information["site_detail"]["id"];
+				var site_around_values=cacheData().get(CACHE_SITE_AROUND_VALUE);
+				var around_value=(!!site_around_values[site_id]?site_around_values[site_id]:information["site_detail"]["around_value"])+"";
+				var worker_tpl=instance.get_schedule_row_worker;
+				var worker_leader_tpl=instance.get_schedule_row_worker_leader;
+
+				var view_workers=" ";
+				var worker=information["worker"];
+				if(worker.length>0){
+
+						var workers=[];
+						for(var i in worker){
+
+								var nickname=worker[i]["nickname"];
+								var is_leader=parseInt(worker[i]["leader_flg"])>0;
+								var worker_color = worker_colors[worker[i]["color_flg"]];
+								var viewname=(!!nickname && nickname.length>0)?nickname:worker[i]["first_name"];
+								workers.push(instance.replaceTPL((is_leader?worker_leader_tpl:worker_tpl),{"name":viewname, "worker_color": worker_color}));
+								//workers.push((!!nickname && nickname.length>0)?nickname:worker[i]["first_name"]);
+						}
+
+						view_workers=workers.join("");
+				}
+
+				var view_trucks=" ";
+				var truck=information["truck"]["reserved"];
+				if(truck.length>0){
+
+						var trucks=[];
+						for(var i in truck) trucks.push(truck[i]["name"]);
+						view_trucks=trucks.join("･");
+				}
+
+				var empty="&nbsp;";
+				var town=information["location"]["town"];
+				var pref=information["location"]["pref"];
+				pref=((!!pref && pref.length>0)?pref:empty);
+				var site_remark=information["site_detail"]["remarks"].length>0?information["site_detail"]["remarks"]:empty;
+				var remarks1=information["schedule"]["remarks"].length>0?information["schedule"]["remarks"]:empty;
+				var remarks2=information["schedule"]["remarks2"].length>0?information["schedule"]["remarks2"]:empty;
+				var remarks3=information["schedule"]["remarks3"].length>0?information["schedule"]["remarks3"]:empty;
+				var site_name=(information["site_detail"]["name"].length>0?information["site_detail"]["name"]:"未設定");
+				var site_area=((!!town && town.length>0)?town:"未設定")
+				var customername=information["customer"]["name"].length>0?information["customer"]["name"]:empty;
+				var area=((!!town && town.length>0)?town:empty);
+				var address=(information["location"]["address"].length>0?information["location"]["address"]:empty);
+				var tpl=instance.replaceTPL(instance.get_schedule_row,{
+
+						"schedule_id" :information["schedule"]["id"],
+						"site_id"     :information["site_detail"]["id"],
+						"site_area"   :site_area,
+						"color"       :information["schedule"]["color"],
+						"around_value":around_value,
+						"title"       :site_name,
+						"workernames" :view_workers,
+						"trucknames"  :view_trucks,
+						"pref"        :pref,
+						"area"        :area,
+						"address"     :address,
+						"customername":customername,
+						"siteremark"  :site_remark,
+						"scheduleremark1":remarks1,
+						"scheduleremark2":remarks2,
+						"scheduleremark3":remarks3
+				});
+
+				var html=$(tpl);
+				elem.append(html);
+				html.ready(function(){
+
+						callback();
+				});
+		}
+
+		var addScheduleMaps=function(callback){
+
+				var elem=this;
+				var instance=TPL.getInstance("schedule_map");
+				var tpl=instance.get_schedule_map;
+				var fragment=document.createDocumentFragment();
+				var __tpl,html;
+
+				var i=0;
+				while(i!=BLOCK_NUM){
+
+						__tpl=instance.replaceTPL(tpl,{
+
+								"position_id":(i+"")
+						});
+
+						html=$(__tpl);
+						fragment.appendChild(html.get(0));
+						i++;
+				}
+
+				if(!(html instanceof jQuery)){
+
+						callback();
+						return;
+				}
+
+				elem.append(fragment);
+				html.ready(function(){
+
+						callback();
+				});
+		}
+
+		var mouseDownEventSitetitle=function(e,callback){
+
+				var target=this;
+				var schedule_map=target.parents("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+				if(1>schedule_map.size()){
+
+						callback();
+						return;
+				}
+
+				var schedule_row=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+				if(1>schedule_row.size()){
+
+						callback();
+						return;
+				}
+
+				schedule_row.css("opacity","0.6");
+
+				//■register the element touched.
+				manageTouch().register(schedule_row);
+
+				//■register the map's id.
+				var current_map_id=schedule_map.attr("data-position-id");
+				manageMoveJudge().register(current_map_id);
+				callback();
+		}
+
+		var isScheduleCell=function(type){
+
+				return TYPE_SCHEDULE_DATA_CELL==type;
+		}
+
+		window["isScheduleEdit"]=function(){
+
+				var is_edit=false;
+				var schedule_timelines=window["schedule_data_line_container"].children("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]");
+				var __schedule_timelines=schedule_timelines.toArray();
+				var informations=window["informations"];
+				for(var i in __schedule_timelines){
+
+						if(!__schedule_timelines.hasOwnProperty(i)) continue;
+						var schedule_timeline=$(__schedule_timelines[i]);
+						var schedules=schedule_timeline.find("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"][data-empty=\"NO\"]");
+						if(1>schedules.size()) continue;
+
+						var date=schedule_timeline.attr("data-time");
+						var __schedules=schedules.toArray();
+						for(var i in __schedules){
+
+								if(!__schedules.hasOwnProperty(i)) continue;
+
+								var schedule=$(__schedules[i]);
+								var schedule_id=schedule.attr("data-schedule-id");
+								var site_id=schedule.attr("data-reservation-id");
+								var information=informations[date][schedule_id];
+								var schedule_map=schedule.parents("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+								var current_position_num=schedule_map.attr("data-position-id");
+								var initial_position_num=information["schedule"]["position_num"]
+								if(current_position_num!=initial_position_num){
+
+										is_edit=true;
+										break;
+								}
+
+								var initial_around_value=information["site_detail"]["around_value"];
+								var current_around_value=cacheData().get(CACHE_SITE_AROUND_VALUE)[site_id];
+								if(current_around_value!=undefined && (initial_around_value!=current_around_value)){
+
+										is_edit=true;
+										break;
+								}
+						}
+
+						if(is_edit) break;
+				}
+
+				return is_edit;
+		}
+
+		var spContextActionTouchSchedule=function(params,callback){
+
+				var self=this;
+				if(!is_edit) return false;
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return false;
+
+				var start_position_id=params["start_position_id"];
+				return setTimeout(function(){
+
+						var last_data_id=self.data("data_id");
+						if(self.data("start_time")==undefined){
+
+								callback(false);
+								return;
+						}
+
+						if(last_data_id==undefined){
+
+								callback(false);
+								return;
+						}
+
+						if(last_data_id!=start_position_id){
+
+								callback(false);
+								return;
+						}
+
+						callback(true);
+
+				},1000);
+		}
+
+		var spContextActionTouchEmpty=function(params,callback){
+
+				var self=this;
+				if(!is_edit) return false;
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return false;
+
+				var start_position_id=params["start_position_id"];
+				return setTimeout(function(){
+
+						var last_data_id=self.data("data_id");
+						if(self.data("start_time")==undefined){
+
+								callback(false);
+								return;
+						}
+
+						if(last_data_id==undefined){
+
+								callback(false);
+								return;
+						}
+
+						if(last_data_id!=start_position_id){
+
+								callback(false);
+								return;
+						}
+
+						callback(true);
+
+				},1000);
+		}
+
+		var scheduleMouseDownEvent=function(e,callback){
+
+				var self=this;
+				var target=$(e.target);
+				var type=target.attr("data-type");
+				var schedule_map=target.parents("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+
+				if(type==TYPE_SCHEDULE_AROUND) e.preventDefault();
+
+				if(1>schedule_map.size()){
+
+						callback();
+						return;
+				}
+
+				var schedule_row=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+				var is_schedule_empty=schedule_row.attr("data-empty").isOk();
+
+				if(is_sp){
+
+						switch(is_schedule_empty){
+
+								case(true):
+
+								var tap_timer=spContextActionTouchEmpty.call(self,{
+
+										"start_position_id":schedule_map.attr("data-position-id")
+
+								},function(status){
+
+										if(!status) return;
+								});
+
+								self.data("tap_timer",tap_timer);
+						break;
+								default:
+
+								var tap_timer=spContextActionTouchSchedule.call(self,{
+
+										"start_position_id":schedule_map.attr("data-position-id")
+
+								},function(status){
+
+										if(!status) return;
+								});
+
+								self.data("tap_timer",tap_timer);
+						break;
+						}
+				}
+
+				if(is_schedule_empty){
+
+						callback();
+						return;
+				}
+
+				var schedule_sitetitle=schedule_row.find("div[data-cell-type=\""+TYPE_SCHEDULE_SITETITLE+"\"]");
+				if(1>schedule_sitetitle.size()){
+
+						callback();
+						return;
+				}
+
+   				if(type!=TYPE_SCHEDULE_SITETITLE && 1>target.parents("div[data-cell-type=\""+TYPE_SCHEDULE_SITETITLE+"\"]").size()){
+
+   				      callback();
+   				      return;
+   				}
+
+				mouseDownEventSitetitle.call(target,e,callback);
+		};
+
+		var scheduleMouseMoveEvent=function(e,option){
+
+				if(!is_edit) return;
+				if(option["touchNum"]>1) return;
+
+				var self=this;
+				switch(is_sp){
+						case(true):
+
+							var touch=e.originalEvent.touches[0];
+							var target=$(document.elementFromPoint(touch.clientX,touch.clientY));
+
+						break;
+						default:
+
+							var target=$(e.target);
+
+						break;
+
+				}
+
+				var schedule_map=target.parents("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+				var day_top=schedule_map.parents("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]");
+				var move_schedule_row=manageTouch().touchElement;
+				var target_map_id=schedule_map.attr("data-position-id");
+				self.data("data_id",target_map_id);
+
+               if(isSmart()){
+
+                       var start_event=self.data("e");
+					   if(start_event!=undefined){
+
+								if(isDiffPageXY(start_event,e,ALLOW_MOVE_TOUCH_POINT)){
+
+		            	           		var tap_timer=self.data("tap_timer");
+                    	   				if(tap_timer!=undefined) clearInterval(tap_timer);
+                    	   				self.removeData("start_time");
+                    	   				self.removeData("tap_timer");
+								}
+					   }
+                }
+
+			  	if(isSmart()) return false;
+				if(!manageTouch().isOn()) return false;
+
+				if(!cacheData().get(MANAGED_AUTHORITY).is_managed) return;
+				if(!manageMoveJudge().isChange(target_map_id)) return;
+
+				var schedule_row=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+				var schedule_sitetitle=schedule_row.find("div[data-cell-type=\""+TYPE_SCHEDULE_SITETITLE+"\"]");
+				if(1>schedule_sitetitle.size()) return;
+
+				//before position id.
+				var before_current_id=manageMoveJudge().currentId;
+				manageMoveJudge().clear().register(target_map_id);
+
+				var current_schedule_map=schedule_map.parent().children("div[data-position-id=\""+before_current_id+"\"]");
+				var z_index=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]").size();
+				//schedule_row.prependTo(current_schedule_map);
+				move_schedule_row.prependTo(schedule_map);
+				move_schedule_row.css("z-index",z_index);
+
+				var before_schedule_map=day_top.find("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"][data-position-id=\""+before_current_id+"\"]");
+				if(before_schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]").size()>0) return;
+				addDataLineRowEmpty.call(before_schedule_map);
+		}
+
+		var getVisibleDate=function(){
+
+				var t1=TYPE_SCHEDULE_DATA_LINE_TOP;
+				var schedule_line_top=window["schedule_data_line_container"].children("div[data-type=\""+t1+"\"]:visible");
+				var date=schedule_line_top.attr("data-time");
+				return date;
+		}
+
+		var setCurrentDay=function(){
+
+				var styles={};
+				styles["0"]="<span style=\"color:red;\">";
+				styles["1"]="<span style=\"color:black;\">";
+				styles["2"]="<span style=\"color:black;\">";
+				styles["3"]="<span style=\"color:black;\">";
+				styles["4"]="<span style=\"color:black;\">";
+				styles["5"]="<span style=\"color:black;\">";
+				styles["6"]="<span style=\"color:white;\">";
+				var date=getVisibleDate();
+				var n_start=Number(date);
+				var ymd_ary=n_start.splitYmd();
+				var w_start=new Date(n_start.addMinutesZero()).getDay()+"";
+				var ymd=ymd_ary[0]+"年"+ymd_ary[1].ridFirstZero()+"月"+ymd_ary[2].ridFirstZero()+"日";
+				if(styles[w_start]!=undefined) ymd=(styles[w_start]+ymd+"</span>");
+				window["schedule-head-date-range"].html(ymd);
+		}
+
+		var isAllowScheduleDown=function(all_schedule_maps){
+
+				var schedule_map=this;
+				var position_id=parseInt(schedule_map.attr("data-position-id"));
+				var is_zero=position_id==0;
+				var schedule_maps=all_schedule_maps;
+				if(!is_zero) schedule_maps=all_schedule_maps.filter(":gt("+(position_id-1)+")");
+				var schedule_maps_list=schedule_maps.toArray().reverse();
+
+				for(var i in schedule_maps_list){
+
+						if(!schedule_maps_list.hasOwnProperty(i)) continue;
+						var __schedule_map=$(schedule_maps_list[i]);
+						var __schedule_row=__schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+						if(__schedule_row.attr("data-empty")=="YES") return true;
+				}
+
+				return false;
+		}
+
+		var scheduleDown=function(all_schedule_maps){
+
+				var insert_schedule_row=this;
+				var schedule_map=insert_schedule_row.parent();
+				var position_id=parseInt(schedule_map.attr("data-position-id"));
+				var next_position_id=position_id+1;
+				var next_schedule_map=all_schedule_maps.filter("div[data-position-id=\""+next_position_id+"\"]");
+				var next_schedule_row=next_schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+				if(next_schedule_row.attr("data-empty")=="YES"){
+
+						next_schedule_row.remove();
+						insert_schedule_row.appendTo(next_schedule_map);
+						return;
+				}
+
+				var fn=arguments.callee;
+				insert_schedule_row.appendTo(next_schedule_map);
+				fn.call(next_schedule_row,all_schedule_maps);
+		}
+
+		var scheduleMouseUpEvent=function(e,s){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+				var schedule_map=target.parents("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+				var start_position_id=s["startPositionID"];
+
+				var allow_point=ALLOW_MOVE_TOUCH_POINT;
+				var diff_x=Math.abs(Math.abs(getPageX(e))-Math.abs(s["startPageX"]));
+				var diff_y=Math.abs(Math.abs(getPageY(e))-Math.abs(s["startPageY"]));
+				var is_diff=(diff_x>allow_point || diff_y>allow_point);
+
+				var is_touch_on=manageTouch().isOn();
+				var is_managed=cacheData().get(MANAGED_AUTHORITY).is_managed;
+				var touch_element=manageTouch().touchElement;
+				var touch_num=s["touchNum"];
+				var last_move_data_id=s["lastMoveDataId"];
+				var is_same_position=(start_position_id==last_move_data_id);
+				manageTouch().clear();
+
+				if(!is_sp || !is_diff) leftSideContentMoveToViewerPosition();
+
+				if((touch_element instanceof jQuery) && touch_element.attr("data-type")==TYPE_SCHEDULE_ROW) touch_element.css("opacity","1.0");
+
+				var schedule_rows=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+				var after_schedule_row =schedule_rows.eq(0).css("z-index",0);
+				var schedule_data_line=after_schedule_row.parents("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]");
+
+				if(schedule_rows.size()>1){
+
+						var before_schedule_row=schedule_rows.eq(1).css("z-index",0);
+						var is_empty=before_schedule_row.attr("data-empty")=="YES";
+						if(is_empty) before_schedule_row.remove();
+
+						if(!is_empty){
+
+								var all_schedule_maps=schedule_data_line.find("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+								var is_ok=isAllowScheduleDown.call(schedule_map,all_schedule_maps);
+
+								if(!is_ok){
+
+										var start_schedule_map=all_schedule_maps.filter("div[data-position-id=\""+start_position_id+"\"]");
+										var start_schedule_row=start_schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+										start_schedule_row.remove();
+										after_schedule_row.appendTo(start_schedule_map);
+										return;
+								}
+
+								scheduleDown.call(before_schedule_row,all_schedule_maps);
+						}
+				}
+
+				var schedule_sitetitle=after_schedule_row.find("div[data-cell-type=\""+TYPE_SCHEDULE_SITETITLE+"\"]");
+				if(1>schedule_sitetitle.size() || !is_touch_on) return;
+				var site_id=after_schedule_row.attr("data-reservation-id");
+				var schedule_id=after_schedule_row.attr("data-schedule-id");
+				var enable_schedule_rows=schedule_data_line.find("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"][data-empty=NO]");
+				var all_site_ids=[];
+				enable_schedule_rows.each(function(){
+
+						var schedule_row=$(this);
+						var site_id=schedule_row.attr("data-reservation-id");
+						all_site_ids.push(site_id);
+				});
+
+				if(!is_same_position){
+
+						if(!is_managed){
+
+								uiAlertNothingAuthority();
+								return;
+						}
+
+						var date=schedule_map.parents("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]").attr("data-time");
+						beforeunLoadEvent();
+						return;
+				}
+
+				var schedule_timeline=after_schedule_row.parents("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]");
+				var ymd=schedule_timeline.attr("data-time");
+				var information=window["informations"][ymd][schedule_id];
+				var schedule_aside=window["schedule_aside"];
+				var site_detail=information["site_detail"];
+
+				var count=args["count"];
+				replaceSideSchedule.call(schedule_aside,information,remark_titles,(count+""),function(main_html){
+
+						//worker.
+						var worker_target=main_html.find("ul[data-type=\"side-worker\"]");
+						var workers=information["worker"].slice(0);
+						addSideWorker.call(worker_target,workers);
+
+						//truck.
+						var truck_target=main_html.find("ul[data-type=\"side-truck\"]");
+						var truck_reserved=information["truck"]["reserved"];
+						if(truck_reserved.length>0) addSideTruck.call(truck_target,truck_reserved.slice(0));
+
+						//edit_time.
+						var t1=TYPE_SCHEDULE_MODIFIED_PARSITE;
+						var action_lastmodified_parsite=main_html.find("div[data-type=\""+t1+"\"]");
+						action_lastmodified_parsite.empty();
+
+						var edit_informations=cacheData().get(CACHE_EDIT_INFORMATION);
+						var edit_information=edit_informations[site_id];
+						lastModifiedInformationUpdateParSite.call(action_lastmodified_parsite,edit_information);
+
+						var t2=TYPE_SCHEDULE_SIDE_DATE;
+						var schedule_side_date=schedule_aside.find("div[data-type=\""+t2+"\"]");
+						var date=new Date(Number(ymd).addMinutesZero()).getTime();
+						replaceSideScheduleDate.call(schedule_side_date.empty(),date);
+				});
+		};
+
+		var actionStart=function(callback){
+
+				if(!is_edit){
+
+						callback(false,1,{
+
+								"title"  :"管理権限のあるアカウントでは有りません",
+								"message":"お手元のアカウントではこちらの操作は行えません"
+						});
+						return;
+				}
+
+				var params={};
+				params["user_id"]=user_id;
+				params["last_edit_time"]=cacheData().get(CACHE_LAST_EDIT_TIME).last_edit_time;
+				params["local_time_key"]=localKeyTime(LOCAL_STORAGE_TIMEKEY);
+				apiGeoRequests.editStart(params,function(status,res){
+
+						if(!status && res["type"]==0){
+
+								callback(false);
+								return;
+						}
+
+						if(!status && res["type"]==1){
+
+								callback(false,res["errorNo"],{
+
+										"title"  :res["title"],
+										"message":res["message"]
+								});
+								return;
+						}
+
+						var action_button=window["schedule_action_button"];
+						var time_key=res["time_key"];
+						var current_time_ms=res["last_modified_ms"];
+						var last_edit_time=res["last_edit_time"];
+						addActionButton.call(action_button,1,function(save_button){
+
+								localKeyTime(LOCAL_STORAGE_TIMEKEY,time_key);
+								cacheData().set(MANAGED_LIMITED_TIMER,{"timer":current_time_ms });
+								cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":last_edit_time });
+								callback(true);
+						});
+				});
+		}
+
+		var mouseUpEventLeftSide=function(e,callback){
+
+			var target=$(e.target);
+			var type=target.attr("data-type");
+
+			if([BTN_SCHEDULE_PREV_BUTTON,BTN_SCHEDULE_PREV_BUTTON_SPAN].indexOf(type)>-1){
+
+				scheduleBtnLeftEvent(function(){
+
+					setCurrentDay();
+					callback();
+				});
+				return;
+			}
+
+			if([BTN_SCHEDULE_NEXT_BUTTON,BTN_SCHEDULE_NEXT_BUTTON_SPAN].indexOf(type)>-1){
+
+				scheduleBtnRightEvent(function(){
+
+					setCurrentDay();
+					callback();
+				});
+				return;
+			}
+
+			if(type==BTN_ACTION_START){
+
+				var action_button=window["schedule_action_button"];
+				return;
+			}
+
+			if(type==BTN_ACTION_SAVE){
+
+				callback();
+				return;
+			}
+
+			if(type==TYPE_SCHEDULE_SIDE_SITE_EDIT){
+
+				return;
+			}
+
+			callback();
+		}
+
+		var allLeftSideEvents=function(){
+
+				var target=this;
+
+				if(is_sp){
+
+						var start="mousedown";
+						if(is_sp) start="touchstart";
+						target.off(start).one(start,function(e){
+
+								var self=$(this);
+								var fn=arguments.callee;
+								self.data("e",e);
+								self.one(e.type,fn);
+						});
+				}
+
+				var end="mouseup";
+				if(is_sp) end="touchend";
+				target.off(end).one(end,function(e){
+
+						var self=$(this);
+						var fn=arguments.callee;
+
+						if(is_sp){
+
+								var start_event=self.data("e");
+								if(isDiffPageXY(start_event,e,ALLOW_MOVE_TOUCH_POINT)){
+
+										self.one(e.type,fn);
+										return;
+								}
+						}
+
+						mouseUpEventLeftSide(e,function(){
+
+								self.one(e.type,fn);
+						});
+
+						return true;
+				});
+		}
+
+		var scheduleEvents=function(){
+
+				var start="mousedown";
+				var move ="mousemove";
+				var end  ="mouseup";
+				var click="click";
+
+				if(is_sp){
+
+						start="touchstart";
+						move ="touchmove";
+						end  ="touchend";
+				}
+
+				var target=this;
+				target.off(end).on(end,function(e){
+
+						var target=$(this);
+						var start=target.data("e");
+						var touch_num=target.data("touch_num");
+						var start_position_id=target.data("start_position_id");
+						var last_move_data_id=target.data("data_id");
+						var tap_timer=target.data("tap_timer");
+						if(tap_timer!=undefined) clearTimeout(tap_timer);
+
+						target.removeData("e");
+						target.removeData("touch_num");
+						target.removeData("start_position_id");
+						target.removeData("data_id");
+						target.removeData("start_time");
+						target.removeData("tap_timer");
+						if(!start || start["target"]==undefined || !(start instanceof jQuery.Event)) return;
+
+						scheduleMouseUpEvent(e,{
+
+								"startPositionID":!start_position_id?-1:start_position_id,
+								"startPageX"     :getPageX(start),
+								"startPageY"     :getPageY(start),
+								"lastMoveDataId" :last_move_data_id,
+								"touchNum"       :touch_num
+						});
+
+						return true;
+				});
+
+                target.off(start).one(start,function(e){
+
+                        var self=$(this);
+                        var fn=arguments.callee;
+                        var touch_num=1;
+                        if(is_sp) touch_num=e.originalEvent.touches.length;
+                        var tap_timer=self.data("tap_timer");
+                        if(tap_timer!=undefined) clearTimeout(tap_timer);
+                        var is_managed=cacheData().get(MANAGED_AUTHORITY).is_managed;
+
+                        manageTouch().clear();
+                        var start_schedule_map=$(e.target).parents("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+                        if(1>start_schedule_map.size()){
+
+                                self.one(e.type,fn);
+                                return false;
+                        }
+
+                        self.data("e",e);
+                        self.data("touch_num",touch_num);
+                        self.data("start_position_id",start_schedule_map.attr("data-position-id"));
+                        self.data("data_id",self.data("start_position_id"));
+                        self.data("start_time",new Date().getTime());
+
+                        if(is_sp && touch_num>1){
+
+                                self.one(e.type,fn);
+                                return true;
+                        }
+
+                        scheduleMouseDownEvent.call(self,e,function(){
+
+                                self.one(e.type,fn);
+                        });
+
+						if(is_smart) return true;
+                        if(is_sp && is_managed) return false;
+                        return true;
+                });
+
+               target.off(move).on(move,function(e){
+
+                        var self=$(this);
+                        var touch_num=self.data("touch_num");
+                        var is_managed=cacheData().get(MANAGED_AUTHORITY).is_managed;
+
+                        scheduleMouseMoveEvent.call(self,e,{
+
+                                "touchNum":touch_num
+                        });
+
+						if(is_smart) return true;
+                        if(is_sp && touch_num>1) return true;
+                        if(is_sp && is_managed) return false;
+                        return true;
+                });
+
+				if(!is_sp){
+
+						var clicked=false;
+						target.off(click).on(click,function(e){
+
+								var target=$(this);
+
+								if(clicked){
+
+										clicked=false;
+										return;
+								}
+
+								clicked=true;
+								setTimeout(function(){
+
+										clicked=false;
+
+								},200);
+
+								return false;
+						});
+				}
+		}
+
+		var scheduleContentBoxMouseDownEvent=function(e,callback){
+
+				var touch_element=$(e.target);
+				var type=touch_element.attr("data-type");
+				callback();
+		}
+
+		var scheduleContentBoxMouseMoveEvent=function(e){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+				var is_on=manageTouch().isOn();
+				var data_list=[TYPE_SCHEDULE_MESSAGE_CELL,TYPE_SCHEDULE_MESSAGE];
+				var is_on_schedule_map=data_list.indexOf(type)>-1;
+				if(!is_on_schedule_map) is_on_schedule_map=target.parents("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]").size()>0;
+
+				// outside of schedule_map.
+				if(is_on && !is_on_schedule_map){
+
+						var schedule_row=manageTouch().touchElement;
+						if((schedule_row instanceof jQuery) && schedule_row.attr("data-type")==TYPE_SCHEDULE_ROW) schedule_row.css("opacity","1.0");
+
+						var schedule_timeline=window["schedule_data_line_container"].find("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]:visible");
+						var date=schedule_timeline.attr("data-time");
+						beforeunLoadEvent();
+						manageTouch().clear();
+
+						var schedule_map=schedule_row.parent();
+						var schedule_data_line=schedule_row.parents("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]");
+						var schedule_rows=schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+						if(schedule_rows.size()>1){
+
+								var all_schedule_maps=schedule_data_line.find("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+								var is_ok=isAllowScheduleDown.call(schedule_map,all_schedule_maps);
+								var after_schedule_row =schedule_rows.eq(0).css("z-index",0);
+								var before_schedule_row=schedule_rows.eq(1).css("z-index",0);
+
+								if(!is_ok){
+
+										var schedule_data_line=schedule_map.parents("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE+"\"]");
+										var start_position_id=schedule_data_line.data("start_position_id");
+										var start_schedule_map=all_schedule_maps.filter("div[data-position-id=\""+start_position_id+"\"]");
+										var start_schedule_row=start_schedule_map.children("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+										start_schedule_row.remove();
+										after_schedule_row.appendTo(start_schedule_map);
+										return;
+								}
+
+								scheduleDown.call(before_schedule_row,all_schedule_maps);
+						}
+				}
+		}
+
+		var scheduleContentBoxMouseUpEvent=function(e,s){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+
+				var allow_point=ALLOW_MOVE_TOUCH_POINT;
+				var diff_x=Math.abs(Math.abs(getPageX(e))-Math.abs(s["startPageX"]));
+				var diff_y=Math.abs(Math.abs(getPageY(e))-Math.abs(s["startPageY"]));
+				var is_diff=(diff_x>allow_point || diff_y>allow_point);
+
+				var is_touch_on=manageTouch().isOn();
+				var is_managed=cacheData().get(MANAGED_AUTHORITY).is_managed;
+
+				if(!is_diff && type==TYPE_SCHEDULE_MEMO_LI){
+
+						if(!is_managed){
+
+								uiAlertNothingAuthority();
+								return;
+						}
+
+						scheduleMemoOpen.call(target);
+						return;
+				}
+		}
+
+		var scheduleContentBoxEvents=function(){
+
+				var start="mousedown";
+				var move ="mousemove";
+				var end  ="mouseup";
+				var click="click";
+
+				if(is_sp){
+
+						start="touchstart";
+						move ="touchmove";
+						end  ="touchend";
+				}
+
+				var target=this;
+				target.off(end).on(end,function(e){
+
+						var target=$(this);
+						var start=target.data("e");
+
+						if(!start || start["target"]==undefined || !(start instanceof jQuery.Event)) return;
+						target.removeData("e");
+
+						scheduleContentBoxMouseUpEvent(e,{
+
+								"startPageX":getPageX(start),
+								"startPageY":getPageY(start)
+						});
+
+						return true;
+				});
+
+				target.off(start).one(start,function(e){
+
+						var self=$(this);
+						var fn=arguments.callee;
+						self.data("e",e);
+						scheduleContentBoxMouseDownEvent(e,function(){
+
+								self.one(e.type,fn);
+						});
+
+						return true;
+				});
+
+				target.off(move).on(move,function(e){
+
+						scheduleContentBoxMouseMoveEvent(e);
+						return true;
+				});
+		};
+
+		var headLineMouseUpEvent=function(e,s){
+
+				var target=$(e.target);
+				var type=target.attr("data-type");
+
+				if(is_sp){
+
+						var allow_point=ALLOW_MOVE_TOUCH_POINT;
+						var diff_y=Math.abs(Math.abs(getPageY(e))-Math.abs(s["startPageY"]));
+						var diff_x=Math.abs(Math.abs(getPageX(e))-Math.abs(s["startPageX"]));
+						if(diff_x>allow_point || diff_y>allow_point) return;
+				}
+
+				if(type==TYPE_SCHEDULE_DAY_BTN){
+
+						var data_url=target.attr("data-url");
+						var ymd_ary=window["select_date"]["ymd"];
+						var url=BASE_URL+data_url;
+
+						if(isScheduleEdit()){
+
+								uiAlertScheduleNoSave(function(status){
+
+										if(!status) return;
+										$(window).off("beforeunload");
+										location.href=url;
+								});
+								return;
+						}
+
+						$(window).off("beforeunload");
+						location.href=url;
+						return;
+				}
+
+				if(type==TYPE_SCHEDULE_WEEK_BTN){
+
+						var data_url=target.attr("data-url");
+						var ymd_ary=window["select_date"]["ymd"];
+						var wk_fd = new Date(ymd_ary[0]+"-"+ymd_ary[1]+"-"+ymd_ary[2]).getMonday();
+						var url=BASE_URL+data_url+"/"+wk_fd.getFullYear()+(wk_fd.getMonth()+1).toString().strpad(2)+(wk_fd.getDate()).toString().strpad(2);
+
+						if(isScheduleEdit()){
+
+								uiAlertScheduleNoSave(function(status){
+
+										if(!status) return;
+										$(window).off("beforeunload");
+										location.href=url;
+								});
+								return;
+						}
+
+						$(window).off("beforeunload");
+						location.href=url;
+						return;
+				}
+
+				if(type==TYPE_SCHEDULE_MONTH_BTN){
+						var data_url=target.attr("data-url");
+						var ymd_ary=window["select_date"]["ymd"];
+						var url=BASE_URL+data_url+"/"+ymd_ary[0]+ymd_ary[1];
+
+						if(isScheduleEdit()){
+
+								uiAlertScheduleNoSave(function(status){
+
+										if(!status) return;
+										$(window).off("beforeunload");
+										location.href=url;
+								});
+								return;
+						}
+
+						$(window).off("beforeunload");
+						location.href=url;
+						return;
+				}
+
+				if([BTN_SCHEDULE_PREV_BUTTON,BTN_SCHEDULE_PREV_BUTTON_SPAN].indexOf(type)>-1){
+
+						scheduleBtnLeftEvent(function(){
+
+								setCurrentDay();
+						});
+						return;
+				}
+
+				if([BTN_SCHEDULE_NEXT_BUTTON,BTN_SCHEDULE_NEXT_BUTTON_SPAN].indexOf(type)>-1){
+
+						scheduleBtnRightEvent(function(){
+
+								setCurrentDay();
+						});
+						return;
+				}
+		};
+
+		var scheduleHeadBtnsEvents=function(){
+
+				var start="mousedown";
+				var move ="mousemove";
+				var end  ="mouseup";
+
+				if(is_sp){
+
+						var start="touchstart";
+						var move ="touchmove";
+						var end  ="touchend";
+				}
+
+				var target=this;
+				target.off(end).on(end,function(e){
+
+						var start=$(this).data("e");
+						headLineMouseUpEvent(e,{
+
+								"startPageX":getPageX(start),
+								"startPageY":getPageY(start)
+						});
+						return false;
+				});
+
+				target.off(start).one(start,function(e){
+
+						var self=$(this);
+						var fn=arguments.callee;
+
+						self.data("e",e);
+						self.one(e.type,fn);
+						return false;
+				});
+		};
+
+		allLeftSideEvents.call(window["schedule_left_side"]);
+		scheduleContentBoxEvents.call(window["schedule_content_box"]);
+		scheduleHeadBtnsEvents.call(window["schedule-btn-left"]);
+		scheduleHeadBtnsEvents.call(window["schedule-btn-right"]);
+		scheduleHeadBtnsEvents.call(window["schedule-head-bottom-line"]);
+		scheduleHeadBtnsEvents.call(window["schedule-head-middle-line"]);
+
+		var make=function(callback){
+
+				var container_top=window["schedule_data_line_container"];
+				var current_ymd=window["select_date"]["ymd"].join("");
+				var information=window["informations"][current_ymd];
+
+				var promiseAddTimeline=function(){
+
+						var deferred=$.Deferred();
+						addTimeline(current_ymd,function(html){
+
+								deferred.resolve({
+
+										"schedule_timeline":html
+								});
+						});
+
+						return deferred.promise();
+				};
+
+				var promiseAddHeadline=function(args){
+
+						var deferred=$.Deferred();
+						var html=args["schedule_timeline"];
+						var schedule_head_line=html.find("div[data-type=\""+TYPE_SCHEDULE_HEAD_LINE+"\"]");
+						var schedule_data_line=html.find("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE+"\"]");
+						addHeadLine.call(schedule_head_line,function(){
+
+								deferred.resolve($.extend(args,{
+
+										"schedule_head_line":schedule_head_line,
+										"schedule_data_line":schedule_data_line
+								}));
+						});
+
+						return deferred.promise();
+				};
+
+				var promiseAddScheduleMaps=function(args){
+
+						var deferred=$.Deferred();
+						var schedule_data_line=args["schedule_data_line"];
+						addScheduleMaps.call(schedule_data_line,function(){
+
+								deferred.resolve(args);
+						});
+
+						return deferred.promise();
+				};
+
+				var promiseAddDataLine=function(args){
+
+						var deferred=$.Deferred();
+						var schedule_data_line=args["schedule_data_line"];
+						addDataLine.call(schedule_data_line,information,function(){
+
+								deferred.resolve(args);
+						});
+
+						return deferred.promise();
+				};
+
+				var promiseAddMakeFinal=function(args){
+
+						var deferred=$.Deferred();
+						var schedule_data_line=args["schedule_data_line"];
+						var schedule_maps=schedule_data_line.children("div[data-type=\""+TYPE_SCHEDULE_MAP+"\"]");
+						var schedule_rows=schedule_maps.find("div[data-type=\""+TYPE_SCHEDULE_ROW+"\"]");
+						var schedule_sitetitles=schedule_rows.find("div[data-cell-type=\"schedule-sitetitle\"]");
+						var roundvalues=schedule_sitetitles.find("div[data-type=\"schedule-around\"]");
+
+						window["schedule_data_line"]=window["schedule_container_top"].find("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE+"\"]");
+						scheduleEvents.call(window["schedule_data_line"]);
+						resizeScheduleMapSize();
+						memoScroll();
+
+						if($.isFunction(callback)) callback();
+						return deferred.resolve().promise();
+				};
+
+				var printError=function(args){
+
+				}
+
+				promiseAddTimeline().
+				then(promiseAddHeadline).
+				then(promiseAddScheduleMaps).
+				then(promiseAddDataLine).
+				done(promiseAddMakeFinal);
+		}
+
+		var action_lastmodified=window["action_lastmodified"];
+		if(!!last_modified_user["user"]){
+
+				updateToInchageMessage({
+
+						"first_name"      :last_modified_user["user"]["first_name"],
+						"last_modified_ms":last_modified_user["last_edit_ms"]
+				});
+		}
+
+		var arrangeScheduleSizeByResize=function(def_current_offset_top,def_current_memo_height){
+
+				var __win=$(window);
+				var current_scroll_point=__win.scrollTop();
+				var prev_scroll_point=__win.data("prev_scroll_point");
+				var diff=current_scroll_point-prev_scroll_point;
+				__win.data("prev_scroll_point",current_scroll_point);
+
+				var schedule_data_line=window["schedule_data_line"];
+				var current_height=schedule_data_line.height();
+				var current_offset_top=schedule_data_line.offset().top;
+				var current_memo_height=window["schedule_side_memo"].height();
+				var after_height=current_height+(diff);
+				var after_memo_height=current_memo_height+(diff);
+
+				if(diff>-1){
+
+						var side_menu=schedule_aside.children("div[data-type=\""+TYPE_SCHEDULE_SIDE_BOX+"\"]");
+						var side_menu_top=side_menu.offset().top;
+						var side_menu_height=side_menu.height();
+						var max_side_height=(side_menu_top+side_menu_height);
+						if((current_height+current_offset_top)>=max_side_height){
+
+								return;
+						}
+				}
+
+				var container_height=Math.max(after_height,def_current_offset_top);
+				var memo_height=Math.max(after_memo_height,def_current_memo_height);
+				schedule_data_line.height(container_height);
+				window["schedule_side_memo"].height(memo_height);
+		}
+
+		var memoScroll=function(){
+
+				window["schedule_data_line"].on("scroll",function(){
+
+						window["schedule_side_memo"].scrollTop($(this).scrollTop());
+				});
+		};
+
+		var windowResize=function(){
+
+				$(window).on("resize",function(){
+
+						resizeScheduleMapSize();
+
+				}).trigger("resize");
+
+				memoScroll();
+
+				if(!is_sp){
+
+						var win=$(window);
+						var initial_scroll_point=win.scrollTop();
+						var def_current_memo_height=window["schedule_side_memo"].height();
+						var def_current_offset_top =window["schedule_data_line"].height();
+						win.data("prev_scroll_point",initial_scroll_point);
+						win.on("scroll",function(){
+
+								arrangeScheduleSizeByResize(def_current_offset_top,def_current_memo_height);
+						});
+				}
+		}
+
+		var schedule_aside=window["schedule_aside"];
+		var current_ymd=window["select_date"]["ymd"].join("");
+		replaceSideScheduleEmpty.call(schedule_aside,current_ymd,function(html){
+
+				make(function(){
+
+						windowResize();
+						setCurrentDay();
+						scheduleRefreshOvertime(limited_second);
+
+						if(!isAuthority(limited_second)) return;
+						addActionButton.call(window["schedule_action_button"],1,function(){
+
+								bodyColor(1);
+
+								cacheData().set(MANAGED_LIMITED_TIMER,{"timer":window["schedule_log"]["edit_time_expired_ms"]});
+								cacheData().set(MANAGED_AUTHORITY,{"is_managed":true});
+						});
+				});
+		});
+
+		var scheduleBtnLeftEvent=function(callback){
+
+				var container_top=window["schedule_data_line_container"];
+				var select_date=window["select_date"]["date"];
+				var current_ymd=window["select_date"]["ymd"].join("");
+				var current_elems=container_top.children();
+				//var current_elem=current_elems.filter("div[data-time=\""+current_ymd+"\"]").remove();
+				var current_elem=current_elems.filter("div[data-time=\""+current_ymd+"\"]").hide();
+				var __select_date=new Date(Number(current_ymd).addMinutesZero());
+				var prev_ymd_ary=__select_date.addDateSeparately(-1);
+				var prev_ymd=prev_ymd_ary[0]+prev_ymd_ary[1]+prev_ymd_ary[2];
+
+				var schedule_timelines=container_top.children("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]");
+				var cache_view=schedule_timelines.filter("[data-time=\""+prev_ymd+"\"]");
+				var fn=arguments.callee;
+
+				if(cache_view.size()>0){
+
+						window["select_date"]["date"]=new Date(Number(prev_ymd).addMinutesZero());
+						window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+						cache_view.show();
+						if($.isFunction(callback)) callback();
+						return;
+				}
+
+				if(window["informations"][prev_ymd]==undefined){
+
+						var params={}
+						params["date"]=prev_ymd_ary[0]+prev_ymd_ary[1]+prev_ymd_ary[2];
+						apiGeoRequests.getDateApi(params,function(status,res){
+
+								var informations=res["data"]["informations"];
+								var current_informations=window["informations"];
+								var add_informations=changeInformationFormatToDate(informations);
+
+								$.extend(current_informations,add_informations,true);
+								window["informations"]=current_informations;
+
+								var edit_informations=res["data"]["edit_informations"];
+								$.extend(cacheData().get(CACHE_EDIT_INFORMATION),edit_informations);
+
+								fn(callback);
+						});
+						return;
+				}
+
+				window["select_date"]["date"]=new Date(Number(prev_ymd).addMinutesZero());
+				window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+
+				make(function(){
+
+						windowResize();
+
+						if($.isFunction(callback)) callback();
+				});
+		}
+
+		var scheduleBtnRightEvent=function(callback){
+
+				var container_top=window["schedule_data_line_container"];
+				var select_date=window["select_date"]["date"];
+				var current_ymd=window["select_date"]["ymd"].join("");
+				var current_elem=container_top.children().filter("div[data-time=\""+current_ymd+"\"]").hide();
+				//var current_elem=container_top.children().filter("div[data-time=\""+current_ymd+"\"]").remove();
+				var __select_date=new Date(Number(current_ymd).addMinutesZero());
+				var next_ymd_ary=__select_date.addDateSeparately(1);
+				var next_ymd=next_ymd_ary[0]+next_ymd_ary[1]+next_ymd_ary[2];
+
+				var schedule_timelines=container_top.children("div[data-type=\""+TYPE_SCHEDULE_DATA_LINE_TOP+"\"]");
+				var cache_view=schedule_timelines.filter("[data-time=\""+next_ymd+"\"]");
+				var fn=arguments.callee;
+
+				if(cache_view.size()>0){
+
+						window["select_date"]["date"]=new Date(Number(next_ymd).addMinutesZero());
+						window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+						cache_view.show();
+						if($.isFunction(callback)) callback();
+						return;
+				}
+
+				if(window["informations"][next_ymd]==undefined){
+
+						var params={}
+						params["date"]=next_ymd_ary[0]+next_ymd_ary[1]+next_ymd_ary[2];
+						apiGeoRequests.getDateApi(params,function(status,res){
+
+								var informations=res["data"]["informations"];
+								var current_informations=window["informations"];
+								var add_informations=changeInformationFormatToDate(informations);
+
+								$.extend(current_informations,add_informations,true);
+								window["informations"]=current_informations;
+
+								var edit_informations=res["data"]["edit_informations"];
+								$.extend(cacheData().get(CACHE_EDIT_INFORMATION),edit_informations);
+
+								fn(callback);
+						});
+						return;
+				}
+
+				window["select_date"]["date"]=new Date(Number(next_ymd).addMinutesZero());
+				window["select_date"]["ymd"]=window["select_date"]["date"].getYmdByMs();
+
+				make(function(){
+
+						windowResize();
+
+						if($.isFunction(callback)) callback();
+				});
+				widthScrollBar();
+		}
+
+		addScheduleRoomLi.call(schedule_side_memo,rooms,function(){
+		
+		});
+
+		if(!isSp()){
+
+				var header=window["body"].find("header");
+				var header_print=header.find("div[data-type=\"header-print\"]");
+				var icon_csv=header_print.find("a[data-type=\"csv-daily\"]");
+				icon_csv.one("click",function(e){
+
+						var self=$(this);
+						var fn=arguments.callee;
+						var select_date=window["select_date"]["date"];
+						var target_date=new Date(select_date).getYmdByMs().join("");
+						var values={};
+						values["date"]=target_date+"";
+						apiGeoRequests.csvDl(values,function(status,res){
+
+								var filename=res["filename"];
+								var href=location.protocol+"//"+location.host;
+								var path=href+"/csv.php?filename="+filename;
+								location.href=path;
+								self.one(e.type,fn);
+						});
+				});
+		}
+
+});
+
+
+</script>
+
+<script id="tpl_schedule_data_time_line" type="text/tmpl">
+<div data-type="schedule-data-time-line" data-time="<<ymd>>">
+	<div id="day_schedule_top_head" data-type="schedule-head-line"></div>
+	<div id="schedule_top_inner" class="schedule_inner_daily" data-type="schedule-data-line" style="-webkit-overflow-scrolling:touch;"></div>
+</div>
+</script>
+
+<script type="text/javascript">
+	function widthScrollBar(){
+		if(!$('style.scrollW').length)
+			$(body).append('<style class="scrollW">#day_schedule_top_head{padding-right: '+(parseInt($('#schedule_top_inner').width()) - parseInt(document.getElementById("schedule_top_inner").clientWidth) - 1)+'px}</style>');
+	}
+	$(window).resize(function(event) {
+		widthScrollBar();
+	});
+</script>
+
+<script id="tpl_schedule_head_worker_count" type="text/tmpl">
+残り<<rest_num>>人
+</script>
+
+<script id="tpl_schedule_head_worker_undercount" type="text/tmpl">
+<span style="color:red;">残り<<rest_num>>人</span>
+</script>
+
+<script id="tpl_schedule_head_line" type="text/tmpl">
+<div class="day_schedule-top-title">
+	<div class="day_schedule-date daily-<<day_num>>">
+		<<view_month>>/<<view_day>>(<span class="day-red"><<week>></span>)
+	</div>
+	<div class="day-schedule-worker-count" data-type="schedule-btn-worker-count" data-toggle="modal" data-target="#modalWorkersFree"><<rest_num>></div>
+</div>
+<div class="schedule-head"></div>
+<div class="schedule-head"><?php echo __("宿泊者"); ?></div>
+<div class="schedule-head"><?php echo __(""); ?></div>
+<div class="schedule-head">配車</div>
+<div class="schedule-head">顧客名</div>
+<div class="schedule-head"><<site_remark_title>></div>
+<div class="schedule-head"><<schedule_remark_title1>></div>
+<div class="schedule-head"><<schedule_remark_title2>></div>
+<div class="schedule-head"><<schedule_remark_title3>></div>
+</script>
+
+<script id="tpl_schedule_map" type="text/tmpl">
+<div data-type="schedule-map" class="schedule-map" data-position-id="<<position_id>>" style="position:relative;"></div>
+</script>
+
+<script id="tpl_schedule_row_worker" type="text/tmpl">
+<span style="color:<<worker_color>>"><<name>></span>
+</script>
+
+<script id="tpl_schedule_row_worker_leader" type="text/tmpl">
+<span style="color:red;"><<name>></span>
+</script>
+
+<script id="tpl_schedule_row_empty" type="text/tmpl">
+<div class="schedule-row schedule-row-empty" data-type="schedule-row" data-empty="YES" style="position:absolute;">
+	<div class="schedule-cell" data-edit-type="schedule-site-edit" data-type="schedule-cell" data-cell-type="schedule-sitetitle"></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-workernames"></div>
+	<div class="schedule-cell" data-edit-type="schedule-site-edit" data-type="schedule-cell" data-cell-type="schedule-area"></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-trucknames"></div>
+	<div class="schedule-cell" data-edit-type="schedule-site-edit" data-type="schedule-cell" data-cell-type="schedule-customername"></div>
+	<div class="schedule-cell" data-edit-type="schedule-site-edit" data-type="schedule-cell" data-cell-type="schedule-siteremarks"></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-scheduleremarks1"></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-scheduleremarks2"></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-scheduleremarks3"></div>
+</div>
+</script>
+
+<script id="tpl_schedule_row" type="text/tmpl">
+<div class="schedule-row schedule-row-not-empty" data-type="schedule-row" data-reservation-id="<<site_id>>" data-schedule-id="<<schedule_id>>" data-empty="NO" style="position:absolute;">
+	<div class="schedule-cell" style="background-color:<<color>>" data-type="schedule-cell" data-edit-type="schedule-site-edit" data-cell-type="schedule-sitetitle">
+		<div id="check-around" data-type="schedule-around" data-count="<<around_value>>" class="spin-<<around_value>>"></div>
+		<div class="right-cell"><span data-type="schedule-message"><<title>>(<<site_area>>)</span></div>
+	</div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-workernames">
+	<span data-type="schedule-message"><<workernames>></span></div>
+	<div class="schedule-cell" data-edit-type="schedule-site-edit" data-type="schedule-cell" data-cell-type="schedule-area">
+	<span data-type="schedule-message"><<pref>><<area>><<address>></span></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-trucknames">
+	<span data-type="schedule-message"><<trucknames>></span></div>
+	<div class="schedule-cell" data-edit-type="schedule-site-edit" data-type="schedule-cell" data-cell-type="schedule-customername">
+	<span data-type="schedule-message"><<customername>></span></div>
+	<div class="schedule-cell" data-edit-type="schedule-site-edit" data-type="schedule-cell" data-cell-type="schedule-siteremarks">
+	<span data-type="schedule-message"><<siteremark>></span></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-scheduleremarks1">
+	<span data-type="schedule-message"><<scheduleremark1>></span></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-scheduleremarks2">
+	<span data-type="schedule-message"><<scheduleremark2>></span></div>
+	<div class="schedule-cell" data-edit-type="schedule-add-informations" data-type="schedule-cell" data-cell-type="schedule-scheduleremarks3">
+	<span data-type="schedule-message"><<scheduleremark3>></span></div>
+</div>
+</script>
+
+<style>
+
+div[data-type=content-box]{
+	user-select:none;
+	-webkit-user-select:none;
+	-moz-user-select:none;
+	-ms-user-select:none;
+	-o-user-select:none;
+}
+</style>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		if(isSp()){
+			$('body').addClass('mobi-layout');
+		}
+	});
+</script>

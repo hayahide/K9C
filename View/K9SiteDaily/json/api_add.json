@@ -1,0 +1,11 @@
+<?php
+  $result = [
+    'masterUser'  => $masterUser,
+    'customer'  => $customer,
+    'areas'  => $areas,
+    'pic_customer'  => $pic_customer,
+    'prefs'   => $prefs,
+    'select_pref'  => $select_pref
+  ];
+  echo json_encode(array('status'=>'YES','result'=>$result));
+?>

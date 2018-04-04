@@ -1,0 +1,1722 @@
+<?php $controller=strtolower($this->params["controller"]);?>
+<?php echo $this->element("schedule_apis/common"); ?>
+<?php echo $this->element("schedule_functions/common"); ?>
+
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/hotel-style.php" />
+
+<?php
+
+$is_start_ok=true;
+$schedule_controller=false;
+if(!isset($_SERVER["HTTP_REFERER"])) $is_start_ok=false;
+
+if($is_start_ok){
+												   
+	$ref=$_SERVER["HTTP_REFERER"];
+	$parse_info=parse_url($ref);
+	$path=$parse_info["path"];
+	$schedule_controller=explode("/",trim($path,"/"))[0];
+	if(!in_array(strtolower($schedule_controller),array("k9site","k9sitemonthly","k9reservation"))) $is_start_ok=false;
+}
+
+?>
+
+<style>
+
+.model-body  .list-guest li.select-color{
+
+	background-color:rgba(255,0,0,0.2);
+	font-weight:bold;
+}
+
+</style>
+
+<script>
+
+var LOCAL_STORAGE_TIMEKEY="time_key";
+var CACHE_LAST_EDIT_TIME="cache_last_edit_time";
+var is_start_ok="<?php echo ($is_start_ok AND !empty($schedule_controller)); ?>";
+if(!is_start_ok){
+
+	alert("<?php echo __("不正なアクセスです"); ?>");
+	location.href="<?php echo ROOT_DOMAIN; ?>";
+}
+
+$(function(){
+
+	var user_id='<?php echo $user_id; ?>';
+	var schedule_controller="<?php echo $schedule_controller; ?>";
+	var select_date="<?php echo $date; ?>";
+
+	window["schedule_log"]={};
+	window["schedule_log"]["last_start_user"]     ="<?php echo $last_start_user; ?>";
+	window["schedule_log"]["edit_time_expired_ms"]="<?php echo $edit_time_expired_ms; ?>";
+	window["schedule_log"]["last_edit_time"]      ="<?php echo $last_edit_time; ?>";
+	cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":window["schedule_log"]["last_edit_time"] });
+	localKeyTime(LOCAL_STORAGE_TIMEKEY,(parseInt(window["schedule_log"]["last_edit_time"])/1000)+"");
+
+	window["reservation_hash"]="<?php echo empty($reservation_hash)?"":$reservation_hash; ?>";
+	window["selected_room_id"]="<?php echo empty($selected_room_id)?"":$selected_room_id; ?>";
+	window["guest_hash"]="<?php echo isset($guest_hash)?$guest_hash:""; ?>";
+
+	window["html"]=$("html");
+	window["body"]=html.find("body");
+
+	window["today"]={};
+	window["today"]["today"]="<?php echo $today; ?>";
+	window["today"]["date"] =new Date(window["today"]["today"]);
+	window["today"]["ymd"]=window["today"]["date"].getYmdByMs().join("");
+
+	var getElementsOnMain=function(){
+
+		var deferred=$.Deferred();
+		var main=this;
+		var elements={};
+		elements["parson"]=main.find("div[data-type=\"parson\"]");
+		elements["parson-title"]       =elements["parson"].find("select[data-type=\"parson-title\"]");
+		elements["parson-number"]      =elements["parson"].find("input[data-type=\"parson-number\"]");
+		elements["parson-firstname"]   =elements["parson"].find("input[data-type=\"parson-firstname\"]");
+		elements["parson-lastname"]    =elements["parson"].find("input[data-type=\"parson-lastname\"]");
+		elements["parson-passport"]    =elements["parson"].find("input[data-type=\"parson-passport\"]");
+		elements["parson-incidential"] =elements["parson"].find("select[data-type=\"parson-incidential\"]");
+		elements["parson-language"]    =elements["parson"].find("select[data-type=\"parson-language\"]");
+		elements["search_button"]      =elements["parson"].find("div[data-type=\"search-button\"]");
+		elements["open-search-parson"] =elements["search_button"].children("button[data-type=\"open-search-parson\"]");
+
+		elements["contact"]=main.find("div[data-type=\"contact\"]");
+		elements["contact-address"] =elements["contact"].find("input[data-type=\"contact-address\"]");
+		elements["contact-city"]    =elements["contact"].find("input[data-type=\"contact-city\"]");
+		elements["contact-state"]   =elements["contact"].find("input[data-type=\"contact-state\"]");
+		elements["contact-zip-code"]     =elements["contact"].find("input[data-type=\"contact-zip\"]");
+		elements["contact-country"]    =elements["contact"].find("select[data-type=\"contact-country\"]");
+		elements["reservation-agency"]    =elements["contact"].find("select[data-type=\"reservation-agency\"]");
+		elements["contact-nationality"]=elements["contact"].find("select[data-type=\"contact-nationality\"]");
+		elements["contact-tel"]     =elements["contact"].find("input[data-type=\"contact-tel\"]");
+		elements["contact-email"]     =elements["contact"].find("input[data-type=\"contact-email\"]");
+
+		elements["administration"]=main.find("div[data-type=\"administration\"]");
+		elements["administration-salesource"] =elements["administration"].find("select[data-type=\"administration-salesource\"]");
+		elements["administration-arrival"] =elements["administration"].find("input[data-type=\"administration-arrival\"]");
+		elements["administration-nights"] =elements["administration"].find("input[data-type=\"administration-nights\"]");
+		elements["administration-departure"] =elements["administration"].find("input[data-type=\"administration-departure\"]");
+		elements["administration-roomavailable"] =elements["administration"].find("button[data-type=\"administration-roomavailable\"]");
+		elements["administration-reservationtype"] =elements["administration"].find("select[data-type=\"administration-reservationtype\"]");
+		elements["administration-payment"] =elements["administration"].find("select[data-type=\"administration-payment\"]");
+		elements["administration-purchase"] =elements["administration"].find("select[data-type=\"administration-purchase\"]");
+
+		elements["rate"]=main.find("div[data-type=\"rate\"]");
+		elements["rate-roomtype"] =elements["rate"].find("select[data-type=\"rate-roomtype\"]");
+		elements["rate-roomnum"] =elements["rate"].find("select[data-type=\"rate-roomnum\"]");
+		elements["rate-adults"]   =elements["rate"].find("input[data-type=\"rate-adults\"]");
+		elements["rate-child"]    =elements["rate"].find("input[data-type=\"rate-child\"]");
+		elements["rate-overwrite-rate"]=elements["rate"].find("input[data-type=\"rate-overwrite-rate\"]");
+		elements["rate-weekday"]=elements["rate"].find("input[data-type=\"rate-weekday\"]");
+		elements["rate-weekend"]=elements["rate"].find("input[data-type=\"rate-weekend\"]");
+
+		elements["remark"]=main.find("div[data-type=\"remark\"]");
+		elements["remark-guest-note"] =elements["remark"].find("textarea[data-type=\"remark-guest-note\"]");
+		elements["remark-reserve-note"] =elements["remark"].find("textarea[data-type=\"remark-reserve-note\"]");
+
+		elements["buttons"]=main.find("div[data-type=\"buttons\"]");
+		elements["buttons-subscribe"]=elements["buttons"].find("button[data-type=\"buttons-subscribe\"]");
+		elements["buttons-back"]=elements["buttons"].find("button[data-type=\"buttons-back\"]");
+
+		elements["selected-room-num"]=main.find("p[data-type=\"selected-room-num\"]");
+
+		return deferred.resolve(elements);
+	}
+
+	var getMenuValues=function(){ this.values={}; }
+
+	getMenuValues.getMenuValues=function(){
+
+        if(!!this["instance"] && this.instance instanceof this){ return this.instance.values; }
+
+        this.instance=new this();
+		this.instance.values={
+
+			"countrys"       :JSON.parse('<?php echo $countrys; ?>'),
+			"working_ids"    :JSON.parse('<?php echo $working_ids; ?>'),
+			"nationality"    :JSON.parse('<?php echo $nationality; ?>'),
+			"classfication"  :JSON.parse('<?php echo $classfication; ?>'),
+			"language"       :JSON.parse('<?php echo $language; ?>'),
+			"salesource"     :JSON.parse('<?php echo $salesource; ?>'),
+			"nametitle"      :JSON.parse('<?php echo $nametitle; ?>'),
+			"roomtypes"      :JSON.parse('<?php echo $roomtypes; ?>'),
+			"roomnums"       :JSON.parse('<?php echo $roomnums; ?>'),
+			"reservationtype":JSON.parse('<?php echo $reservationtype; ?>'),
+			"paymenttypes"   :JSON.parse('<?php echo $cardtypes; ?>'),
+			"purchase"       :JSON.parse('<?php echo $purchase; ?>'),
+			"agencies"       :JSON.parse('<?php echo $agencies; ?>')
+		};
+
+        return this.instance.values;
+	}
+
+	var setMenus=function(elements){
+	
+		var deferred     =$.Deferred();
+
+		var menu_values=getMenuValues.getMenuValues();
+
+		var countrys=menu_values["countrys"];
+		var working_ids=menu_values["working_ids"];
+		var nationality=menu_values["nationality"];
+		var classfication=menu_values["classfication"];
+		var language=menu_values["language"];
+		var salesource=menu_values["salesource"];
+		var nametitle=menu_values["nametitle"];
+		var roomtypes=menu_values["roomtypes"];
+		var roomnums=menu_values["roomnums"];
+		var reservationtype=menu_values["reservationtype"];
+		var paymenttypes=menu_values["paymenttypes"];
+		var purchase=menu_values["purchase"];
+		var agencies=menu_values["agencies"];
+
+		setMenu.call(elements["parson-title"],nametitle);
+		setMenu.call(elements["parson-incidential"],classfication);
+		setMenu.call(elements["parson-language"],language);
+		setMenu.call(elements["contact-country"],countrys);
+		setMenu.call(elements["reservation-agency"],agencies["names"]);
+		setMenu.call(elements["contact-nationality"],nationality);
+		setMenu.call(elements["administration-salesource"],salesource);
+		setMenu.call(elements["administration-reservationtype"],reservationtype);
+
+		setMenu.call(elements["administration-payment"],paymenttypes);
+		setMenu.call(elements["administration-purchase"],purchase);
+		return deferred.resolve(elements);
+	}
+
+	var getInformations=function(elements){
+
+		var deferred=$.Deferred();
+		if(window["reservation_hash"]==undefined) return deferred.resolve(elements);
+
+		var params={};
+		params["hash"]=window["reservation_hash"];
+		apiGeoRequests.getReservationInformations(params,function(status,res){ 
+
+			if(!status) return deferred.reject(res);
+			deferred.resolve(elements,res["data"]); 
+		});
+		return deferred.promise();
+	}
+
+	var getNightCount=function(jp_start,jp_end){
+
+		var start_date=new Date(Number(jp_start).addMinutesZero());
+		var end_date  =new Date(Number(jp_end).addMinutesZero());
+		var range=start_date.getDateRange(end_date);
+		var night=range.length-1;
+		return night;
+	}
+
+	var setCalendar=function(elements){
+
+		var deferred=$.Deferred();
+		var calendars=elements["administration"].find("[data-type=\"administration-arrival\"],[data-type=\"administration-departure\"]");
+
+		setCalendarForInput.call(calendars,{
+		
+			"onSelect":function(selectedDate){
+
+				var calendar=$(this);
+				var type=calendar.attr("data-type");
+				var start=elements["administration-arrival"];
+				var end  =elements["administration-departure"];
+				var staytype=elements["administration-reservationtype"].val();
+				var is_end=calendar.attr("data-type")=="administration-departure";
+				var start_val=start.val();
+				var end_val  =end.val();
+
+				switch(staytype){
+				
+				case('<?php echo K9DataReservation::$STAY; ?>'):
+
+					if(is_end && 1>start_val.length){
+
+						alert("<?php echo __("宿泊開始日が設定されていません"); ?>");
+						end.val(end.data("calendar_end"));
+						return;
+					}
+
+					var jp_start=replaceToYmd(start_val);
+					var jp_end=replaceToYmd(end_val);
+					if(is_end && jp_start>=jp_end){
+
+						alert("<?php echo __("以降の日付を設定して下さい"); ?>");
+						end.val(end.data("calendar_end"));
+						return;
+					}
+
+					if(!is_end && !!jp_end && jp_start>=jp_end){
+
+						alert("<?php echo __("以前の日付を設定して下さい"); ?>");
+						start.val(start.data("calendar_start"));
+						return;
+					}
+
+					if(start_val.length>0 && end_val.length>0){
+					
+						var night=getNightCount(jp_start,jp_end);
+						elements["administration-nights"].val(night);
+					}
+
+					start.data("calendar_start",start_val);
+					end.data("calendar_end",end_val);
+					break;
+
+				case('<?php echo K9DataReservation::$REST; ?>'):
+
+					elements["administration-nights"].val(1);
+					break;
+				}
+			}
+		});
+
+		return deferred.resolve(elements);
+	}
+
+	var setEventRoom=function(elements){
+
+		var deferred=$.Deferred();
+
+		elements["reservation-agency"].change(function(){
+
+			var agencies=getMenuValues.getMenuValues()["agencies"];
+			var salesources=agencies["salesources"];
+			var company_id=$(this).val();
+			var salesource_id=salesources[company_id];
+			elements["administration-salesource"].val(salesource_id);
+		})
+
+		elements["administration-reservationtype"].change(function(e){
+
+			var target=$(e.target);
+			var val=target.val();
+			var disabled=false;
+			var roomnum_menus;
+			var roomtype_menus;
+			var firstvalue;
+
+			elements["rate-roomnum"].empty();
+			elements["rate-roomtype"].empty();
+
+			switch(val){
+			case('<?php echo K9DataReservation::$REST; ?>'):
+
+				roomnum_menus =getRoomnumsByStaytype(val,true);
+				roomtype_menus=getRoomtypesByStaytype(val,true);
+				setMenu.call(elements["rate-roomnum"],roomnum_menus);
+				setMenu.call(elements["rate-roomtype"],roomtype_menus);
+
+				firstvalue=elements["rate-roomnum"].children("option").eq(1).val();
+				elements["rate-roomnum"].val(firstvalue);
+				elements["rate-roomtype"].val(0);
+
+				elements["administration-nights"].val(1);
+				var arrive_date   =elements["administration-arrival"].val();
+				var arrive_ymd    =replaceToYmd(arrive_date);
+				var departure_ymd=Number(arrive_ymd).addDate(1);
+				var departure_date=replaceToLocaleFormatWithYmd(departure_ymd);
+				elements["administration-departure"].val(departure_date);
+
+				disabled=true;
+				break;
+
+			case("stay"):
+
+				var start=elements["administration-arrival"];
+				var end  =elements["administration-departure"];
+				start.val(start.data("calendar_start"));
+				end.val(end.data("calendar_end"));
+				var jp_start=replaceToYmd(start.val());
+				var jp_end=replaceToYmd(end.val());
+				var night=getNightCount(jp_start,jp_end);
+				elements["administration-nights"].val(night);
+
+				roomnum_menus=getRoomnumsByStaytype(val,true);
+				roomtype_menus=getRoomtypesByStaytype(val,true);
+				setMenu.call(elements["rate-roomnum"],roomnum_menus);
+				setMenu.call(elements["rate-roomtype"],roomtype_menus);
+
+				firstvalue=elements["rate-roomnum"].children("option").eq(1).val();
+				elements["rate-roomnum"].val(firstvalue);
+				elements["rate-roomtype"].val(0);
+				break;
+			}
+
+			elements["administration-departure"].propDisable(disabled);
+			elements["administration-nights"].propDisable(disabled);
+		})
+
+		elements["rate-roomtype"].change(function(e){
+
+			var target=$(e.target);
+			var val=target.val();
+			var is_selected=(val>0);
+			elements["rate-roomnum"].val(is_selected?0:1);
+		});
+
+		elements["rate-roomnum"].change(function(e){
+
+			var target=$(e.target);
+			var val=target.val();
+			var is_selected=(val>0);
+			elements["rate-roomtype"].val(is_selected?0:1);
+		});
+
+		return deferred.resolve(elements);
+	}
+
+	var setGuestCheckinHistories=function(information){
+	
+		var target=this;
+		var instance=TPL.getInstance("search_guest_history");
+		var history_tpl=instance.get_search_guest_history;
+		var fragment=document.createDocumentFragment();
+		var history_html;
+
+		for(var i in information){
+
+			history_html=$(instance.replaceTPL(history_tpl,{
+			
+				"reserve_id"   :information[i]["id"],
+				"In"           :information[i]["checkin_time"],
+				"Out"          :information[i]["checkout_time"]
+			}));
+
+			fragment.appendChild(history_html.get(0));
+		}
+
+		target.append(fragment);
+	}
+
+	var setEventSearchGuest=function(elements){
+
+		var deferred=$.Deferred();
+
+		elements["open-search-parson"].one("click",function(e){
+
+			var self=$(this);
+			var target=$(e.target);
+			var fn=arguments.callee;
+			var search_results={};
+
+			var instance=TPL.getInstance("search_guest");
+			var search_guest_tpl=instance.get_search_guest;
+			
+			var main_title="<?php echo __("宿泊者検索"); ?>";
+			var message_html=$(search_guest_tpl);
+
+			var getElementsOnRemodal=function(){
+
+				var elements={};
+				var parent=this;
+				elements["parent"]=parent;
+				elements["parson-firstname"]=parent.find("input[data-type=\"parson-firstname\"]");
+				elements["parson-lastname"]=parent.find("input[data-type=\"parson-lastname\"]");
+				elements["parson-country"]=parent.find("select[data-type=\"parson-country\"]");
+				elements["parson-nationality"]=parent.find("select[data-type=\"parson-nationality\"]");
+				elements["parson-title"]=parent.find("select[data-type=\"parson-title\"]");
+				elements["parson-classfication"]=parent.find("select[data-type=\"parson-classfication\"]");
+				elements["parson-language"]=parent.find("select[data-type=\"parson-language\"]");
+				elements["search-guest-ul"]=parent.find("ul[data-type=\"search-guest-ul\"]");
+				elements["parson-address"]=parent.find("input[data-type=\"parson-address\"]");
+				elements["parson-city"]=parent.find("input[data-type=\"parson-city\"]");
+				elements["parson-state"]=parent.find("input[data-type=\"parson-state\"]");
+				elements["parson-zip-code"]=parent.find("input[data-type=\"parson-zipcode\"]");
+				elements["parson-tel"]=parent.find("input[data-type=\"parson-tel\"]");
+				elements["parson-passport"]=parent.find("input[data-type=\"parson-passport\"]");
+				elements["parson-email"]=parent.find("input[data-type=\"parson-email\"]");
+				elements["parson-id"]=parent.find("input[data-type=\"parson-id\"]");
+				elements["search-count"]=parent.find("span[data-type=\"search-count\"]");
+				elements["guest-select"]=parent.find("a[data-type=\"guest-select\"]");
+				elements["button-cancel"]=parent.find("button[data-type=\"button-cancel\"]");
+				elements["button-save"]  =parent.find("button[data-type=\"button-save\"]");
+				elements["remark-guest-note"]=parent.find("textarea[data-type=\"remark-guest-note\"]");
+				elements["guest-history"]=parent.find("div[data-type=\"guest-history\"]");
+
+				return elements;
+			}
+
+			var setElements=function(){
+			
+				var deferred=$.Deferred();
+				var elements=getElementsOnRemodal.call(message_html);
+				return deferred.resolve(elements);
+			}
+
+			var setDefValue=function(elements){
+
+				var deferred=$.Deferred();
+
+				var menu_values=getMenuValues.getMenuValues();
+				setMenu.call(elements["parson-title"],menu_values["nametitle"]);
+				setMenu.call(elements["parson-classfication"],menu_values["classfication"]);
+				setMenu.call(elements["parson-language"],menu_values["language"]);
+				setMenu.call(elements["parson-country"],menu_values["countrys"]);
+				setMenu.call(elements["parson-nationality"],menu_values["nationality"]);
+
+				return deferred.resolve(elements);
+			}
+
+			var showCandidateFragment=function(guest_list){
+
+				var instance=TPL.getInstance("search_guest_li");
+				var search_guest_li_tpl=instance.get_search_guest_li;
+				var fragment=document.createDocumentFragment();
+				var search_guest_li_html;
+				var viewname;
+				for(var guest_id in guest_list){
+
+					var names=[];
+					if(guest_list[guest_id]["last_name"].length>0)  names.push(guest_list[guest_id]["last_name"]);
+					if(guest_list[guest_id]["first_name"].length>0) names.push(guest_list[guest_id]["first_name"]);
+
+					viewname=(1>names.length)?'<?php echo __("未設定"); ?>':names.join(" ");
+					search_guest_li_html=$(instance.replaceTPL(search_guest_li_tpl,{
+					
+						"guest_id":guest_id,
+						"name"    :viewname,
+						"title"   :guest_list[guest_id]["title"]
+					}));
+
+					fragment.appendChild(search_guest_li_html.get(0));
+				}
+
+				return fragment;
+			}
+
+			var setEventSearch=function(elements){
+
+				var deferred=$.Deferred();
+				var inputs=elements["parent"].find("input[data-type=\"search-frist-name\"],input[data-type=\"search-last-name\"]");
+				inputs.change(function(e){
+
+					var target=$(e.target);
+					var type=target.attr("data-type");
+					var firstname=inputs.eq(0).val().trim();
+					var lastname =inputs.eq(1).val().trim();
+					if(1>firstname.length && 1>lastname.length){
+
+						search_results={};
+						elements["search-guest-ul"].empty();
+						return;
+					}
+
+					var params={"data":{}};
+					params["data"]["firstname"]=firstname;
+					params["data"]["lastname"] =lastname;
+					apiGeoRequests.guestSearch(params,function(status,res){
+
+						if(!status){
+
+							alert(res["message"]);
+							search_results={};
+							elements["search-guest-ul"].empty();
+							return;
+						}
+
+						var guest_list=res["data"];
+						search_results=guest_list;
+						
+						var fragment=showCandidateFragment(guest_list);
+						elements["search-count"].text(Object.keys(guest_list).length);
+						elements["search-guest-ul"].empty().append(fragment);
+					});
+				});
+
+				return deferred.resolve(elements);
+			}
+
+			var setEditGuestValues=function(elements){
+			
+				var deferred=$.Deferred();
+
+				<?php if(empty($reservation_hash)){ ?>
+				elements["button-save"].remove();
+				return deferred.resolve(elements,{});
+				<?php } ?>
+
+				elements["parent"].find("input[data-type=\"search-frist-name\"],input[data-type=\"search-last-name\"]").propDisable(true);
+				elements["parent"].find("input[data-type=\"search-frist-name\"],input[data-type=\"search-last-name\"]").propDisable(true);
+				elements["guest-select"].remove();
+				elements["button-cancel"].remove();
+
+				var params={"data":{}};
+				params["data"]["guest_hash"]=window["guest_hash"];
+				apiGeoRequests.guestSearch(params,function(status,res){
+
+					if(!status) return deferred.reject(res);
+					var data=res["data"];
+					var fragment=showCandidateFragment(data);
+					elements["search-guest-ul"].empty().append(fragment);
+					elements["search-guest-ul"].children("li").eq(0).addClass("select-color");
+					return deferred.resolve(elements,data);
+				});
+
+				return deferred.promise();
+			}
+
+			var setGuestValue=function(elements,data){
+
+				var deferred=$.Deferred();
+
+				if(1>Object.keys(data).length) return deferred.resolve(elements);
+
+				for(var guest_id in data) break;
+				var information=data[guest_id];
+				elements["parson-firstname"].val(information["first_name"]);
+				elements["parson-lastname"].val(information["last_name"]);
+				elements["parson-country"].val(information["contact_country_num"]);
+				elements["parson-nationality"].val(information["contact_nationality_num"]);
+				elements["parson-title"].val(information["title_num"]);
+				elements["parson-classfication"].val(information["incidential_num"]);
+				elements["parson-language"].val(information["language_num"]);
+				elements["parson-address"].val(information["contact_address"]);
+				elements["parson-city"].val(information["contact_city"]);
+				elements["parson-state"].val(information["contact_state"]);
+				elements["parson-zip-code"].val(information["contact_zip_code"]);
+				elements["parson-tel"].val(information["contact_tel"]);
+				elements["parson-passport"].val(information["passport"]);
+				elements["parson-email"].val(information["contact_email"]);
+				elements["parson-id"].val(guest_id);
+				elements["remark-guest-note"].val(information["remarks"]);
+
+				elements["guest-history"].empty();
+				if(1>information["reservation"].length) return;
+				setGuestCheckinHistories.call(elements["guest-history"],information["reservation"]);
+	
+				return deferred.resolve(elements);
+			}
+
+			var setGuestInformations=function(information,callback){
+
+				var main=window["body"].find("div[data-type=\"reservation-set-top\"]");
+
+				getElementsOnMain.call(main).
+				done(function(elements){
+
+					elements["parson-firstname"].val(information["first_name"]);
+					elements["parson-lastname"].val(information["last_name"]);
+					elements["parson-passport"].val(information["passport"]);
+					elements["parson-incidential"].val(information["incidential_num"]);
+					elements["parson-language"].val(information["language_num"]);
+					elements["parson-title"].val(information["title_num"]);
+					elements["contact-address"].val(information["contact_address"]);
+					elements["contact-city"].val(information["contact_city"]);
+					elements["contact-state"].val(information["contact_state"]);
+					elements["contact-country"].val(information["contact_country_num"]);
+					elements["contact-nationality"].val(information["contact_nationality_num"]);
+					elements["contact-zip-code"].val(information["contact_zip_code"]);
+					elements["contact-tel"].val(information["contact_tel"]);
+					elements["contact-email"].val(information["contact_email"]);
+					elements["remark-guest-note"].val(information["remarks"]);
+					window["guest_hash"]=information["hash"];
+					callback();
+				});
+			}
+
+			setElements().
+			then(setDefValue).
+			then(setEventSearch).
+			then(setEditGuestValues).
+			then(setGuestValue).
+			done(function(elements){
+
+				var __setGuestInformations=function(guest_id,information){
+
+					var message_html=this;
+					var elements=getElementsOnRemodal.call(message_html);
+					elements["parson-firstname"].val(information["first_name"]);
+					elements["parson-lastname"].val(information["last_name"]);
+					elements["parson-country"].val(information["contact_country_num"]);
+					elements["parson-nationality"].val(information["contact_nationality_num"]);
+					elements["parson-title"].val(information["title_num"]);
+					elements["parson-classfication"].val(information["incidential_num"]);
+					elements["parson-language"].val(information["language_num"]);
+					elements["parson-address"].val(information["contact_address"]);
+					elements["parson-city"].val(information["contact_city"]);
+					elements["parson-state"].val(information["contact_state"]);
+					elements["parson-zip-code"].val(information["contact_zip_code"]);
+					elements["parson-tel"].val(information["contact_tel"]);
+					elements["parson-passport"].val(information["passport"]);
+					elements["parson-email"].val(information["contact_email"]);
+					elements["parson-id"].val(guest_id);
+					elements["remark-guest-note"].val(information["remarks"]);
+
+					elements["guest-history"].empty();
+					if(1>information["reservation"].length) return;
+					setGuestCheckinHistories.call(elements["guest-history"],information["reservation"]);
+				}
+
+				var params={};
+				params["yes"]=function(){ self.one(e.type,fn); };
+				params["no"]=params["yes"];
+				params["close"]=params["yes"];
+				params["search-guest-a"]=function(e,type){
+
+					if(type=="start") return;
+					var target=$(e.target);
+
+					var li=target.parent();
+					var ul=li.parent();
+					ul.children("li").removeClass("select-color");
+					li.addClass("select-color");
+
+					var guest_id=li.attr("data-guest-id");
+					if(search_results[guest_id]==undefined) return;
+					var information=search_results[guest_id];
+					__setGuestInformations.call(message_html,guest_id,information);
+				};
+
+				params["guest-select"]=function(e,type){
+
+					if(type=="start") return;
+
+					var remodal=this;
+					var guest_ul=message_html.find("ul[data-type=\"search-guest-ul\"]");
+					var guest_li=guest_ul.children("li").filter(function(){ return $(this).hasClass("select-color"); });
+					var select_guest_id=guest_li.attr("data-guest-id");
+					var information=search_results[select_guest_id];
+					setGuestInformations(information,function(){
+					
+						remodal.close();
+					});
+				};
+
+				params["button-save"]=function(e,type){
+				
+					if(type=="start") return;
+					if(!window["guest_hash"]) return;
+
+					var remodal=this;
+					var elements=getElementsOnRemodal.call(message_html);
+					
+					var params={"data":{}};
+					params["data"]["firstname"]=elements["parson-firstname"].val().trim();
+					params["data"]["lastname"]=elements["parson-lastname"].val().trim();
+					params["data"]["country"]=elements["parson-country"].val();
+					params["data"]["title"]=elements["parson-title"].val();
+					params["data"]["classfication"]=elements["parson-classfication"].val();
+					params["data"]["language"]=elements["parson-language"].val();
+					params["data"]["address"]=elements["parson-address"].val().trim();
+					params["data"]["city"]=elements["parson-city"].val().trim();
+					params["data"]["state"]=elements["parson-state"].val().trim();
+					params["data"]["zip"]=elements["parson-zip-code"].val().trim();
+					params["data"]["email"]=elements["parson-email"].val().trim();
+					params["data"]["passport"]=elements["parson-passport"].val().trim();
+					params["guest_hash"]=window["guest_hash"];
+
+					var getValues=function(){
+
+						var deferred=$.Deferred();
+						var message_html=this;
+						var elements=getElementsOnRemodal.call(message_html);
+						
+						var params={"data":{}};
+						params["data"]["first_name"]=elements["parson-firstname"].val().trim();
+						params["data"]["last_name"]=elements["parson-lastname"].val().trim();
+						params["data"]["contact_country"]=elements["parson-country"].val();
+						params["data"]["contact_nationality"]=elements["parson-nationality"].val();
+						params["data"]["title"]=elements["parson-title"].val();
+						params["data"]["incidential"]=elements["parson-classfication"].val();
+						params["data"]["language_num"]=elements["parson-language"].val();
+						params["data"]["contact_address"]=elements["parson-address"].val().trim();
+						params["data"]["contact_city"]=elements["parson-city"].val().trim();
+						params["data"]["contact_state"]=elements["parson-state"].val().trim();
+						params["data"]["contact_zip_code"]=elements["parson-zip-code"].val().trim();
+						params["data"]["contact_email"]=elements["parson-email"].val().trim();
+						params["data"]["contact_tel"]=elements["parson-tel"].val().trim();
+						params["data"]["passport"]=elements["parson-passport"].val().trim();
+						params["data"]["remarks"]=elements["remark-guest-note"].val().trim();
+						return deferred.resolve(params);
+					}
+
+					var saveGuestInformation=function(params){
+					
+						var deferred=$.Deferred();
+						params["guest_hash"]=window["guest_hash"];
+						apiGeoRequests.saveGuestInformation(params,function(status,res){
+					
+							if(!status) return deferred.reject(res);
+							var data=res["data"];
+							deferred.resolve(data);
+						});
+
+						return deferred.promise();
+					}
+
+					getValues.call(message_html).
+					then(saveGuestInformation).
+					done(function(data){
+
+						alert("<?php echo __("設定した宿泊者情報が内容が正常に登録されました"); ?>");
+						var guest_id=elements["parson-id"].val();
+						var guest_information=data[guest_id];
+						var guest_hash=guest_information["hash"];
+						window["guest_hash"]=guest_hash;
+						remodal.close();
+					}).
+					fail(function(res){
+					
+						alert(res["message"]);
+					});
+				};
+
+				params["button-close"]=function(e,type){
+
+					if(type=="start") return;
+					var remodal=this;
+					remodal.close();
+				};
+
+				params["button-cancel"]=function(e,type){
+				
+					if(type=="start") return;
+					var guest_ul=message_html.find("ul[data-type=\"search-guest-ul\"]");
+					var guest_li=guest_ul.children("li").filter(function(){ return $(this).hasClass("select-color"); });
+					var select_guest_id=guest_li.attr("data-guest-id");
+					var information=search_results[select_guest_id];
+					__setGuestInformations.call(message_html,select_guest_id,information);
+				};
+
+				remodalAlert("wide_screen",main_title,message_html,params);
+
+			}).
+			fail(function(res){
+			
+				alert(res["message"]);
+				self.one(e.type,fn); 
+			});
+		});
+
+		return deferred.resolve(elements);
+	}
+
+	var getEndDateWithStartAndNightsCount=function(start_val,night){
+
+		var start_date=new Date(Number(replaceToJpDate(start_val).replace(/-/g,"")).addMinutesZero());
+		var end_date=Number(start_date.addDate(night)).splitYmd();
+		end_date=end_date.join("-");
+		var end_val=replaceToLocalDate(end_date);
+		return end_val;
+	}
+
+	var setEventNight=function(elements){
+	
+		var deferred=$.Deferred();
+
+		elements["administration-nights"].change(function(e){
+
+			var self=$(this);
+			var night=Math.max(self.val(),1);
+			var start_val=elements["administration-arrival"].val();
+			self.val(night);
+
+			if(1>start_val.length){
+
+				var message="<?php echo __("宿泊開始日が設定されていません"); ?>";
+				alert(message);
+				return;
+			}
+
+			var end_val=getEndDateWithStartAndNightsCount(start_val,night);
+			elements["administration-departure"].data("calendar_end",end_val).val(end_val);
+		});
+
+		return deferred.resolve(elements);
+	}
+
+	var setEventOverwriteRate=function(elements){
+
+		var deferred=$.Deferred();
+
+		elements["rate-overwrite-rate"].change(function(e){
+
+			var target=$(e.target);
+			var is_checked=target.prop("checked");
+			elements["rate-weekday"].propDisable((is_checked?false:true));
+			elements["rate-weekend"].propDisable((is_checked?false:true));
+		});
+
+		return deferred.resolve(elements);
+	}
+
+	var setSearchButton=function(elements){
+
+		var deferred=$.Deferred();
+
+		// to do.
+		<?php if(!empty($reservation_hash)){ ?>
+
+			elements["search_button"].show();
+
+		<?php }else{ ?>
+
+			elements["search_button"].show();
+
+		<?php } ?>
+
+		return deferred.resolve(elements);
+	}
+
+	var getRoomtypesByStaytype=function(staytype,is_add_zero){
+
+		var menu_values=getMenuValues.getMenuValues();
+		var roomnums=menu_values["roomtypes"];
+		var menus;
+
+		switch(staytype){
+		
+		case('<?php echo K9DataReservation::$STAY; ?>'):
+
+			menus=$.extend(roomnums["<?php echo K9MasterRoom::$HOTEL; ?>"],roomnums["<?php echo K9MasterRoom::$APART; ?>"]);
+			break;
+
+		case('<?php echo K9DataReservation::$REST; ?>'):
+
+			menus=roomnums["<?php echo K9MasterRoom::$HOTEL; ?>"];
+			break;
+		}
+
+		if(is_add_zero!=undefined && !!is_add_zero) menus[0] ="no selected";
+		return menus;
+	}
+
+	var getRoomnumsByStaytype=function(staytype,is_add_zero){
+
+		var menu_values=getMenuValues.getMenuValues();
+		var roomnums=menu_values["roomnums"];
+		var menus;
+
+		switch(staytype){
+		
+		case('<?php echo K9DataReservation::$STAY; ?>'):
+
+			menus=$.extend(roomnums["<?php echo K9MasterRoom::$HOTEL; ?>"],roomnums["<?php echo K9MasterRoom::$APART; ?>"]);
+			break;
+
+		case('<?php echo K9DataReservation::$REST; ?>'):
+
+			menus=roomnums["<?php echo K9MasterRoom::$HOTEL; ?>"];
+			break;
+		}
+
+		if(is_add_zero!=undefined && !!is_add_zero) menus[0] ="no selected";
+		return menus;
+	}
+
+	var setDefValue=function(elements){
+
+		var deferred=$.Deferred();
+		var staytype;
+
+		<?php if(!empty($reservation_hash)){ ?>
+
+		elements["parson-firstname"].val("<?php echo $parson_firstname; ?>");
+		elements["parson-lastname"].val("<?php echo $parson_lastname; ?>");
+		elements["parson-passport"].val("<?php echo $parson_passport; ?>");
+		elements["parson-incidential"].val("<?php echo $parson_incidential; ?>");
+		elements["parson-language"].val("<?php echo $parson_language; ?>");
+		elements["parson-title"].val("<?php echo $parson_title; ?>");
+		elements["parson-number"].val("<?php echo $bookin_id; ?>");
+
+		elements["contact-address"].val("<?php echo $contact_address; ?>");
+		elements["contact-city"].val("<?php echo $contact_city; ?>");
+		elements["contact-state"].val("<?php echo $contact_state; ?>");
+		elements["contact-country"].val("<?php echo $contact_country; ?>");
+		elements["reservation-agency"].val("<?php echo $agency_id; ?>");
+		elements["contact-nationality"].val("<?php echo $contact_nationality; ?>");
+		elements["contact-zip-code"].val("<?php echo $contact_zip; ?>");
+		elements["contact-tel"].val("<?php echo $contact_tel; ?>");
+		elements["contact-email"].val("<?php echo $contact_email; ?>");
+
+		elements["administration-salesource"].val("<?php echo $administration_salesource; ?>");
+		elements["rate-adults"].val("<?php echo $rate_adults; ?>");
+		elements["rate-child"].val("<?php echo $rate_child; ?>");
+		elements["remark-reserve-note"].val("<?php echo $remark_reserve_note; ?>");
+		elements["remark-guest-note"].val("<?php echo $remark_guest_note; ?>");
+
+		var arrival_ymd  = replaceToLocalDate("<?php echo $arrival_ymd; ?>","-","/");
+		var departure_ymd= replaceToLocalDate("<?php echo $departure_ymd; ?>","-","/");
+		elements["administration-arrival"].data("calendar_start",arrival_ymd).val(arrival_ymd);
+		elements["administration-departure"].data("calendar_end",departure_ymd).val(departure_ymd);
+
+		elements["administration-nights"].val("<?php echo $nights; ?>");
+
+		elements["rate-roomnum"].val("<?php echo $room_id; ?>");
+		elements["rate-weekday"].val("<?php echo $rate_weekday; ?>");
+		elements["rate-weekend"].val("<?php echo $rate_weekend; ?>");
+		elements["rate-overwrite-rate"].prop("checked","<?php echo $is_rate_overwrite?true:false; ?>");
+
+		var is_checked=elements["rate-overwrite-rate"].is(":checked");
+		elements["rate-weekday"].propDisable(is_checked?false:true);
+		elements["rate-weekend"].propDisable(is_checked?false:true);
+
+		elements["administration-reservationtype"].val("<?php echo $staytype; ?>");
+		elements["administration-reservationtype"].propDisable(true);
+		elements["administration-payment"].val("<?php echo $paymenttype; ?>");
+		elements["administration-purchase"].val("<?php echo $purchase_flg; ?>");
+
+		staytype=elements["administration-reservationtype"].val();
+		var roomnums =getRoomnumsByStaytype(staytype,true);
+		var roomtypes=getRoomtypesByStaytype(staytype,true);
+
+		setMenu.call(elements["rate-roomnum"],roomnums);
+		setMenu.call(elements["rate-roomtype"],roomtypes);
+
+		if(window["selected_room_id"]!=undefined){
+
+			elements["rate-roomtype"].val(0);
+			elements["rate-roomnum"].val(window["selected_room_id"]);
+
+		}else{
+
+			elements["rate-roomtype"].val(1);
+			elements["rate-roomnum"].val(0);
+		}
+
+		if(staytype=='<?php echo K9DataReservation::$REST; ?>'){
+
+			elements["administration-nights"].propDisable(true).val(1);
+			elements["administration-departure"].propDisable(true).val("");
+		}
+
+		<?php }else{ ?>
+
+		var arrival_ymd  = replaceToLocalDate("<?php echo $arrival_ymd; ?>","-");
+		var departure_ymd= replaceToLocalDate("<?php echo $departure_ymd; ?>","-");
+		elements["administration-nights"].val(1);
+		elements["administration-arrival"].data("calendar_start",arrival_ymd).val(arrival_ymd);
+		elements["administration-departure"].data("calendar_end",departure_ymd).val(departure_ymd);
+		elements["administration-reservationtype"].val("<?php echo $staytype; ?>");
+
+		elements["rate-weekday"].propDisable(true);
+		elements["rate-weekend"].propDisable(true);
+	
+		staytype=elements["administration-reservationtype"].val();
+		var roomnums=getRoomnumsByStaytype(staytype,true);
+		var roomtypes=getRoomtypesByStaytype(staytype,true);
+
+		setMenu.call(elements["rate-roomnum"],roomnums);
+		setMenu.call(elements["rate-roomtype"],roomtypes);
+		elements["rate-roomnum"].val("<?php echo $selected_room_id; ?>");
+		elements["rate-roomtype"].val(0);
+
+		if(staytype=='<?php echo K9DataReservation::$REST; ?>'){
+
+			elements["administration-nights"].propDisable(true).val(1);
+			elements["administration-departure"].propDisable(true).val("");
+		}
+
+		<?php } ?>
+
+		var is_checkin="<?php echo $is_checkin; ?>";
+		var is_checkout="<?php echo $is_checkout; ?>";
+
+		if(is_checkin)   elements["administration-arrival"].propDisable(true);
+		if(is_checkin && staytype=='<?php echo K9DataReservation::$REST; ?>'){
+
+			elements["rate-roomtype"].propDisable(true);
+			elements["rate-roomnum"].propDisable(true);
+		}
+
+		if(is_checkout){
+
+			elements["administration-nights"].propDisable(true);
+			elements["administration-departure"].propDisable(true);
+			elements["rate-roomtype"].propDisable(true);
+			elements["rate-roomnum"].propDisable(true);
+			elements["parson-number"].propDisable(true);
+			elements["rate-overwrite-rate"].propDisable(true);
+			elements["rate-child"].propDisable(true);
+			elements["rate-adults"].propDisable(true);
+			elements["rate-weekday"].propDisable(true);
+			elements["rate-weekend"].propDisable(true);
+			elements["administration-roomavailable"].propDisable(true);
+		}
+
+		return deferred.resolve(elements);
+	}
+
+	var reservatonSubscribe=function(elements){
+
+		var deferred=$.Deferred();
+
+		elements["buttons-back"].one("click",function(e){
+
+			var self=$(this);
+			var fn=arguments.callee;
+			var url="<?php echo ROOT_DOMAIN.DS; ?>"+schedule_controller+"/"+"index"+"/";
+
+			switch("<?php echo strtolower($schedule_controller); ?>"){
+			
+				case("k9sitemonthly"):
+
+					var split_ymd=Number(select_date).splitYmd();
+					var select_ym=split_ymd[0]+split_ymd[1];
+					url+=select_ym;
+					break;
+
+				case("k9site"):
+
+					url+=select_date;
+					break;
+			}
+
+			location.href=url;
+		});
+
+		elements["buttons-subscribe"].one("click",function(e){
+		
+			var self=$(this);
+			var fn=arguments.callee;
+
+			var values={"parson":{},"reservation":{},"room":{}};
+			values["parson"]["title"]             =elements["parson-title"].val();
+			values["parson"]["parson-number"]     =elements["parson-number"].val();
+			values["parson"]["parson-firstname"]  =elements["parson-firstname"].val();
+			values["parson"]["parson-lastname"]   =elements["parson-lastname"].val();
+			values["parson"]["parson-passport"]   =elements["parson-passport"].val();
+			values["parson"]["parson-incidential"]=elements["parson-incidential"].val();
+			values["parson"]["parson-language"]   =elements["parson-language"].val();
+
+			values["parson"]["contact-address"]   =elements["contact-address"].val();
+			values["parson"]["contact-city"]      =elements["contact-city"].val();
+			values["parson"]["contact-state"]     =elements["contact-state"].val();
+			values["parson"]["contact-zip-code"]  =elements["contact-zip-code"].val();
+			values["parson"]["contact-country"]   =elements["contact-country"].val();
+			values["parson"]["contact-nationality"]=elements["contact-nationality"].val();
+			values["parson"]["contact-tel"]        =elements["contact-tel"].val();
+			values["parson"]["contact-email"]      =elements["contact-email"].val();
+			values["parson"]["remark-guest-note"]  =elements["remark-guest-note"].val().trim();
+
+			values["reservation"]["administration-range"]=[];
+			values["reservation"]["administration-range"].push({
+			
+				"start":elements["administration-arrival"].val(),
+				"end"  :elements["administration-departure"].val()
+			});
+
+			var reservation_type=elements["administration-reservationtype"].val();
+			var payment_type    =elements["administration-payment"].val();
+			var purchase        =elements["administration-purchase"].val();
+			var bookingid       =elements["parson-number"].val().trim();
+
+			values["reservation"]["administration-salesource"]     =parseInt(Math.max(elements["administration-salesource"].val(),0));
+			values["reservation"]["administration-reservationtype"]=reservation_type;
+			values["reservation"]["administration-bookingid"]      =bookingid;
+
+			values["reservation"]["administration-paymenttype"] =payment_type;
+			values["reservation"]["administration-purchase"]    =purchase;
+			values["reservation"]["remark-reserve-note"]        =elements["remark-reserve-note"].val().trim();
+			values["reservation"]["administration-agency"]      =elements["reservation-agency"].val();
+
+			var is_check_overwrite=elements["rate-overwrite-rate"].prop("checked");
+			values["room"]["rate-roomtype"]=elements["rate-roomtype"].val();
+			values["room"]["rate-roomnum"] =elements["rate-roomnum"].val();
+			values["room"]["rate-adults"]  =elements["rate-adults"].val();
+			values["room"]["rate-child"]   =elements["rate-child"].val();
+			values["room"]["rate-weekday"]=(is_check_overwrite)?elements["rate-weekday"].val():0;
+			values["room"]["rate-weekend"]=(is_check_overwrite)?elements["rate-weekend"].val():0;
+
+			var params={"data":{},"master":{},"reservation":{},"guest":{}};
+			params["data"]=values;
+			params["master"]["user_id"]=user_id;
+			params["reservation"]["hash"]=window["reservation_hash"];
+			params["guest"]["hash"]=window["guest_hash"];
+
+			var methods={};
+			methods['<?php echo K9DataReservation::$REST; ?>']="reservationRestSubscribe";
+			methods['<?php echo K9DataReservation::$STAY; ?>']="reservationSubscribe";
+			apiGeoRequests[methods[reservation_type]](params,function(status,res){
+
+				self.one(e.type,fn);
+				if(!status){
+				
+					alert(res["message"]);
+					return;
+				} 
+
+				//this value of hash changed everytime.
+				window["reservation_hash"]=res["data"]["reservation"]["hash"];
+				window["guest_hash"]=res["data"]["guest"]["hash"];
+
+				var last_edit_time=res["last_edit_time"];
+				cacheData().set(CACHE_LAST_EDIT_TIME,{ "last_edit_time":last_edit_time });
+				localKeyTime(LOCAL_STORAGE_TIMEKEY,(parseInt(last_edit_time)/1000)+"");
+
+				var params=[];
+				params.push(res["data"]["room"]["id"]);
+				params.push("<?php echo $date; ?>");
+				params.push(window["reservation_hash"]);
+				var base_url="<?php echo "K9Reservation".DS."index".DS; ; ?>";
+				base_url+=params.join("/");
+				history.replaceState(null,null,base_url);
+
+				var message="<?php echo __("設定した宿泊情報が内容が正常に登録されました"); ?>";
+				alert(message);
+				location.reload();
+			});
+		});
+
+		return deferred.resolve();
+	}
+
+	var setEventRoomAvailable=function(elements){
+	
+		var deferred=$.Deferred();
+
+		elements["administration-roomavailable"].one("click",function(e){
+		
+			var self=$(this);
+			var fn=arguments.callee;
+			self.one(e.type,fn);
+		});
+
+		return deferred.resolve(elements);
+	}
+
+	var checkAvailable=function(elements){
+	
+		var deferred=$.Deferred();
+
+		elements["administration-roomavailable"].one("click",function(e){
+		
+			var target=$(e.target);
+			var fn=arguments.callee;
+
+			var ng_class      ="ng_style";
+			var arrival_date  =elements["administration-arrival"].removeClass(ng_class).val();
+			var departure_date=elements["administration-departure"].removeClass(ng_class).val();
+			var roomtype_val  =elements["rate-roomtype"].removeClass(ng_class).val();
+			var roomnum_val   =elements["rate-roomnum"].removeClass(ng_class).val();
+			var reservetype   =elements["administration-reservationtype"].val();
+
+			switch(reservetype){
+			
+			case('<?php echo K9DataReservation::$STAY; ?>'):
+
+				if(1>arrival_date.length || 1>departure_date){
+
+					elements["administration-arrival"].addClass(ng_class);
+					elements["administration-departure"].addClass(ng_class);
+					target.one(e.type,fn);
+					return;
+				}
+
+				if(1>roomtype_val && 1>roomnum_val){
+
+					elements["rate-roomtype"].addClass(ng_class);
+					elements["rate-roomnum"].addClass(ng_class);
+					target.one(e.type,fn);
+					return;
+				}
+				break;
+
+			case('<?php echo K9DataReservation::$REST; ?>'):
+
+				if(1>arrival_date.length){
+
+					elements["administration-arrival"].addClass(ng_class);
+					target.one(e.type,fn);
+					return;
+				}
+
+				if(1>roomtype_val && 1>roomnum_val){
+
+					elements["rate-roomtype"].addClass(ng_class);
+					elements["rate-roomnum"].addClass(ng_class);
+					target.one(e.type,fn);
+					return;
+				}
+	
+				break;
+			}
+
+			var params={"data":{},"reservation":{}};
+			var is_roomtype=(roomtype_val>0)?true:false;
+
+			var method;
+			switch(reservetype){
+			
+				case('<?php echo K9DataReservation::$STAY; ?>'):
+
+					method=(is_roomtype?"checkRoomTypeAvailable":"checkRoomAvailable");
+					break;
+
+				case('<?php echo K9DataReservation::$REST; ?>'):
+
+					method=(is_roomtype?"checkRestRoomTypeAvailable":"checkRestRoomAvailable");
+					break;
+			}
+
+			params["data"]["arrival_date"]  =arrival_date;
+			params["data"]["departure_date"]=departure_date;
+			params["data"]["reservetype"]   =reservetype;
+
+			params["reservation"]["hash"]=window["reservation_hash"];
+
+			switch(is_roomtype){
+			
+				case(true):
+				params["data"]["room_type_id"]=roomtype_val;
+			break;
+				default:
+				params["data"]["room_id"]=roomnum_val;
+			break;
+			}
+
+			apiGeoRequests[method](params,function(status,res){
+
+				target.one(e.type,fn);
+				if(!status){
+				
+					alert(res["message"]);
+					return;
+				}
+
+				var main_title="<?php echo __("Room Available?"); ?>";
+				var message=res["message"];
+				var params={};
+				params["yes"]=function(){};
+				params["no"]   =params["yes"];
+				params["close"]=params["yes"];
+				remodalAlert("modal",main_title,message,params);
+			});
+		});
+
+		return deferred.resolve(elements);
+	}
+
+	var setSelectRoomNum=function(elements,data){
+	
+		var deferred=$.Deferred();
+		if(1>data.length) return deferred.resolve(elements,data);
+
+		for(var reserve_id in data) break;
+		var reserve_info=data[reserve_id];
+		var room_id=reserve_info["room"]["room_id"];
+		var room_val=elements["rate-roomnum"].children("option[value=\""+room_id+"\"]").text();
+		elements["selected-room-num"].text(room_val);
+		return deferred.resolve(elements,data);
+	}
+
+	var main=window["body"].find("div[data-type=\"reservation-set-top\"]");
+
+	getElementsOnMain.call(main).
+	then(setMenus).
+	then(setCalendar).
+	then(setEventNight).
+	then(setEventRoom).
+	then(setEventSearchGuest).
+	then(setEventRoomAvailable).
+	then(setEventOverwriteRate).
+	then(setSearchButton).
+	then(setDefValue).
+	then(getInformations).
+	then(setSelectRoomNum).
+	then(checkAvailable).
+	then(reservatonSubscribe).
+	done(function(data){
+
+	}).
+	fail(function(res){
+	
+		alert(res["message"]);
+	});
+
+});
+
+</script>
+	
+<div class="container-fluid book-room" data-type="reservation-set-top" style="background-color:rgba(255,255,255,1.0);">
+
+	<div class="row">
+		<form action="#" method="post" class="form-horizontal" id="boooking">
+		<div class="col-md-6 col-sm-6 col-xs-12">
+
+			<div class="col-md-12 col-sm-12 col-xs-12 person form-info" data-type="parson">
+				<h5><?php echo __("個人情報"); ?></h5>
+				<div class=" form-border">
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("敬称"); ?>:</label>
+						<div class="col-md-2 col-sm-3">
+						<select class="" name="title" data-type="parson-title"></select></div>
+						<div class="col-md-6 col-sm-5 btn-tooltip" style="display:none;" data-type="search-button"> 
+							<button data-type="open-search-parson" class="btn btn-default btn-click" type="button" onclick="return false;" ><span class="glyphicon glyphicon-search"></span></button>
+							<div class="title-tooltip" ><span class="tooltip-af"><?php echo __("過去のゲストを検索する場合はこちらを押して下さい"); ?></span></div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("予約番号"); ?></label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" placeholder="<?php echo __("空白の場合自動的に番号が振られます"); ?>" data-type="parson-number" /></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("姓"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-firstname"/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("名前"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-lastname"/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("パスポート番号"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-passport" /></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("クラス"); ?>:</label>
+						<div class="col-md-8 col-sm-8">
+						<select class="" name="title" data-type="parson-incidential"></select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("言語"); ?>:</label>
+						<div class="col-md-8 col-sm-8">
+						<select class="" name="title" data-type="parson-language"></select>
+						</div>
+					</div>
+				</div>		
+			</div> <!-- /Person -->
+
+			<div class="col-md-12 col-sm-12 col-xs-12 contact form-info" data-type="contact">
+				<h5><?php echo __("連絡先"); ?></h5>
+				<div class=" form-border">
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("所在地詳細"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="contact-address"/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("都市"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="contact-city"/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("州"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="contact-state"/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("郵便番号"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="contact-zip"/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("企業名"); ?>:</label>
+						<div class="col-md-8 col-sm-8">
+						<select class="" name="title" data-type="reservation-agency"></select></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("国"); ?>:</label>
+						<div class="col-md-8 col-sm-8">
+						<select class="" name="title" data-type="contact-country"></select></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("国籍"); ?>:</label>
+						<div class="col-md-8 col-sm-8">
+						<select class="" name="title" data-type="contact-nationality"></select></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("電話番号"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="number" class="" name="" value="" data-type="contact-tel"/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 col-sm-4"><?php echo __("メールアドレス"); ?>:</label>
+						<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="contact-email"/></div>
+					</div>
+				</div>		
+			</div> <!-- /Contact -->
+
+		</div>
+		<div class="col-md-6 col-sm-6 col-xs-12" data-type="administration">
+			<div class="col-md-12 col-sm-12 col-xs-12 admin form-info">
+				<h5><?php echo __("宿泊情報"); ?></h5>
+				<div class=" form-border">
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("宿泊予約元"); ?>:</label>
+						<div class="col-md-9 col-sm-9">
+						<select class="" name="title" data-type="administration-salesource"></select></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("宿泊開始日"); ?>:</label>
+						<div class="col-md-9 col-sm-9"><input type="text" class="" name="" value="" data-type="administration-arrival" readonly/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("宿泊日数"); ?>:</label>
+						<div class="col-md-3 col-sm-3"><input type="number" class="in-num" name="" min="1" value="" data-type="administration-nights"/></div>
+						<div class="col-md-6 col-sm-6"><button type="button" class="btn btn-default " data-type="administration-roomavailable"><?php echo __("空室確認"); ?></button></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("出発日"); ?>:</label>
+						<div class="col-md-9 col-sm-9"><input type="text" class="" name="" value="" data-type="administration-departure" readonly/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("予約タイプ"); ?>:</label>
+						<div class="col-md-9 col-sm-9">
+						<select class="" name="title" data-type="administration-reservationtype"></select></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("支払方法"); ?>:</label>
+						<div class="col-md-9 col-sm-9">
+						<select class="" name="title" data-type="administration-payment"></select></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("支払状況"); ?>:</label>
+						<div class="col-md-9 col-sm-9">
+						<select class="" name="title" data-type="administration-purchase"></select></div>
+					</div>
+				</div>		
+			</div><!-- /Admin --> 
+			
+			<div class="col-md-12 col-sm-12 col-xs-12 rate form-info" data-type="rate">
+				<h5><?php echo __("部屋情報及び金額"); ?></h5>
+				<div class=" form-border">
+
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("部屋番号"); ?>:</label>
+						<div class="col-md-9 col-sm-9">
+						<select class="" name="title" data-type="rate-roomnum"></select></div>
+					</div>
+	
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("部屋タイプ"); ?>:</label>
+						<div class="col-md-9 col-sm-9">
+						<select class="" name="title" data-type="rate-roomtype"></select></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("大人"); ?>:</label>
+						<div class="col-md-3 col-sm-3"><input type="number" min="1" class="in-num" name="" value="1" data-type="rate-adults"/></div>
+						<label class="col-md-3 col-sm-3 text-center"><?php echo __("子供"); ?>:</label>
+						<div class="col-md-3 col-sm-3"><input type="number" min="0" class="in-num" name="" value="0" data-type="rate-child"/></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><span class="sr-only">Checkbox jverwrite Rate</span></label>
+						<div class="col-md-9 col-sm-9">
+							<label><input type="checkbox" class="w3-check" name="" value="" data-type="rate-overwrite-rate"/><?php echo __("金額設定(上書き)"); ?></label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("平日価格"); ?>:</label>
+						<div class="col-md-3 col-sm-3"><input type="number" min="0" class="in-num" name="" value="" data-type="rate-weekday" disabled/></div>
+						<label class="col-md-3 col-sm-3 text-center"><?php echo __("週末価格"); ?>:</label>
+						<div class="col-md-3 col-sm-3"><input type="number" min="0" class="in-num" name="" value="" data-type="rate-weekend" disabled/></div>
+					</div>
+					
+				</div>		
+			</div> <!-- /Rate -->
+			<div class="col-md-12 col-sm-12 col-xs-12 rate form-info" data-type="remark">
+				<h5><?php echo __("各種備考"); ?></h5>
+				<div class="form-border" >
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("宿泊者向け"); ?>:</label>
+						<div class="col-md-9 col-sm-9"><textarea class="" name="guest" rows="5" data-type="remark-guest-note"></textarea></div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("予約情報向け"); ?>:</label>
+						<div class="col-md-9 col-sm-9"><textarea class="" name="guest" rows="5" data-type="remark-reserve-note"></textarea></div>
+					</div>
+					
+				</div>		
+			</div> <!-- /General  -->
+
+		</div> <!-- /col-md-6 -->
+		<div class="col-md-12 col-sm-12 col-xs-12">
+			<div class="col-md-7 col-sm-7 col-xs-12 Confirm form-info">
+				<h5><?php echo __("予約情報確認"); ?></h5>
+				<div class="form-border" >
+					<div class="form-group">
+						<label class="col-md-3 col-sm-3"><?php echo __("部屋情報(s)"); ?>:</label>
+						<div class="col-md-9 col-sm-9"><p data-type="selected-room-num"></p></div>
+					</div>
+				</div>	 <!-- /confirm -->	
+			</div> 
+			<div class="col-md-5 col-sm-5 col-xs-12 btn-group form-info" data-type="buttons">
+				<div class="col-md-12 col-sm-12 col-xs-12">
+					<div class="form-group">
+					</div>
+					<div class="form-group">
+						<div class="col-md-4 col-sm-4"><button class="btn btn-default" type="button" data-type="buttons-subscribe"><?php echo __("保存する"); ?></button></div>
+						<div class="col-md-4 col-sm-4"><button class="btn btn-default" type="button" data-type="buttons-back"><?php echo __("戻る"); ?></button></div>
+					</div>
+				</div>	
+			</div>
+
+		</div>
+	</form>
+	</div> <!-- /row -->
+</div> <!-- /container -->
+
+<script id="tpl_select_option" type="text/tmpl">
+<option value="<<key>>"><<value>></option>
+</script>
+
+<script id="tpl_select_option_selected" type="text/tmpl">
+<option value="<<key>>" selected><<value>></option>
+</script>
+
+<script id="tpl_search_guest" type="text/tmpl">
+<div class="model-body container-fluid guest">
+   <!-- -->
+   <div class="row">
+	  <div class="form-scroll">
+		<div class="col-md-4 col-sm-4 col-xs-12 bdr pd-zero">
+			<div class="col-md-12 col-sm-12 col-xs-12 pd-zero">
+				<form class="form-horizontal" method="post" action="" id="guest-search">
+					<div class="col-md-12 col-sm-12 col-xs-12 form-info">
+						<h5><?php echo __("宿泊者検索"); ?></h5>
+						<div class="form-border">
+							<div class="form-group">
+								<label class="col-md-3 col-sm-3"><?php echo __("姓"); ?>:</label>
+								<div class="col-md-9 col-sm-9"><input type="text" class="" name="" value="" data-type="search-frist-name" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-3 col-sm-3"><?php echo __("名前"); ?>:</label>
+								<div class="col-md-9 col-sm-9"><input type="text" class="" name="" value="" data-type="search-last-name" /></div>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="col-md-12 col-sm-12 col-xs-12 pd-zero" id="guest-list">
+				<div class="col-md-12 col-sm-12 col-xs-12 form-info">
+					<h5><?php echo __("宿泊者候補"); ?></h5>
+					<div class="form-border">
+						<ul class="list-guest" data-type="search-guest-ul"></ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-8 col-sm-8 col-xs-12 bdr pd-zero">
+			
+			<form action="#" method="get" class="form-horizontal" id="guest-show-info">
+				<div class="col-md-12 col-sm-12 col-xs-12">
+					<div class="col-md-6 col-sm-6 col-xs-12 name-address form-info">
+						<h5><?php echo __("宿泊者名と所在地"); ?></h5>
+						<div class=" form-border">
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4">Title:</label>
+								<div class="col-md-4 col-sm-8">
+									<select class="" name="title" data-type="parson-title"></select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("姓"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-firstname" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("名前"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-lastname" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("所在地詳細"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-address" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("都市"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-city" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("州"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-state" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("郵便番号"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-zipcode" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("国"); ?>:</label>
+								<div class="col-md-8 col-sm-8">
+								<select class="" name="title" data-type="parson-country">
+								</select></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("国籍"); ?>:</label>
+								<div class="col-md-8 col-sm-8">
+								<select class="" name="title" data-type="parson-nationality">
+								</select></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("電話番号"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-tel" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("パスポート番号"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="" name="" value="" data-type="parson-passport" /></div>
+							</div>
+
+						</div>      
+					</div> <!-- /Name and Address -->
+
+					<div class="col-md-6 col-sm-6 col-xs-12 personal form-info">
+						<h5><?php echo __("個人情報"); ?></h5>
+						<div class=" form-border">
+
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("宿泊者ID"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="in-num" name="" value="" data-type="parson-id" readonly/></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("クラス"); ?>:</label>
+								<div class="col-md-8 col-sm-8">
+								<select class="" name="title" data-type="parson-classfication">
+								</select></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("メールアドレス"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><input type="text" class="in-num" name="" value="" data-type="parson-email" /></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("各種言語"); ?>:</label>
+								<div class="col-md-8 col-sm-8"><select class="" name="title" data-type="parson-language">
+								</select></div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 col-sm-4"><?php echo __("備考"); ?>:</label>
+								<div class="col-md-8 col-sm-8">
+								<textarea class="" name="guest" rows="5" data-type="remark-guest-note"></textarea>
+								</div>
+							</div>
+
+						</div>      
+					</div><!-- /Admin --> 
+
+					<div class="col-md-6 col-sm-6 col-xs-12 personal form-info">
+						<h5><?php echo __("宿泊履歴(過去2回)"); ?></h5>
+						<div class=" form-border" data-type="guest-history" style="padding-bottom:10px;"></div>      
+					</div><!-- /Admin --> 
+	
+				</div>
+				
+			</form> <!-- form-horizontal -->
+		</div>
+
+		<div class="col-md-12 col-sm-12 col-xs-12 btn-bottom">
+			<div class="col-md-4 col-sm-4">
+				<div class="btn-group">
+					<a data-type="guest-select" onclick="return false;" href="#" class="btn btn-default" style="min-width: 92px"> Select </a>
+					<span><span data-type="search-count">0</span> Guest(s) Found</span>
+				</div>
+			</div>
+			<div class="col-md-8 col-sm-8">
+				<div class="btn-group btn-group-justified">
+					<div class="btn-group"><button href="#" class="btn btn-default" data-type="button-save"><?php echo __("保存する"); ?></button></div>
+					<div class="btn-group"><button href="#" class="btn btn-default" data-type="button-cancel"><?php echo __("元の状態へ戻す"); ?></button></div>
+					<div class="btn-group"><button href="#" class="btn btn-default" data-type="button-close"><?php echo __("閉じる"); ?></button></div>
+				</div>
+			</div>
+		</div>
+	</div> <!-- /row -->
+</div>
+</script>
+
+<script id="tpl_search_guest_li" type="text/tmpl">
+<li data-type="search-guest-li" data-guest-id="<<guest_id>>"><a href="#" onclick="return false;" data-type="search-guest-a"><<title>>.<<name>></a></li>
+</script>
+
+<script id="tpl_search_guest_history" type="text/tmpl">
+<div class="check-history">
+	<div class="check-history-id"><<reserve_id>></div>
+	<div class="check-history-in">In&nbsp;<<In>></div>
+	<div class="check-history-out">Out&nbsp;<<Out>></div>
+</div>
+</script>
+

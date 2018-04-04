@@ -1,0 +1,2302 @@
+<aside class="l-side"></aside>
+
+<script>
+
+if(isSp()){
+
+		  var body=$("body");
+			  body.on("touchend",function(e){
+
+			  var target=$(e.target);
+			  var tagName=target.prop("tagName").toLowerCase();
+			  var type=target.attr("data-type");
+			  var id=target.attr("id");
+			  var allowTags =["a","button","input","textarea","select"];
+			  var allowTypes=["schedule-bg-color",
+							  "schedule-add-worker",
+							  "schedule-worker-all-label",
+							  "schedule-assign-same-data-label",
+							  "schedule-assign-same-data",
+							  "schedule-clear-worker-all-label",
+							  "schedule-truck-all-label",
+							  "schedule-add-truck",
+							  "schedule-report-send",
+							  "schedule-report-cancel"];
+
+			  if(allowTypes.indexOf(type)>-1)   return;
+			  if(allowTags.indexOf(tagName)>-1) return;
+			  if(target.parents("div[id=\"confirmOverlay\"]").size()>0) return;
+			  if(id!=undefined && /^ui-id-\d+$/.test(id)) return; // autoComplete
+
+			  <?php $controller=strtolower($this->params["controller"]);?>
+			  <?php if($controller=="site"){?>
+			  if(target.parents("div[data-type=\"schedule-report\"]").size()>0) return;
+			  if(target.parents("div[data-type=\"schedule-report-clipboard\"]").size()>0) return;
+			  <?php } ?>
+
+			  e.preventDefault();
+		});
+}
+
+var getCustomerInformations=function(callback){
+
+		var customer_list=cacheData().get(CACHE_CUSTOMER_INFORMATIONS);
+		if(customer_list!=undefined && Object.keys(customer_list).length>0){
+
+				callback(true,customer_list);
+				return;
+		}
+
+		var params={}
+		params["v"]=API_VERSION;
+		apiGeoRequests.getCustomerInformations(params,function(status,res){
+
+				if(!res["status"].isOk()){
+
+						callback(false);
+						return;
+				}
+
+				var informations=res["data"]["informations"];
+				cacheData().set(CACHE_CUSTOMER_INFORMATIONS,informations);
+				callback(true,informations);
+		});
+}
+
+var autoCompleteCustomer=function(values){
+
+		var site_customer=this;
+		var focus=function(value){
+
+				value=(value==undefined)?"":value;
+				site_customer.data("first_value",value);
+				if(!value) site_customer.attr("data-customer-id","");
+		}
+
+		site_customer.autocomplete({
+
+				source:values,
+				autoFocus:true,
+				delay:200,
+				minLength:1,
+				select:function(e,ui){
+
+						var customer_id=ui["item"]["id"];
+						site_customer.attr("data-customer-id",customer_id);
+				},
+				open:function(){},
+				search:function(e,ui){ focus(); },
+				focus:function(e,ui){ focus(ui["item"]); }
+		});
+
+		site_customer.off("focusin").on("focusin",function(){ focus(); });
+		site_customer.off("focusout").on("focusout",function(){
+
+				var data=$(this).data("first_value");
+				if(!data || !("value" in data)) return;
+				if(1>site_customer.val().trim())  return;
+				var value=data["value"];
+				var customer_id=data["id"];
+				site_customer.val(value);
+				site_customer.attr("data-customer-id",customer_id);
+		});
+}
+
+var compactDateHistories=function(history){
+
+		var histories={};
+		for(var i in history){
+
+				if(!history.hasOwnProperty(i)) continue;
+				var date=Number(history[i]).splitYmd();
+				var y=parseInt(date[0]);
+				var m=parseInt(date[1]);
+				var d=parseInt(date[2]);
+				if(!(y in histories)) histories[y]={};
+				if(!(m in histories[y])) histories[y][m]=[];
+				histories[y][m].push(d);
+		}
+
+		return histories;
+}
+
+var autoKanaExchange=function(target,is_katakana){
+
+		var elem=this;
+
+		var body=$("body");
+		var i=loading(body);
+		i.show();
+
+		var js=document.location.protocol+BASE_URL+"assets/js/jquery.autoKana.js";
+		is_katakana=((is_katakana==undefined)?false:is_katakana);
+		loadScript(js,function(){
+
+				i.hide();
+
+				elem.autoKana(target,{
+
+						"katakana":is_katakana
+				});
+		});
+}
+
+var updateToInchageMessage=function(informations,callback){
+
+	window["action_lastmodified"].empty();
+	lastModifiedInformationUpdate({
+
+		"first_name"      :informations["first_name"],
+		"last_modified_ms":informations["last_edit_ms"]
+
+	},function(html){
+
+		var parent=html.parents("div[data-type=\"schedule-left-side\"]");
+		var target=parent.find("div[data-type=\"room-search-buttons\"]");
+		var instance=TPL.getInstance(["purchase_search_view"]);
+		var purchase_tpl=instance.get_purchase_search_view;
+		target.append($(purchase_tpl));
+		if($.isFunction(callback)) callback();
+	});
+}
+
+// edit last modified informations.
+var lastModifiedInformationUpdate=function(informations,callback){
+
+	var elem=window["action_lastmodified"];
+	var instance=TPL.getInstance("schedule_modified_information_top");
+	var ms=parseInt(informations["last_modified_ms"]);
+	var name=(!!informations["first_name"]?informations["first_name"]:"&nbsp;");
+	var ymd ="&nbsp;";
+	var his ="&nbsp;";
+
+	if(ms>0){
+
+		var date=new Date(ms);
+		ymd=date.getYmdByMs();
+		ymd=viewYmd(ymd[0],ymd[1],ymd[2]);
+		his=date.getHisByMs();
+		his.pop();
+		var hour=his[0].ridFirstZero();
+		var minutes=his[1];
+		his=hour+":"+minutes;
+	}
+
+	var html=instance.replaceTPL(instance.get_schedule_modified_information_top,{
+
+		"date":ymd,
+		"time":his,
+		"name":name
+	});
+
+	html=$(html);
+	elem.append(html);
+	if(!$.isFunction(callback)) return;
+	html.ready(function(){
+
+		callback(html);
+	});
+}
+
+// edit last modified informations.
+var lastModifiedInformationUpdateParSite=function(informations,callback){
+
+	var elem=this;
+
+	if(1>Object.keys(informations).length){
+
+		elem.empty();
+		if($.isFunction(callback)) callback();
+		return;
+	}
+
+	var instance=TPL.getInstance("schedule_modified_information_bottom");
+	var ms=parseInt(informations["last_modified_ms"]);
+	var name=(!!informations["first_name"]?informations["first_name"]:"&nbsp;");
+	var ymd ="&nbsp;";
+	var his ="&nbsp;";
+
+	if(ms>0){
+
+		var date=new Date(ms);
+		ymd=date.getYmdByMs();
+		ymd=viewYmd(ymd[0],ymd[1],ymd[2]);
+		his=date.getHisByMs();
+		his.pop();
+		var hour=his[0].ridFirstZero();
+		var minutes=his[1];
+		his=hour+":"+minutes;
+	}
+
+	var html=instance.replaceTPL(instance.get_schedule_modified_information_bottom,{
+
+		"date":ymd,
+		"time":his,
+		"name":name
+	});
+
+	html=$(html);
+	elem.append(html);
+	if(!$.isFunction(callback)) return;
+	html.ready(function(){
+
+		callback();
+	});
+}
+
+var addColorList=function(color_ids,color_list,callback){
+
+		var elem=this;
+		if(1>color_ids.length){
+
+				if($.isFunction(callback)) callback();
+				return;
+		}
+
+		var fn=arguments.callee;
+		var color_id  =color_ids.shift();
+		var color_code=color_list[color_id];
+		var instance=TPL.getInstance("schedule_bg_color");
+		var tpl=instance.replaceTPL(instance.get_schedule_bg_color,{
+
+				"color_id":color_id,
+				"color"   :color_code
+		});
+
+		var html=$(tpl);
+		elem.append(html);
+		html.ready(function(){
+
+				fn.call(elem,color_ids,color_list,callback);
+		});
+}
+
+var whiteColorStyle=function(){
+
+		var span=$("<span data-type=\"schedule-bg-color-white\">").text("なし");
+
+		span.css({
+
+				"font-size":"9px",
+				"line-height":"2",
+				"-webkit-transform":"scale(0.5)",
+				"-moz-transform"   :"scale(0.5)",
+				"-ms-transform"    :"scale(0.5)",
+				"-o-transform"     :"scale(0.5)",
+				"transform"        :"scale(0.5)"
+		});
+
+		if(isSp()){
+
+				span.css('font-size', '23px');
+		}
+
+		this.css({"border":"1px #ccc solid"});
+		this.html(span);
+}
+
+var getCalendarFormatDates=function(schedule_dates){
+
+		var group_id=0;
+		var schedule_groups={};
+		for(var i in schedule_dates){
+
+				if(!schedule_dates.hasOwnProperty(i)) continue;
+				var schedule_date=schedule_dates[i];
+				if(!schedule_groups[group_id]){
+
+						schedule_groups[group_id]={};
+						schedule_groups[group_id]["start_value"]=schedule_date;
+						schedule_groups[group_id]["end_value"]  =schedule_date;
+						continue;
+				}
+
+				var check_date=Number(schedule_groups[group_id]["end_value"]).addMinutesZero();
+				var date=new Date(check_date);
+				date.setDate(date.getDate()+1);
+				var ymd=date.getYmdByMs().join("");
+				if(ymd==schedule_dates[i]){
+
+						schedule_groups[group_id]["end_value"]=ymd;
+						continue;
+				}
+
+				group_id++;
+				schedule_groups[group_id]={};
+				schedule_groups[group_id]["start_value"]=schedule_date;
+				schedule_groups[group_id]["end_value"]  =schedule_date;
+		}
+
+		return schedule_groups;
+}
+
+var actionSiteSideEditBtn=function(callback){
+
+		var elem=this;
+		var clickEnd=deviceClickEventEnd();
+		elem.one(clickEnd,function(e){
+
+				var target=$(this);
+				var fn=arguments.callee;
+				var site_id=target.attr("data-site-id");
+				var date   =target.attr("data-ymd");
+				callback.call(target,e,{
+
+						"date"   :date,
+						"site_id":site_id
+				});
+				return false;
+		});
+}
+
+//■edit date in side menu.
+var replaceSideScheduleDate=function(ms,callback){
+
+		var target=this;
+		var instance=TPL.getInstance(["schedule_site_date"]);
+		var ms_date=new Date(ms);
+		var ymd_ary=ms_date.getYmdByMs();
+		var ymd=ymd_ary.join("-");
+
+		var weekDayList=["<?php echo __("日"); ?>",
+						 "<?php echo __("月"); ?>",
+						 "<?php echo __("火"); ?>",
+						 "<?php echo __("水"); ?>",
+						 "<?php echo __("木"); ?>",
+						 "<?php echo __("金"); ?>",
+						 "<?php echo __("土"); ?>"];
+
+		var week=ms_date.getWeek(weekDayList);
+
+		var date_html=instance.replaceTPL(instance.get_schedule_site_date,{
+
+				"site_month"    :(ms_date.getMonth()+1),
+				"site_day"      :ms_date.getDate(),
+				"site_week"     :week,
+		});
+
+		date_html=$(date_html);
+
+		target.append(date_html);
+		date_html.ready(function(){
+
+				if($.isFunction(callback)) callback.call(target,date_html);
+		});
+}
+
+//■edit side menu when nothing target date.
+var replaceSideScheduleEmpty=function(date,callback){
+
+		var elem=this;
+		var instance=TPL.getInstance("schedule_site_detail_empty");
+		var main_html=instance.get_schedule_site_detail_empty;
+
+		main_html=$(main_html);
+		elem.empty().append(main_html);
+
+		//■edit date detail in side menu.
+		var target=main_html.find("div[data-type=\"schedule-site-date\"]");
+		var __date=new Date(Number(date).addMinutesZero()).getTime();
+		replaceSideScheduleDate.call(target,__date,function(html){
+
+				if($.isFunction(callback)) callback.call(target,html);
+		});
+}
+
+//■edit side menu.
+var replaceSideSchedule=function(current_ymd,information,callback){
+
+	var elem=this;
+	var instance=TPL.getInstance(["schedule_site_detail","schedule_remark_content","reservation_checkin","reservation_checkout","reservation_checkout_already"]);
+	var tpl =instance.get_schedule_site_detail;
+	var remark_tpl=instance.get_schedule_remark_content;
+	var reserve_id=information["reservation"]["id"];
+	var schedule_id=information["schedule"]["id"];
+	var guest_name=information["guest"]["last_name"]+(information["guest"]["first_name"].length>0?" "+information["guest"]["first_name"]:"");
+	var room_type=information["room"]["room_type"];
+	var room_num =information["room"]["room_num"];
+	var room_type_color_id=information["room"]["room_type_color_id"];
+	var room_floor=information["room"]["room_floor"];
+	var room_type_color=color_list[information["room"]["room_type_id"]];
+	var room_price_color=color_list[information["room"]["room_price_data_id"]]==undefined?"black":color_list[information["room"]["room_price_data_id"]];
+	var room_price=information["room"]["room_price"];
+	var room_situation=information["room"]["room_situation"];
+	var schedule_remarks=information["schedule"]["remarks"].trim();
+	var reserve_remarks=information["reservation"]["remarks"].trim();
+	var guest_remarks=information["guest"]["remarks"].trim();
+	var guest_id     =information["guest"]["id"];
+	var price_type_colors={"0":"black","3":"blue","4":"red"};
+	var is_checkin =information["reservation"]["is_checkin"];
+	var is_checkout=information["reservation"]["is_checkout"];
+	var room_price_status=information["room"]["room_price_status"];
+	var type=information["room"]["type"];
+	var staytype=information["reservation"]["staytype"];
+	var staff=information["reservation"]["staff"];
+	var payment=information["reservation"]["payment"];
+	var bookingid=information["reservation"]["booking_id"];
+
+	var price_status_message="&nbsp;";
+
+	switch(true){
+	
+		case([3,4].indexOf(room_price_status)>-1):
+			price_status_message="(Special period)";
+			break;
+		case([5].indexOf(room_price_status)>-1):
+			price_status_message="(Weekend price)";
+			break;
+		case([6].indexOf(room_price_status)>-1):
+			price_status_message="(Weekday price)";
+			break;
+	}
+
+	var schedule_remark_html="";
+	var reserve_remark_html ="";
+	var guest_remark_html   ="";
+
+	if(schedule_remarks.length>0){
+
+		schedule_remark_html=instance.replaceTPL(remark_tpl,{
+		
+			"remark_title"  :"<?php echo __("日程の備考"); ?>",
+			"remark_content":schedule_remarks
+		});
+	}
+
+	if(reserve_remarks.length>0){
+
+		reserve_remark_html=instance.replaceTPL(remark_tpl,{
+		
+			"remark_title"  :"<?php echo __("予約情報の備考"); ?>",
+			"remark_content":reserve_remarks
+		});
+	}
+
+	if(guest_remarks.length>0){
+
+		guest_remark_html=instance.replaceTPL(remark_tpl,{
+		
+			"remark_title"  :"<?php echo __("宿泊者の備考"); ?>",
+			"remark_content":guest_remarks
+		});
+	}
+
+	var staytypes={
+
+		"stay":"<?php echo __("宿泊"); ?>",
+		"rest":"<?php echo __("休憩"); ?>"
+	};
+
+	var main_html=instance.replaceTPL(tpl,{
+
+		"reserve_id"        :reserve_id,
+		"guest_id"          :guest_id,
+		"ymd"               :current_ymd,
+		"schedule_id"       :schedule_id,
+		"guest_name"        :guest_name.length>0?guest_name:"<?php echo __("宿泊者名未設定");?>",
+		"room_type"         :room_type,
+		"checkin_time"      :(is_checkin ?information["reservation"]["checkin_time"] :"&nbsp;"),
+		"checkout_time"     :(is_checkout?information["reservation"]["checkout_time"]:"&nbsp;"),
+		"room_floor"        :room_floor,
+		"room_type_color"   :room_type_color,
+		"room_situation"    :room_situation,
+		"room_price"        :room_price+"$",
+		"room_price_message":price_status_message,
+		"room_num"          :room_num,
+		"room_price_color"  :room_price_color,
+		"type"              :type,
+		"staytype"          :staytypes[staytype],
+		"payment"           :payment,
+		"staff"             :staff,
+		"schedule_remarks"  :schedule_remark_html.length>0?schedule_remark_html:"&nbsp;",
+		"reserve_remarks"   :reserve_remark_html.length>0?reserve_remark_html:"&nbsp;",
+		"guest_remarks"     :guest_remark_html.length>0?guest_remark_html:"&nbsp;",
+		"bookingid"         :bookingid
+	});
+
+	main_html=$(main_html);
+
+	var checkinout_html=main_html.find("p[data-type=\"checkin-out\"]");
+	if(is_checkin)  main_html.find("div[data-type=\"checkin\"]").show();
+	if(is_checkout) main_html.find("div[data-type=\"checkout\"]").show();
+	
+	switch(information["reservation"]["is_checkin"]){
+	
+		case(false):
+
+			main_html.find("a[data-type=\"price-invoice\"]").hide();
+			main_html.find("a[data-type=\"diposit-invoice\"]").hide();
+			main_html.find("a[data-type=\"meal-select\"]").hide();
+			main_html.find("a[data-type=\"credit-select\"]").hide();
+			main_html.find("a[data-type=\"food-charge\"]").hide();
+			main_html.find("a[data-type=\"drink-charge\"]").hide();
+			var checkin=$(instance.get_reservation_checkin);
+			checkinout_html.append(checkin);
+			break;
+
+		case(true):
+
+			main_html.find("a[data-type=\"price-invoice\"]").css("display","block");
+			main_html.find("a[data-type=\"diposit-invoice\"]").css("display","block");
+			main_html.find("a[data-type=\"meal-select\"]").css("display","block");
+			main_html.find("a[data-type=\"credit-select\"]").css("display","block");
+			main_html.find("a[data-type=\"food-charge\"]").css("display","block");
+			main_html.find("a[data-type=\"drink-charge\"]").css("display","block");
+			var checkout=$(instance["get_"+(is_checkout?"reservation_checkout_already":"reservation_checkout")]);
+			checkinout_html.append(checkout);
+			break;
+	}
+
+	elem.empty().append(main_html);
+	main_html.ready(function(){
+
+		if($.isFunction(callback)) callback.call(elem,main_html);
+	});
+}
+
+var addSideTruck=function(trucks,callback){
+
+		var elem=this;
+		if(1>trucks.length){
+
+				if($.isFunction(callback)) callback();
+				return;
+		}
+
+		var fn=arguments.callee;
+		var truck=trucks.shift();
+		var instance=TPL.getInstance("schedule_side_truck");
+		var html=instance.replaceTPL(instance.get_schedule_side_truck,{
+
+				"truck":truck["name"]
+		});
+
+		var html=$(html);
+		elem.append(html);
+		html.ready(function(){
+
+				fn.call(elem,trucks,callback);
+		});
+}
+
+var addSideWorker=function(workers,callback){
+
+		var elem=this;
+		if(1>workers.length){
+
+				if($.isFunction(callback)) callback();
+				return;
+		}
+		var fn=arguments.callee;
+		var worker=workers.shift();
+		var instance=TPL.getInstance(["schedule_side_worker","schedule_side_worker_leader"]);
+		var firstname=worker["first_name"];
+		var nickname =worker["nickname"];
+		var view_name=((nickname.length>0)?nickname:firstname);
+		var is_leader=parseInt(worker["leader_flg"])>0;
+		var worker_tpl=(is_leader?instance.get_schedule_side_worker_leader:instance.get_schedule_side_worker);
+		var worker_color = worker_colors[worker["color_flg"]];
+		
+		var html=instance.replaceTPL(worker_tpl,{
+
+				"worker":view_name,
+				"worker_color": worker_color,
+		});
+
+		var html=$(html);
+		elem.append(html);
+		html.ready(function(){
+
+				fn.call(elem,workers,callback);
+		});
+}
+
+var addActionButton=function(status,callback){
+
+	var elem=this;
+	var instance=TPL.getInstance(["schedule_action_start_btn","schedule_action_save_btn"]);
+	var html=instance["get_schedule_action_"+(!!status?"save":"start")+"_btn"];
+
+	html=$(html);
+	elem.empty().append(html);
+	if(!$.isFunction(callback)) return;
+	html.ready(function(){
+
+		callback(html);
+	});
+}
+
+var leftSideContentMoveToViewerPosition=function(){
+
+		var __window=$(window);
+		var l_contents=window["body"].find("div[data-type=\""+TYPE_SCHEDULE_L_CONTENTS+"\"]");
+		var max_bottom_point=l_contents.offset().top+l_contents.height();
+
+		var left_side=window["schedule_left_side"];
+		var scroll_point=__window.scrollTop();
+		left_side.css({"top":Math.max(scroll_point,0)+"px"});
+
+		var scroll_value_bottom=__window.height()+scroll_point;
+		var offset=left_side.offset();
+		var offset_top=offset.top;
+		var offset_bottom=offset_top+left_side.height();
+
+		if(max_bottom_point>=offset_bottom) return;
+		var diff=offset_bottom-max_bottom_point;
+		scroll_point-=diff;
+		left_side.css("top",Math.max(scroll_point,0)+"px");
+}
+
+var beforeunLoadEvent=function(){
+
+	var event="beforeunload";
+	$(window).off(event).bind(event,function(){
+
+		return "<?php echo __("操作した履歴は保存されません"); ?>";
+	});
+}
+
+</script>
+
+<script id="tpl_select_option" type="text/tmpl">
+<option value="<<key>>"><<value>></option>
+</script>
+
+<script id="tpl_select_option_selected" type="text/tmpl">
+<option value="<<key>>" selected><<value>></option>
+</script>
+
+<script id="tpl_schedule_calendar" type="text/tmpl">
+<div class="date-wrap" data-type="calendar">
+	<input class="datepicker form-control calendar_start" type="text" name="" value="<<start_value>>" data-type="calendar-start" readonly/>
+	<span>～</span>
+	<input class="datepicker form-control calendar_end" type="text" name="" value="<<end_value>>" data-type="calendar-end" readonly/>
+	<span class="calendar-rm" data-type="calendar-remove">&times;</span>
+</div>
+</script>
+
+<script id="tpl_schedule_remarks" type="text/tmpl">
+<div class="field-item cf">
+	<div class="field-item-label"><label for=""><<title>></label></div>
+	<div class="field-item-input"><textarea name="name" data-type="data-remarks<<index>>" class="form-control"></textarea></div>
+</div>
+</script>
+
+<style type="text/css">
+	#schedule-site-modal-inner .field-item-input{width:100%}
+</style>
+
+<script id="tpl_schedule_site_date" type="text/tmpl">
+<div>
+<p class="date"><<site_month>>/<<site_day>>(<<site_week>>)</p>
+</div>
+</script>
+
+<script id="tpl_schedule_site_detail_empty" type="text/tmpl">
+<div data-type="schedule-site-box">
+	<div class="side-date" data-type="schedule-site-date"></div>
+</div>
+</script>
+
+<script id="tpl_schedule_remark_content" type="text/tmpl">
+<p class="coment">
+	<span class="comment_title"><<remark_title>></span>
+	<div class="comment_content"><<remark_content>></div>
+</p>
+</script>
+
+<script id="tpl_schedule_site_detail" type="text/tmpl">
+<div data-type="schedule-site-box" data-guest-id="<<guest_id>>" data-reservation-id="<<reserve_id>>" data-time="<<ymd>>" data-schedule-id="<<schedule_id>>">
+	<div class="side-date" data-type="schedule-site-date"></div>
+
+	<div class="site-content">
+		<div class="side-box primary">
+			<p class="place"><<guest_name>>&nbsp;(<<bookingid>>)</p>
+
+			<div class="add">
+				<div class="left"><?php echo __("部屋番号"); ?></div>
+				<div class="right"><<room_num>></span></div>
+			</div>
+	
+			<div class="add">
+				<div class="left"><?php echo __("部屋タイプ"); ?></div>
+				<div class="right"><span style="font-weight:bold;"><<room_type>>(<<room_floor>>)</span></div>
+			</div>
+			<div class="add">
+				<div class="left"><?php echo __("金額"); ?></div>
+				<div class="right"><span style="font-weight:bold;"><<room_price>><<room_price_message>></span></div>
+			</div>
+			<div class="add">
+				<div class="left"><?php echo __("部屋の状況"); ?></div>
+				<div class="right"><span style="font-weight:bold;"><<room_situation>></span></div>
+			</div>
+			<div class="add">
+				<div class="left"><?php echo __("種別"); ?></div>
+				<div class="right"><span style="font-weight:bold;"><<type>></span></div>
+			</div>
+			<div class="add">
+				<div class="left"><?php echo __("宿泊タイプ"); ?></div>
+				<div class="right"><span style="font-weight:bold;"><<staytype>></span></div>
+			</div>
+			<div class="add">
+				<div class="left"><?php echo __("支払い"); ?></div>
+				<div class="right"><span style="font-weight:bold;"><<payment>></span></div>
+			</div>
+			<div class="add">
+				<div class="left"><?php echo __("設定者"); ?></div>
+				<div class="right"><span style="font-weight:bold;"><<staff>></span></div>
+			</div>
+			<div class="add" data-type="checkin" style="display:none;">
+				<div class="left"><?php echo __("チェックイン"); ?></div>
+				<div class="right"><<checkin_time>></div>
+			</div>
+			<div class="add" data-type="checkout" style="display:none;">
+				<div class="left"><?php echo __("チェックアウト"); ?></div>
+				<div class="right"><<checkout_time>></div>
+			</div>
+
+			<a class="price_total" data-type="price-total">
+				<?php echo __("金額詳細"); ?>
+			</a>
+
+			<a class="price_invoice" data-type="price-invoice">
+				<?php echo __("請求書発行"); ?>
+			</a>
+
+			<a class="diposit_invoice" data-type="diposit-invoice">
+				<?php echo __("デポジット受領書"); ?>
+			</a>
+
+			<a class="room_guest_history" data-type="meal-select">
+				<?php echo __("注文関連"); ?>
+			</a>
+
+			<a class="room_guest_history" data-type="credit-select">
+				<?php echo __("クレジット設定"); ?>
+			</a>
+
+			<div class="schedule_remark">
+				<<schedule_remarks>>
+				<<reserve_remarks>>
+				<<guest_remarks>>
+			</div>
+
+		</div>
+		<!-- / .side-box primary -->
+		<div class="side-box secondary"></div>
+		<!-- / .side-box secondary -->
+		<div class="side-box tertiary">
+
+			<p class="checkin_out" data-type="checkin-out"></p>
+	
+			<p class="edit-btn">
+				<a href="#" onclick="return false;" data-type="schedule-reservation-edit-btn">
+					<span class="fa fa-calendar-o"></span><?php echo __("予約情報編集"); ?>
+				</a>
+			</p>
+		</div><!-- / .side-box tertiary -->
+		<div class="last-update">
+			<div data-type="schedule-modified-parsite-information"></div><!--schedule-modified-information-->
+		</div><!--last-update-->
+
+	</div><!--site-content-->
+</div><!--schedule-site-box-->
+</script>
+
+<script id="tpl_schedule_modified_information_top" type="text/tmpl">
+<p class="set-title01"><span class="set-span01"><?php echo __("最終更新時間"); ?></span><span class="set-date"><<date>></span><span class="set-time"><<time>></span></p>
+	<p class="set-title02"><span class="set-span02"><?php echo __("最終更新者"); ?></span><span class="set-name"><<name>></span></p>
+	<div class="room_search_types" data-type="room-search-buttons">
+		<?php if(in_array($controller,array("k9site"))){ ?>
+		<a class="booking_search" data-button-type="booking-search-button" data-type="booking-search"><?php echo __("宿泊IDで検索"); ?></a>
+		<?php } ?>
+	</div>
+	<a class="reservation_search" data-type="reservation-search-button" style="display:none;"></a>
+</script>
+
+<script id="tpl_schedule_modified_information_bottom" type="text/tmpl">
+<p class="set-title01"><span class="set-span01"><?php echo __("最終更新時間"); ?></span><span class="set-date"><<date>></span><span class="set-time"><<time>></span></p>
+	<p class="set-title02"><span class="set-span02"><?php echo __("最終更新者"); ?></span><span class="set-name"><<name>></span></p>
+</script>
+
+<style>
+
+div[data-type=schedule-select-workers]{
+	width:20%;
+	height:80%;
+	background-color:blue;
+	position:absolute;
+	top:50px;
+	left:600px;
+	z-index:1;
+}
+
+</style>
+
+<script id="tpl_schedule_action_start_btn" type="text/tmpl">
+<a data-type="action-start" href="#" onclick="return false;"><?php echo __("操作する"); ?></a>
+</script>
+
+<script id="tpl_schedule_action_save_btn" type="text/tmpl">
+<a data-type="action-save" href="#" onclick="return false;"><?php echo __("操作を完了する"); ?></a>
+</script>
+
+<script id="tpl_purchase_search_view" type="text/tmpl">
+<a class="purchase_search" data-button-type="purchase-search-button" data-type="purchase-search"><?php echo __("未払で検索"); ?></a>
+</script>
+
+<script id="tpl_purchase_search_unview" type="text/tmpl">
+<div class="purchase_cancel" data-button-type="purchase-search-button" data-type="purchase-search-cancel"><?php echo __("全て表示"); ?></div>
+</script>
+
+<script id="tpl_reservation_checkin" type="text/tmpl">
+<a href="#" onclick="return false;" data-type="reservation-checkin">
+	<?php echo __("チェックイン"); ?>
+</a>
+</script>
+
+<script id="tpl_reservation_checkout" type="text/tmpl">
+<a href="#" onclick="return false;" data-type="reservation-checkout">
+	<?php echo __("チェックアウト"); ?>
+</a>
+</script>
+
+<script id="tpl_reservation_checkout_already" type="text/tmpl">
+<a href="#" onclick="return false;" data-type="reservation-already-checkout">
+	<?php echo __("チェックアウト済み"); ?>
+</a>
+</script>
+
+<script id="tpl_schedule_memo_li" type="text/tmpl">
+<li data-room-id="<<room_id>>" data-type="schedule-memo-li" style="overflow:hidden;"><<room_num>></li>
+</script>
+
+<script id="tpl_remodal_total_price_row" type="text/tmpl">
+<tr>
+	<td><div><<room_num>></div></td>
+	<td><div><<date>></div></td>
+	<td><div><<total_price>></div></td>
+	<td class="standard" data-type="price-rows"></td>
+</tr>
+</script>
+
+<script id="tpl_remodal_total_meal_price_par_row" type="text/tmpl">
+<div class="col-md-12" data-type="price-par-row">
+	<div class="col-md-6" data-id="<<food_id>>"><h5><<name>>(<<remarks>>)</h5></div>
+	<div class="col-md-3 text-center price" data-staff-id="<<employee_id>>"><h5><<staff>></h5></div>
+	<div class="col-md-3 text-center price"><h5><<price>></h5></div>
+</div>
+</script>
+
+<script id="tpl_remodal_total_room_price_par_row" type="text/tmpl">
+<div class="col-md-12" data-type="price-par-row">
+	<div class="col-md-6" data-room-type-id="<<room_type_id>>" style="color:<<price_color>>;"><h5><<room_type>><<price_type_detail>></h5></div>
+	<div class="col-md-3 text-center price" data-staff-id="<<employee_id>>"><h5><<staff>></h5></div>
+	<div class="col-md-3 text-center price"><h5><<price>></h5></div>
+</div>
+</script>
+
+<script id="tpl_remodal_total_price" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/total-price.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="total_price" class="total-price" >
+		<h2><p><<guest_name>></p></h2>
+		<div class="fixed">
+		<div class="table-responsive style-scroll">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th width="12%"><div><p><?php echo __("部屋番号"); ?></p></div></th>
+						<th width="12%"><div><p><?php echo __("日付"); ?></p></div></th>
+						<th width="12%"><div><p><?php echo __("総計(日)"); ?></p></div></th>
+						<th width="45%"><div><p><?php echo __("詳細"); ?></p></div></th>
+					</tr>
+				</thead>
+				<tbody data-type="price-all-rows"></tbody>
+			</table>
+		</div>
+	</div>
+		<h3 class="text-right" data-type="price-total"><strong></strong></h3>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_price_info_tr_values" type="text/tmpl">
+<tr data-id="<<data_id>>">
+	<td data-type="data-room-num"><h5><strong><<room>></strong></h5></td>
+	<td data-type="data-range"><h5><strong><<staff>></strong></h5></td>
+	<td data-type="data-range"><h5><strong><<range>></strong></h5></td>
+	<td data-type="data-price-value"><h5><strong><<value>></strong></h5></td>
+	<td class="btn-group">
+		<a class="btn btn-default btn-sm btn-after" data-type="price-rate-edit" data-toggle="tab" href="#reSearch"><?php echo __("編集する"); ?></a>
+		<a class="btn btn-default btn-sm btn-after" data-type="price-rate-delete"><?php echo __("削除する"); ?></a>
+		<a class="btn btn-default btn-sm btn-after" data-type="price-rate-check" data-toggle="tab" href="#priceCheck"><?php echo __("確認する"); ?></a>
+	</td>
+</tr>
+</script>
+
+<script id="tpl_remodal_guest_history" type="text/tmpl">
+<div class="model-body container-fluid history" style="color: #000">
+	<h2 style="text-align:left;" data-type="remodal-title"><strong><<guest_name>></strong></h2>
+	<ul class="list-mem " id="style-scroll" data-type="history-list"></ul>
+</div>
+</script>
+
+<script id="tpl_remodal_guest_history_li" type="text/tmpl">
+<li class="col-md-12 info-item">
+	<div class="col-md-10 bd-bottom">
+		<div class="col-sm-4 col-xs-6"><p class="form-control-static" style="background-color: #fff"><<start_date>>~</p></div>
+	</div>
+	<div class="col-md-12 col-sm-12 col-xs-12 content-history">
+		<div class="col-md-11 col-sm-11 col-xs-12 bd-bottom">
+			<div class="col-md-2 col-sm-3 col-xs-4 text-center bd-btm-content">
+				<p class="form-control-static" type="number" name="number"><<reserve_id>></p>
+			</div>
+			<div class="col-md-9 col-sm-9 col-xs-8 bd-btm-content">
+				<p class="form-control-static col-md-6" type="text" name="name" ><span><<room_type>>(<<room_num>>)</span></p>
+			</div>
+		</div>	
+		<div class="col-md-12 contact-cmt">
+			<div class="col-md-7"></div>
+			<div class="col-md-5">
+				<textarea class="form-control" type="text" name="remark"><<remark>></textarea>
+			</div>
+		</div>
+	</div>
+</li>
+</script>
+
+<script id="tpl_remodal_meal_select" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("１つ選択して下さい"); ?></p></p></h3>
+		<div class="row">
+
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-food" name="on" class="btn active btn-lg"><?php echo __("フード"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-drink" name="off" class="btn active btn-lg"><?php echo __("ドリンク"); ?></button>
+				</div>
+			</div>
+
+			<div class="col-md-12" style="margin-top:10px;">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-spa" name="on" class="btn active btn-lg"><?php echo __("SPA"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-laundry" name="off" class="btn active btn-lg"><?php echo __("洗濯"); ?></button>
+				</div>
+			</div>
+
+			<div class="col-md-12" style="margin-top:10px;">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-limousine" name="on" class="btn active btn-lg"><?php echo __("送迎"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-tobacco" name="on" class="btn active btn-lg"><?php echo __("タバコ"); ?></button>
+				</div>
+			</div>
+			<div class="col-md-12" style="margin-top:10px;">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-roomservice" name="on" class="btn active btn-lg"><?php echo __("ルームサービス"); ?></button>
+				</div>
+			</div>
+		</div>
+		<h6 class="text-center">
+		<?php echo __("各注文数の入力を行います"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_list_main_menus" type="text/tmpl">
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div class="menu-top menu">
+		<ul class="nav nav-tabs" data-type="menu-tab-list">
+			<li class="active"><a class="btn convert" data-toggle="tab" href="#selected_food" name="" data-type="tab-selected">selected</a></li>
+		</ul>
+		<h4 class="pull-right"><span class="sub-title"><<date>></span></h4>
+	</div>
+	<div id="body-show" class="tab-content menu" data-type="menu-list">
+
+		<div id="selected_food" class="base-price tab-pane fade in active">
+			<h2><p>Selected Food Menus</p></h2>
+			<div class="fixed-free-style">
+				<div class="table-responsive style-scroll" >
+					<table class="table "> 
+						<tbody data-type="data-tbody"></tbody>
+					</table>
+				</div>
+			</div>
+			<div class="btn-bottom">
+			<button style="margin-left:5px;" class="btn btn-primary btn-lg pull-right" data-type="other-item"><?php echo __("他の項目を確認"); ?></button>
+			<button class="btn btn-primary btn-lg pull-right" data-type="order-save"><?php echo __("保存する"); ?></button>
+			</div>
+		</div>
+	</div>
+</div>
+</script>
+
+<script id="tpl_list_main_mastermenus" type="text/tmpl">
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div class="menu-top menu">
+		<ul class="nav nav-tabs" data-type="menu-tab-list"></ul>
+	</div>
+	<div id="body-show" class="tab-content menu" data-type="menu-list"></div>
+</div>
+</script>
+
+<script id="tpl_select_menu_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-master-id="<<master_id>>" data-aliase-type="<<category_aliase>>" data-type="data-select-row">
+	<td width="19%"><div class="pd-left"><p style="white-space: nowrap;"><a data-type="select_menu_row_a" style="text-decoration:underline;"data-toggle="tab" href="#<<category_aliase>>"><<title>></a></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p><<price>>$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p><<staff>></p></div></td>
+	<td width="5%"><div><strong><input class="text-center" min="0" type="number" name="" value="<<count>>" readonly/></strong></div></td>
+	<td width="5%"><div data-type="select-cash" style="text-align:center;"><<cash_type>></div></td>
+	<td width="55%"><div><p><<remarks>></p></div></td>
+</tr>
+</script>
+
+<script id="tpl_master_price_menu_noitem_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-type="data-menu-row" data-aliase-type="<<aliase>>">
+	<td width="19%"><div class="pd-left"><p style="white-space: nowrap;"><<title>></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p data-type="data-price"><<price>>$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p data-type="data-price"><<staff>></p></div></td>
+	<td width="10%"><div><strong><input data-type="menu-baseprice" class="text-center" min="0" type="number" name="" value="0" /></strong></div></td>
+	<td width="55%"><div><p style="border-bottom:0px;"><input data-type="menu-remarks" placeholder="<?php echo __("備考"); ?>" type="text"></p></div></td>
+</tr>
+</script>
+
+<script id="tpl_master_price_menu_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-type="data-menu-row" data-aliase-type="<<aliase>>">
+	<td width="10%" class="text-center"><div class="pd-left"><p><<item_num>></p></div></td>
+	<td width="19%" ><div class="pd-left"><p style="white-space: nowrap;"><<title>></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p data-type="data-price"><<price>>$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p data-type="data-price"><<staff>></p></div></td>
+	<td width="10%"><div><strong><input data-type="menu-baseprice" class="text-center" min="0" type="number" name="" value="0" /></strong></div></td>
+	<td width="45%"><div><p style="border-bottom:0px;"><input data-type="menu-remarks" placeholder="<?php echo __("備考"); ?>" type="text"></p></div></td>
+</tr>
+</script>
+
+<script id="tpl_menu_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-master-id="<<master_id>>" data-aliase-type="<<aliase>>" data-type="data-menu-row">
+	<td width="10%" class="text-center"><div class="pd-left"><p><<item_num>></p></div></td>
+	<td width="19%"><div class="pd-left"><p style="white-space: nowrap;"><<title>></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p data-type="data-price"><<price>>$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p data-type="data-price"><<staff>></p></div></td>
+	<td width="5%"><div><strong><input class="text-center" min="0" type="number" name="" value="0" /></strong></div></td>
+	<td width="5%"><div><select data-type="select-cash"></select></div></td>
+	<td width="45%"><div><p><<remarks>></p></div></td>
+</tr>
+</script>
+
+<script id="tpl_menu_check_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-type="data-menu-row" data-aliase-type="<<aliase>>">
+	<td width="19%"><div class="pd-left"><p style="white-space: nowrap;"><<title>></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p data-type="data-price"><<price>>$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p data-type="data-price"><<staff>></p></div></td>
+	<td width="55%" class="text-center"><div><p><<remarks>></p></div></td>
+	<td width="10%" class="text-left"><div class="pd-left"><input data-type="data-menu-checkbox" type="checkbox" onclick="return false;" checked></div></td>
+</tr>
+</script>
+
+<script id="tpl_select_baseprice_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-type="data-select-row">
+	<td width="19%"><div class="pd-left"><p><a data-type="select_menu_row_a" style="text-decoration:underline;"data-toggle="tab" href="#<<category_aliase>>"><<title>></a></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p><<price>>$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p><<staff>></p></div></td>
+	<td width="10%"><div><strong><input class="text-center" min="0" type="number" name="" value="<<count>>" readonly/></strong></div></td>
+	<td width="55%"><div><p><<remarks>></p></div></td>
+</tr>
+</script>
+
+<script id="tpl_baseprice_check_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-type="data-menu-row" data-aliase-type="<<aliase>>">
+	<td width="10%" class="text-center"><div class="pd-left"><p style="border-bottom:0px;">
+	<input type="text" placeholder="<?php echo __("商品番号"); ?>" data-type="data-itemnum"></p></div></td>
+	<td width="19%"><div class="pd-left"><p style="border-bottom:0px;"><input type="text" placeholder="<?php echo __("項目名"); ?>" data-type="data-itemtitle"></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p data-type="data-price"><<price>>$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p data-type="data-price"><<staff>></p></div></td>
+	<td width="45%" class="text-center"><div><p style="border-bottom:0px;"><input type="text" data-type="data-remarks" placeholder="<?php echo __("備考"); ?>"></p></div></td>
+	<td width="10%" class="text-left"><div class="pd-left"><input data-type="data-menu-checkbox" type="checkbox" onclick="return false;" checked></div></td>
+</tr>
+</script>
+
+<script id="tpl_baseprice_add_row" type="text/tmpl">
+<tr data-type="data-add-menu-row">
+	<td width="10%"><div class="pd-left"><p style="border-bottom:0px;"><input type="text" data-type="menu-itemnum" placeholder="<?php echo __("アイテム番号"); ?>"></p></div></td>
+	<td width="30%">
+	<div class="pd-left">
+	<p style="border-bottom:0px;">
+		<input type="text" data-type="menu-title-ja" placeholder="<?php echo __("日本語タイトル"); ?>" style="width:49%;">
+		<input type="text" data-type="menu-title-en" placeholder="<?php echo __("英語タイトル"); ?>" style="width:49%;">
+	</p>
+	</div>
+	</td>
+	<td width="10%" class="text-center"><div class="pd-left"><p style="border-bottom:0px;"><input data-type="menu-price" min="0" placeholder="<?php echo __("金額"); ?>" type="number">$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p><<staff>></p></div></td>
+	<td width="30%"><div class="pd-left"><p style="border-bottom:0px;"><input type="text" data-type="menu-remarks" placeholder="<?php echo __("備考"); ?>"></p></div></td>
+	<td width="10%"><div class="pd-left"><button data-type="menu-add-button"><?php echo __("追加"); ?></button></div></td>
+</tr>
+</script>
+
+<script id="tpl_baseprice_check_nonitem_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-type="data-menu-row" data-aliase-type="<<aliase>>">
+	<td width="30%"><div class="pd-left"><p style="border-bottom:0px;"><input type="text" placeholder="<?php echo __("項目名"); ?>" data-type="data-itemtitle"></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p data-type="data-price"><<price>>$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p data-type="data-price"><<staff>></p></div></td>
+	<td width="44%" class="text-center"><div><p style="border-bottom:0px;"><input type="text" data-type="data-remarks" placeholder="<?php echo __("備考"); ?>"></p></div></td>
+	<td width="10%" class="text-left"><div class="pd-left"><input data-type="data-menu-checkbox" type="checkbox" onclick="return false;" checked></div></td>
+</tr>
+</script>
+
+<script id="tpl_baseprice_check_nonitem_room_row" type="text/tmpl">
+<tr data-id="<<meal_id>>" data-type="data-menu-row" data-aliase-type="<<aliase>>">
+	<td width="23%" class="text-left"><div class="pd-left"><p data-type="room-num"><<room_num>></p></div></td>
+	<td width="17%"  class="text-center"><div class="pd-left"><p style="border-bottom:0px;"><select style="width:100%;" data-type="room-type"></select></p></div></td>
+	<td width="10%"  class="text-center"><div class="pd-left"><p style="border-bottom:0px;"><select style="width:100%;" data-type="room-residence"></select></p></div></td>
+	<td width="5%"  class="text-center"><div class="pd-left"><p style="border-bottom:0px;">
+	<input type="number" min="1" data-type="room-floor" placeholder="<?php echo __("フロア"); ?>"></p></div></td>
+	<td width="10%"  class="text-center"><div class="pd-left"><p><<staff>></p></div></td>
+	<td width="35%"  class="text-center"><div class="pd-left"><p style="border-bottom:0px;">
+	<input type="text" data-type="room-remarks" placeholder="<?php echo __("備考"); ?>"></p></div></td>
+</tr>
+</script>
+
+<script id="tpl_baseprice_add_nonitem_row" type="text/tmpl">
+<tr data-type="data-add-menu-row">
+	<td width="30%"><div class="pd-left">
+		<p style="border-bottom:0px;">
+			<input type="text" data-type="menu-title-ja" placeholder="<?php echo __("日本語タイトル"); ?>" style="width:49%;">
+			<input type="text" data-type="menu-title-en" placeholder="<?php echo __("英語タイトル"); ?>" style="width:49%;">
+		</p>
+	</div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p style="border-bottom:0px;"><input data-type="menu-price" min="0" placeholder="<?php echo __("金額"); ?>" type="number">$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p><<staff>></p></div></td>
+	<td width="44%"><div class="pd-left"><p style="border-bottom:0px;"><input type="text" data-type="menu-remarks" placeholder="<?php echo __("備考"); ?>"></p></div></td>
+	<td width="10%"><div class="pd-left"><button data-type="menu-add-button"><?php echo __("追加"); ?></button></div></td>
+</tr>
+</script>
+
+<script id="tpl_menu_add_row" type="text/tmpl">
+<tr data-type="data-add-menu-row">
+	<td width="19%"><div class="pd-left"><p><input type="text" data-type="menu-title" placeholder="<?php echo __("項目名"); ?>"></p></div></td>
+	<td width="6%" class="text-center"><div class="pd-left"><p style="border-bottom:0px;"><input data-type="menu-price" min="0" placeholder="<?php echo __("金額"); ?>" type="number">$</p></div></td>
+	<td width="10%" class="text-center"><div class="pd-left"><p><<staff>></p></div></td>
+	<td width="55%"><div class="pd-left"><p style="border-bottom:0px;"><input type="text" data-type="menu-remarks" placeholder="<?php echo __("備考"); ?>"></p></div></td>
+	<td width="10%"><div class="pd-left"><button data-type="menu-add-button"><?php echo __("追加"); ?></button></div></td>
+</tr>
+</script>
+
+<script id="tpl_menu_list" type="text/tmpl">
+<div id="<<category_aliase>>" class="base-price tab-pane fade" data-type="food-menu-list" data-aliase-type="<<category_aliase>>">
+	<h2><p><<category>></p></h2>
+	<div class="fixed-free-style">
+		<div class="table-responsive style-scroll" >
+			<table class="table"> 
+				<tbody data-type="data-tbody"></tbody>
+			</table>
+		</div>
+	</div>
+	<div class="btn-bottom">
+	<button style="margin-left:5px;" class="btn btn-primary btn-lg pull-right" data-type="other-item"><?php echo __("他の項目を確認"); ?></button>
+	<button class="btn btn-primary btn-lg pull-right" data-type="order-save"><?php echo __("保存する"); ?></button>
+	</div>
+</div><!-- / id menu-food -->		
+</script>
+
+<script id="tpl_menu_tab_list" type="text/tmpl">
+<li data-aliase-type="<<category_aliase>>"><a class="btn convert" data-toggle="tab" href="#<<category_aliase>>" name=""><<name>></a></li>
+</script>
+
+<script id="tpl_remodal_payment_way" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("支払い方法をお選び下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="payment-select" data-type="select-block">
+				<div class="payment-select-left"><?php echo __("支払いに関して"); ?></div>
+				<div class="payment-select-right"><select data-type="howto-payment"></select></div>
+			</div>
+			<div class="payment-select" data-type="select-block">
+				<div class="payment-select-left"><?php echo __("支払状況"); ?></div>
+				<div class="payment-select-right"><select data-type="purchase-progress"></select></div>
+			</div>
+			<div class="payment-select" style="display:none;" data-type="select-block">
+				<div class="payment-select-left"><?php echo __("決済種別"); ?></div>
+				<div class="payment-select-right"><select data-type="payment-cards"></select></div>
+			</div>
+			<div class="payment-button">
+				<button data-type="payment-save"><?php echo __("編集する"); ?></button>
+			</div>
+		</div>
+		<h6 class="text-center">
+		<?php echo __("支払い方法と、支払い状況の登録"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_checkout" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("チェックアウトしても宜しいですか？"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-checkin-yes" name="on" class="btn active btn-lg"><?php echo __("する"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-checkin-no" name="off" class="btn active btn-lg"><?php echo __("しない"); ?></button>
+				</div>
+			</div>
+		</div>
+		<h6 class="text-center">
+		<?php echo __("当日までの費用が請求書に記載されます"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_price_room_num_setting" type="text/tmpl">
+<div class="model-body container-fluid" data-type="price-info">
+	<div class="menu-top">
+		<ul class="nav nav-tabs pull-right" data-type="price-type-menu">
+			<li class="active"><a class="btn" data-type="menu-list" data-toggle="tab" href="#listReport" name="listReport" id="btn-list"><?php echo __("一覧表示"); ?></a></li>
+			<li><a class="btn" data-toggle="tab" data-type="menu-price" href="#reSearch" ><?php echo __("金額設定"); ?></a></li>
+		</ul>
+	</div>
+	<div id="body-show" class="tab-content">
+	<div class="form-search tab-pane fade" id="priceCheck" data-type="price-check">
+	</div>
+	<div class="form-search tab-pane fade" id="reSearch">
+		<form action="#" class="form-horizontal">
+			<div class="form-group">
+				<div class="col-md-12 col-sm-12">
+					<label class="col-md-8 col-sm-12"><h4><strong><<template_title>></strong></h4></label>
+				</div>
+				<div class="col-md-4 col-sm-8">	
+					<select name="room_name" class="form-control" data-type="price-type-list"></select>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-md-12 col-sm-12"><label class="col-md-8 col-sm-12"><h4><strong><?php echo __("有効期間"); ?></strong></h4></label></div>
+				<div class="col-md-12 value-symbol">
+					<div class="col-md-4 col-sm-5">
+						<input class="form-control" type="text" name="fromdate" placeholder="<?php echo __("開始日"); ?>" data-type="calendar-start" readonly/>
+					</div>
+					<div class="col-md-4 col-sm-7" style="margin-left:10px;">
+						<input class="form-control" type="text" name="todate"   placeholder="<?php echo __("終了日"); ?>" data-type="calendar-end" readonly/>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-md-12 col-sm-12"><label class="col-md-8 col-sm-12"><h4><strong><?php echo __("設定値"); ?></strong></h4></label></div>
+				<div class="col-md-12 value-symbol">
+					<div class="col-md-7 col-sm-9 col-xs-10"><input data-type="price-rate-value" class="form-control" type="number" name="percent" min="0" /></div>
+					<div class="col-md-2 col-sm-3 col-xs-2 btn-symbol"><a class="btn btn-lg">%</a></div>
+				</div>
+				<div class="col-md-12 value-symbol">
+					<div class="col-md-7 col-sm-9 col-xs-10"><input data-type="price-value"class="form-control" min="0" type="number" name="value" pattern="(d{3})([.])(d{2})" /></div>
+					<div class="col-md-2 col-sm-3 col-xs-2 btn-symbol"><a class="btn btn-lg">$</a></div>
+					<div class="col-md-3 col-sm-3" data-type="price-value-send"><a data-type="price-value-send-a" class="btn btn-convert"><?php echo __("登録する"); ?></a></div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div id="listReport" class="list tab-pane fade in active">
+		<h2><p><?php echo __("一覧表示"); ?></p></h2>
+		<div class="fixed">
+		<div class="table-responsive style-scroll">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th width="20%" data-type="room-tmplate-title"><div><p><<template_title>></p></div></th>
+						<th width="10%"><div><p><?php echo __("設定者"); ?></p></div></th>
+						<th width="10%"><div><p><?php echo __("有効期間"); ?></p></div></th>
+						<th width="10%"><div><p><?php echo __("設定値"); ?></p></div></th>
+						<th width="50%"><div><p><?php echo __("操作"); ?></p></div></th>
+					<tr>
+				</thead>
+				<tbody data-type="price-rate-list"></tbody>
+			</table>
+		</div>
+		</div>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_credit_situation" type="text/tmpl">
+<div class="credit-situation-block" data-type="credit-situations">
+	<div class="credit-situation-title">
+		<?php echo __("クレジット設定状況"); ?>(<<reserve_id>>)
+	</div>
+	<div class="credit-situation-informations" data-type="credit-list"></div>
+
+	<div class="btn-bottom" style="overflow:auto;padding-right:5%;margin-top:10px;">
+	<button class="btn btn-primary btn-lg pull-right" data-type="credit-save"><?php echo __("保存する"); ?></button>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_credit_situation_child_add" type="text/tmpl">
+<div class="credit-situation-informations-child" style="padding-top:2px;padding-bottom:2px;" data-type="credit-situation-row-top" data-ymd="0" data-credit-id="0">
+	<div class="box-first"><select data-type="credit-select"></select></div>
+	<div class="box-second">0$</div>
+	<div class="box-third"><input type="number" style="width:100%;" value="0" data-type="credit-price" min="0"></div>
+	<div class="box-fourth"><select data-type="credit-payment-type"></select></div>
+	<div class="box-fifth"><<staff>></div>
+	<div class="box-sixth"><<time>></div>
+	<div class="box-seven"><input type="text" style="width:100%;" data-type="credit-remarks" placeholder="<?php echo __("備考"); ?>"></div>
+	<div class="box-eighth"><button data-type="credit-add-button"><?php echo __("追加"); ?></button></div>
+</div>
+</script>
+
+<script id="tpl_remodal_credit_situation_child" type="text/tmpl">
+<div class="credit-situation-informations-child" style="padding-top:2px;padding-bottom:2px;" data-type="credit-situation-row-top" data-ymd="<<ymd>>" data-credit-id="<<credit_id>>">
+	<div class="box-first"><select data-type="credit-select"></select></div>
+	<div class="box-second"><<current_price>>$</div>
+	<div class="box-third"><input type="number" style="width:100%;" value="<<current_price>>" data-type="credit-price" min="0"></div>
+	<div class="box-fourth"><select data-type="credit-payment-type"></select></div>
+	<div class="box-fifth"><<staff>></div>
+	<div class="box-sixth"><<time>></div>
+	<div class="box-seven"><input type="text" style="width:100%;" data-type="credit-remarks" placeholder="<?php echo __("備考"); ?>"></div>
+	<div class="box-eighth"><input type="checkbox" data-type="credit-checkbox" onclick="return false;" checked></div>
+</div>
+</script>
+
+<script id="tpl_remodal_room_situation" type="text/tmpl">
+<div class="room-situation-block" data-type="room-situations">
+	<div class="room-situation-title">
+		<?php echo __("現在状況"); ?>
+	</div>
+	<div class="room-situation-menu-title">
+		<div class="room-situation-menu-title-left"><?php echo __("部屋番号"); ?></div>
+		<div class="room-situation-menu-title-right"><?php echo __("部屋タイプ"); ?></div>
+	</div>
+	<div class="room-situation-informations" data-type="room-list" style="border:1px #ccc solid;"></div>
+</div>
+</script>
+
+<script id="tpl_remodal_room_situation_child" type="text/tmpl">
+<div class="room-situation-informations-child" data-type="room-situation-row-top" data-room-id="<<room_id>>">
+	<div class="box-first" style="background-color:<<bgcolor>>;color:<<fontcolor>>;" data-type="room-num"><<room_num>></div>
+	<div class="box-second" data-type="room-type"><<room_type>></div>
+	<div class="box-third"><select data-type="room-situation-select"></select></div>
+	<div class="box-fourth"><a href="#" onclick="return false;" data-type="situation-edit"><?php echo __("編集する"); ?></a></div>
+</div>
+</script>
+
+<script id="tpl_remodal_employee_list_li" type="text/tmpl">
+<li class="col-md-12 col-sm-12 info-item" data-type="parent-row-li" data-staff-auth="<<employee_auth>>" data-staff-id="<<employee_id>>" style="background-color:<<bg_color>>;">
+	<label class="col-md-8 col-sm-6 ">
+		<div class="col-md-2 col-sm-2 col-xs-2 text-center">
+			<p class="form-control text-center number"><<employee_id>></p>
+		</div>
+		<div class="col-md-3 col-sm-2 col-xs-2 text-center">
+			<p class="form-control"><<name>></p>
+		</div>
+		<div class="col-md-3 col-sm-2 col-xs-2 text-center">
+			<p class="form-control"><<jobtitle>></p>
+		</div>
+	</label>	
+	<div class="col-md-12 col-sm-12">
+		<div class="col-md-10 col-sm-10 contact-cmt">
+			<div class="col-md-6 col-sm-6 tel">
+				<div class="col-md-12 col-sm-12">
+					<label class="col-md-5 col-sm-5 col-xs-5"><p class="form-control"><?php echo __("権限"); ?></p></label>
+					<div class="col-md-7 col-sm-7 col-xs-7"><p class="form-control"><<auth>></p></div>
+				</div>
+				<div class="col-md-12 col-sm-12">
+					<label class="col-md-5 col-sm-5 col-xs-5"><p class="form-control"><?php echo __("従業員アカウント"); ?></p></label>
+					<div class="col-md-7 col-sm-7 col-xs-7"><p class="form-control"><<account>></p></div>
+				</div>
+			</div>
+			<div class="col-md-1 col-sm-1 btn-show"></div>
+			<div class="col-md-5 col-sm-5 remark">
+				<p class="form-control"><<remark>></p>
+			</div>
+		</div>
+		<div class="col-md-2 col-sm-2 btn-select">
+		<a class="btn btn-default" type="button" data-toggle="tab" href="#register" data-type="staff-select"><?php echo __("選択する"); ?></a>
+		</div>
+	</div>
+</li>
+</script>
+
+<script id="tpl_remodal_employee" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid">
+	<div class="menu-top">
+		<ul class="nav nav-tabs pull-right" data-type="toggle-buttons">
+			<li class="active" ><a class="btn" data-toggle="tab" href="#employee" name="employee" id="btn-list"><?php echo __("一覧表示"); ?></a></li>
+			<li><a class="btn" data-toggle="tab" data-type="tab-employee-list" href="#register"><?php echo __("従業員設定"); ?></a></li>
+		</ul>
+	</div>
+	<div id="body-show" class="tab-content col-md-12">
+		<div class="tab-pane fade in active" id="employee">
+			<h2 style="text-align:left;" data-type="remodal-title"><strong><?php echo __("従業員"); ?></strong></h2>
+			<ul class="list-mem style-scroll" data-type="employee-list"></ul>
+		</div>
+		<div id="register" class="list tab-pane fade" data-type="employee-setting">
+			<form class="" method="" action="#" id="form-register">
+				<div class="col-md-8 col-sm-8 col-xs-12 resister-infor">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<label class="col-md-12 col-sm-12 col-xs-12">
+							<h3 class="sub-title">
+							<p><?php echo __("名前"); ?></p>
+							<p class="name"> 
+								<span class="error text-danger"></span>
+							</p>
+							</h3>
+						</label>
+						<div class="col-md-4 col-sm-4 col-xs-12">
+							<input type="text" class="" value="" data-type="first-name" name="first-name" placeholder="<?php echo __("姓"); ?>"/>
+						</div>
+						<div class="col-md-4 col-sm-4 col-xs-16">
+							<input type="text" class="" value="" data-type="middle-name" name="middle-name" placeholder="<?php echo __("ミドルネーム"); ?>"/>
+						</div>
+						<div class="col-md-4 col-sm-4 col-xs-12">
+							<input type="text" class="" value="" data-type="last-name" name="last-name" placeholder="<?php echo __("名前"); ?>"/>
+						</div>
+					</div>
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<label class="col-md-12 col-sm-12 col-xs-12">
+							<h3 class="sub-title">
+							<p><?php echo __("権限"); ?></p>
+							<p class="auth"> 
+								<span class="error text-danger"></span>
+							</p>
+							</h3>
+						</label>
+						<div class="col-md-7 col-sm-7 col-xs-12">
+							<select name="auth" class="form-control" data-type="form-authority"></select>
+						</div>
+					</div>
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<label class="col-md-12 col-sm-12 col-xs-12">
+							<h3 class="sub-title">
+							<p><?php echo __("役職"); ?></p>
+							<p class="auth"> 
+								<span class="error text-danger"></span>
+							</p>
+							</h3>
+						</label>
+						<div class="col-md-7 col-sm-7 col-xs-12">
+							<select name="auth" class="form-control" data-type="form-jobtitle"></select>
+						</div>
+					</div>
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<label class="col-md-12 col-sm-12 col-xs-12">
+							<h3 class="sub-title">
+							<p><?php echo __("アカウント"); ?></p>
+							<?php $message=__("#data#文字以上"); ?>
+							<?php $message=str_replace("#data#",8,$message); ?>
+							<p class="account"><span class="error text-danger"><?php echo __("英数字のみ"); ?>(<?php echo $message; ?>)</span></p>
+							</h3>
+						</label>
+						<div class="col-md-7 col-sm-7 col-xs-12">
+							<input data-type="form-account" type="text" class="" value="" name="account" placeholder="<?php echo __("ユーザ名"); ?>" pattern="^[a-zA-Z0-9]+" />
+						</div>
+					</div>
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<label class="col-md-12 col-sm-12 col-xs-12">
+							<h3 class="sub-title">
+							<p><?php echo __("パスワード"); ?></p>
+							<?php $message=__("#data#文字以上"); ?>
+							<?php $message=str_replace("#data#",8,$message); ?>
+							<p class="pass"><span class="error text-danger"><?php echo __("英数字のみ"); ?>(<?php echo $message; ?>)</span></p>
+							</h3>
+						</label>
+						<div class="col-md-6 col-sm-6 col-xs-12">
+							<?php $placeholder=__("パスワード")."(".__("変更しない場合は未入力").")"; ?>
+							<input data-type="form-password" type="text" class="" name="pass" placeholder="<?php echo $placeholder; ?>" pattern="^[a-zA-Z0-9]+" />
+						</div>
+						<div class="col-md-6 col-sm-6 col-xs-12">
+							<?php $placeholder=__("パスワード確認")."(".__("変更しない場合は未入力").")"?>
+							<input data-type="form-password-conf" type="text" class="" name="re-pass" placeholder="<?php echo $placeholder; ?>" pattern="^[a-zA-Z0-9]+" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4 col-sm-4 col-xs-12">
+					<label class="col-md-12 col-sm-12 col-xs-12"><h3 class="title"><?php echo __("備考"); ?></h3></label>
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<textarea class="form-control" cols="" rows="10" data-type="form-remark"></textarea>
+					</div>
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<button onclick="return false;" class="btn btn-convert" data-type="staff-submit" type="submit"><?php echo __("登録する"); ?></button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_checkin" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("チェックインしても宜しいですか？"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-checkin-yes" name="on" class="btn active btn-lg"><?php echo __("する"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-checkin-no" name="off" class="btn active btn-lg"><?php echo __("しない"); ?></button>
+				</div>
+			</div>
+		</div>
+		<h6 class="text-center">
+		<?php echo __("チェックイン後、こちらの操作は取り消せません"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_all_setting" type="text/tmpl">
+<div class="model-body container-fluid">
+	<div id="settings" class="settings">
+		<h2><p><?php echo __("各種設定"); ?></p></h2>
+		<div>
+			<form action="#" class="form-horizontal" >
+
+				<div class="form-group" data-type="setting-tax-top">
+					<div class="col-md-12 value-symbol">
+						<div class="col-md-3 col-sm-5">
+							 <a class="btn btn-convert"><?php echo __("税率"); ?></a>
+						</div>
+						<div class="col-md-7 col-sm-6 middle">
+							<input class="form-control" type="number" name="tax" min="0" maxlength="20" minlength="8" data-target-type="price-tax"/>
+						</div>
+						<div class="col-md-2 col-sm-1">
+							<a class="btn btn-convert" data-type="price-tax"><?php echo __("編集する");?></a>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group" data-type="setting-language-top">
+					<div class="col-md-12 value-symbol">
+						<div class="col-md-3 col-sm-5">
+							 <a class="btn btn-convert btn-md"><?php echo __("言語"); ?></a>
+						</div>
+						<div class="col-md-7 col-sm-6 middle">
+							<select name="room_name" class="form-control" data-target-type="select-language"></select>
+						</div>
+						<div class="col-md-2 col-sm-1">
+							<a class="btn btn-convert" data-type="select-language"><?php echo __("編集する");?></a>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group" data-type="setting-card-top"></div>
+
+				<div class="form-group" data-type="setting-inovice-top"></div>
+
+			</form>
+		</div>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_invoice_company" type="text/tmpl">
+<div style="height:40px;" class="col-md-12 value-symbol" data-type="invoice-company-top" data-meta-key="<<meta_key>>">
+	<div class="col-md-3 col-sm-5">
+		 <a class="btn btn-convert btn-md"><<title>></a>
+	</div>
+	<div class="col-md-7 col-sm-6 middle">
+		<input class="form-control" type="text" data-type="invoice-company"/>
+	</div>
+	<div class="col-md-2 col-sm-1">
+		<a class="btn btn-convert" data-type="select-invoice"><?php echo __("編集する");?></a>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_card_info" type="text/tmpl">
+<div style="height:40px;" class="col-md-12 value-symbol" data-type="card-top" data-card-id="<<card_id>>">
+	<div class="col-md-3 col-sm-5">
+		 <a class="btn btn-convert btn-md"><<card>></a>
+	</div>
+	<div class="col-md-7 col-sm-6 middle">
+		<input class="form-control" style="width:34%;margin-left:2%;float:left;"type="number" name="tax" min="0" data-type="card-range" placeholder="day"/>
+		<div style="float:left;width:12%;margin-left:2%;text-align:left;line-height:4.8;">(day)</div>
+		<input class="form-control" style="width:34%;margin-left:2%;float:left;"type="number" name="rate" min="0" data-type="card-rate" placeholder="rate(%)" />
+		<div style="float:left;width:12%;margin-left:2%;text-align:left;line-height:4.8;">(%)</div>
+	</div>
+	<div class="col-md-2 col-sm-1">
+		<a class="btn btn-convert" data-type="select-card"><?php echo __("編集する");?></a>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_member_history" type="text/tmpl">
+<div class="model-body container-fluid" style="color: #000" id="members">
+	<h2 style="text-align:left;" data-type="remodal-title"><strong><?php echo __("以下の候補が見つかりました"); ?></strong></h2>
+	<ul class="list-mem" id="style-scroll" data-type="member-list"></ul>
+</div>
+</script>
+
+<script id="tpl_remodal_member_history_li" type="text/tmpl">
+<li class="col-md-12 col-sm-12 info-item">
+	<label class="col-md-10 col-sm-10 ">
+		<div class="col-md-2 col-sm-3 col-xs-4 text-center">
+			<<guest_id>>
+		</div>
+		<div class="col-md-4 col-sm-6 col-xs-8">
+			<<guest_name>>
+		</div>
+	</label>	
+	<div class="col-md-12 col-sm-12">
+		<div class="col-md-10 col-sm-10 contact-cmt">
+			<div class="col-md-7 col-sm-7 tel">
+				<div class="col-md-12 col-sm-12">
+					<label class="col-md-5 col-sm-5 col-xs-5"><p class="form-control-static"><?php echo __("電話番号"); ?></p></label>
+					<div class="col-md-7 col-sm-7 col-xs-7"><<tel_number>></div>
+				</div>
+				<div class="col-md-12 col-sm-12">
+					<label class="col-md-5 col-sm-5 col-xs-5"><p class="form-control-static"><?php echo __("最終宿泊日"); ?></p></label>
+					<div class="col-md-7 col-sm-7 col-xs-7"><<last_date>></div>
+				</div>
+			</div>
+			<div class="col-md-5 col-sm-5">
+				<textarea class="form-control" type="text" name="remark" value=""><<remarks>></textarea>
+			</div>
+		</div>
+		<div class="col-md-2 col-sm-2 btn-select"><a class="btn btn-default" data-guest-id="<<guest_id>>" data-type="member-select" type="button"><?php echo __("選択する"); ?></a></div>
+	</div>
+</li>
+</script>
+
+<script id="tpl_remodal_price_title" type="text/tmpl">
+<div class="content-block">
+	<div class="list-title-block">
+		<div class="list-title-block-left"><<reserve_id>></div>
+		<div class="list-title-block-right"><<guest_name>></div>
+	</div>
+	<div class="content-price-block" data-type="schedule-price-list"></div>
+</div>
+</script>
+
+<script id="tpl_remodal_price_value" type="text/tmpl">
+<div class="box" data-schedule-id="<<schedule_id>>" data-id="<<data_id>>">
+	<div class="date">
+		<div class="date-center">
+		<<date>>
+		</div>
+	</div>
+	<div class="price" style="color:<<font_color>>;"><<price>><span style="font-size:0.5em;">(<<base_price>>)</span></div>
+</div>
+</script>
+
+<script id="tpl_remodal_agent" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("一方を選択して下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="agent-add" name="on" class="btn active btn-lg"><?php echo __("法人追加"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="agent-list" name="off" class="btn active btn-lg"><?php echo __("法人一覧"); ?></button>
+				</div>
+			</div>
+		</div>
+		<h6 class="text-center">
+		<?php echo __("各種項目、及び法人の管理が行えます"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_base_price_types" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("一方を選択して下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-item" name="on" class="btn active btn-lg"><?php echo __("各種項目設定"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-baseprice" name="off" class="btn active btn-lg"><?php echo __("標準金額設定"); ?></button>
+				</div>
+			</div>
+		</div>
+		<h6 class="text-center">
+		<?php echo __("各種項目、及び金額の設定を行えます"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_daily_report" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("取得する人を指定して下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+			<div class="daily_report_calendar_block">
+				<div class="daily_report_calendar_block_top"><?php echo __("指定日"); ?></div>
+				<div class="daily_report_calendar_block_bottom"><input type="text" data-type="daily-report-calendar" readonly></div>
+			</div>
+			<div class="daily_report_calendar_block">
+				<div class="daily_report_calendar_block_top"><?php echo __("指定月"); ?></div>
+				<div class="daily_report_calendar_block_bottom">
+					<select data-type="monthly-year"></select>
+					<select data-type="monthly-month"></select>
+					<button data-type="monthly-download">Download</button>
+				</div>
+			</div>
+			<div class="daily_report_calendar_block">
+				<div class="daily_report_calendar_block_top"><?php echo __("言語"); ?></div>
+				<div class="daily_report_calendar_block_bottom"><select style="width:100%;height:100%;" data-type="daily-report-language"></select></div>
+			</div>
+			</div>
+		</div>
+		<h6 class="text-left" style="padding-left:30px;padding-bottom:5px;">
+		1).<?php echo __("売上状況、及び他各情報をエクセルの形式で取得します"); ?><br>
+		2).<?php echo __("通信状況により時間が掛かる恐れがあります"); ?><br />
+		3).<?php echo __("月毎の取得を行うと時間が掛かります、実行後はしばらくお待ち下さい"); ?><br />
+		4).<?php echo __("言語の切り替えにより、シートの翻訳が変更されます"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_situation_unavailable" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="unavailable_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("必要項目を指定して下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="situation-unavailable-top roomdetail"><<title>></div>
+			<div class="situation-unavailable-top reason">
+				<div class="calendar-left"><?php echo __("理由"); ?></div>
+				<div class="calendar-right"><select data-type="unavailable-reason"></select></div>
+			</div>
+			<div class="situation-unavailable-top calendar">
+				<div class="calendar-left"><?php echo __("予定期間"); ?></div>
+				<div class="calendar-right">
+					<input type="text" data-type="calendar-start" placeholder="<?php echo __("開始日"); ?>" readonly>&nbsp;〜&nbsp;
+					<input type="text" data-type="calendar-end" placeholder="<?php echo __("終了日"); ?>" readonly>
+				</div>
+			</div>
+			<div class="situation-unavailable-top remarks">
+			<textarea data-type="unavailable-remarks" placeholder="<?php echo __("備考"); ?>"></textarea>
+			</div>
+			<div class="situation-unavailable-top">
+			<button data-type="situation-unavailable-remove-button"><?php echo __("削除する"); ?></button>
+			<button style="margin-left:2%;" data-type="situation-unavailable-button"><?php echo __("保存する"); ?></button>
+			</div>
+		</div>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_emploee_management_select" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("一方を選択して下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-attendance" name="on" class="btn active btn-lg"><?php echo __("勤怠管理"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-account" name="off" class="btn active btn-lg"><?php echo __("従業員アカウント"); ?></button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_price_type_select" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("一方を選択して下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-room-num" name="on" class="btn active btn-lg"><?php echo __("部屋番号"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-room-type" name="off" class="btn active btn-lg"><?php echo __("部屋タイプ"); ?></button>
+				</div>
+			</div>
+		</div>
+		<h6 class="text-center">
+		<?php echo __("期間毎に部屋番号、及び部屋タイプで金額の変動を行えます"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_reservation_color" type="text/tmpl">
+<a class="color" data-type="remodal-reservation-color" style="background-color:<<bg_color>>;" data-color-id="<<color_id>>"></a>
+</script>
+
+<script id="tpl_remodal_masterprice_type_select" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("１つ選択して下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="master-reststay-<<type>>" name="on" class="btn active btn-lg"><?php echo __("休憩"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="master-food-<<type>>" name="on" class="btn active btn-lg"><?php echo __("フード"); ?></button>
+				</div>
+			</div>
+			<div class="col-md-12" style="margin-top:10px;">
+				<div class="col-md-6">
+					<button type="submit" data-type="master-drink-<<type>>" name="off" class="btn active btn-lg"><?php echo __("ドリンク"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="master-spa-<<type>>" name="on" class="btn active btn-lg"><?php echo __("SPA"); ?></button>
+				</div>
+			</div>
+			<div class="col-md-12" style="margin-top:10px;">
+				<div class="col-md-6">
+					<button type="submit" data-type="master-laundry-<<type>>" name="off" class="btn active btn-lg"><?php echo __("洗濯"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="master-limousine-<<type>>" name="on" class="btn active btn-lg"><?php echo __("送迎"); ?></button>
+				</div>
+			</div>
+			<div class="col-md-12" style="margin-top:10px;">
+				<div class="col-md-6">
+					<button type="submit" data-type="master-tobacco-<<type>>" name="off" class="btn active btn-lg"><?php echo __("タバコ"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="master-roomservice-<<type>>" name="on" class="btn active btn-lg"><?php echo __("ルームサービス"); ?></button>
+				</div>
+			</div>
+			<div class="col-md-12" data-type="menu-room-blocks" style="margin-top:10px;">
+				<div class="col-md-6">
+					<button type="submit" data-type="master-room-<<type>>" name="on" class="btn active btn-lg"><?php echo __("部屋別"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="master-roomtype-<<type>>" name="off" class="btn active btn-lg"><?php echo __("部屋タイプ別"); ?></button>
+				</div>
+			</div>
+		</div>
+		<h6 class="text-center">
+		<?php echo __("各種、金額の変更を行えます"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_agent_add" type="text/tmpl">
+<div class="outputpayment-situation-block" data-type="outputpayment-situations">
+	<div class="agent-situation-title">
+		<?php echo __("企業情報追加"); ?>
+	</div>
+	<div class="agent-situation-informations" style="padding-bottom:10px;" data-type="agent-list">
+		<div class="agent-set-container">
+			<div class="agent-set-container-left">
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("企業名"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><input type="text" data-type="agent-companyname" placeholder="<?php echo __("入力必須"); ?>"></div>
+				</div>
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("連絡先"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><input type="text" data-type="agent-contact"></div>
+				</div>
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("Fax"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><input type="text" data-type="agent-fax"></div>
+				</div>
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("企業タイプ"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><select data-type="agent-type"></select></div>
+				</div>
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("Sale source"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><select data-type="agent-salesource"></select></div>
+				</div>
+			</div>
+			<div class="agent-set-container-right">
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("Credit Limited"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><input type="text" data-type="agent-credit-limited"></div>
+				</div>
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("Number Due Date"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><input type="text" data-type="agent-number-duedate"></div>
+				</div>
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("Register Date"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><input type="text" data-type="agent-registdate" placeholder="<?php echo __("入力必須"); ?>" readonly/></div>
+				</div>
+				<div class="agent-item">
+					<div class="agent-item-left"><?php echo __("VAT No"); ?>&nbsp;:</div>
+					<div class="agent-item-right"><input type="text" data-type="agent-vatno" placeholder="<?php echo __("入力必須"); ?>"></div>
+				</div>
+			</div>
+		</div>
+		<div class="agent-set-remark-container">
+			<div class="agent-set-remark-container_left"><?php echo __("所在地"); ?></div>
+			<div class="agent-set-remark-container_right"><textarea data-type="agent-address"></textarea></div>
+		</div>
+	</div>
+	<div class="btn-bottom" style="overflow:auto;padding-right:5%;">
+	<p style="text-align:center;margin-top:0px;"></p>
+	<button class="btn btn-primary btn-lg pull-right" data-type="agent-tolist" style="margin-left:10px;"><?php echo __("一覧へ遷移"); ?></button>
+	<button class="btn btn-primary btn-lg pull-right" data-type="agent-save"><?php echo __("保存する"); ?></button>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_outputpayment_situation" type="text/tmpl">
+<div class="outputpayment-situation-block" data-type="outputpayment-situations">
+	<div class="outputpayment-situation-title">
+		<?php echo __("支出状況"); ?>
+	</div>
+	<div class="outputpayment-calendar"><input type="text" data-type="outputpayment-date-calendar" placeholder="select date" readonly></div>
+	<div class="outputpayment-situation-informations" style="border:1px #ccc solid;padding-bottom:10px;" data-type="outputpayment-list"></div>
+	<div class="btn-bottom" style="overflow:auto;padding-right:5%;margin-top:10px;">
+	<p style="text-align:center;margin-top:10px;"><?php echo __("金額の入力は必須です、未入力の場合そのデータは登録されません"); ?></p>
+	<button class="btn btn-primary btn-lg pull-right" data-type="outputpayment-save"><?php echo __("保存する"); ?></button>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_outputpayment_situation_child_add" type="text/tmpl">
+<div class="payment_top" style="margin-top:10px;" data-payment-id="0" data-type="row-top">
+	<div class="box-first"><input type="text" data-type="outputpayment-store" placeholder="<?php echo __("店名"); ?>"></div>
+	<div class="box-second"><input type="text" data-type="outputpayment-item" placeholder="<?php echo __("商品名"); ?>"></div>
+	<div class="box-third"><input type="number" min="0" data-type="outputpayment-value" placeholder="<?php echo __("金額"); ?>"></div>
+	<div class="box-fourth"><select data-type="outputpayment-buyer"></select></div>
+	<div class="box-fifth"><input type="text" data-type="outputpayment-remarks" placeholder="<?php echo __("備考"); ?>"></div>
+	<div class="box-sixth"><?php echo $first_name; ?></div>
+	<div class="box-seventh"><button data-type="outputpayment-add"><?php echo __("追加"); ?></button></div>
+</div>
+</script>
+
+<script id="tpl_remodal_outputpayment_situation_child" type="text/tmpl">
+<div class="payment_top" style="margin-top:10px;" data-payment-id="<<data_id>>" data-type="row-top">
+	<div class="box-first"><input type="text" data-type="outputpayment-store" placeholder="<?php echo __("店名"); ?>"></div>
+	<div class="box-second"><input type="text" data-type="outputpayment-item" placeholder="<?php echo __("商品名"); ?>"></div>
+	<div class="box-third"><input type="number" min="0" data-type="outputpayment-value" placeholder="<?php echo __("金額"); ?>"></div>
+	<div class="box-fourth"><select data-type="outputpayment-buyer"></select></div>
+	<div class="box-fifth"><input type="text" data-type="outputpayment-remarks" placeholder="<?php echo __("備考"); ?>"></div>
+	<div class="box-sixth"><<staff>></div>
+	<div class="box-seventh"><input type="checkbox" data-type="outputpayment-status" onclick="return false;" checked></div>
+</div>
+</script>
+
+<script id="tpl_remodal_attendance_situation" type="text/tmpl">
+<div class="attendance-situation-block" data-type="attendance-situations">
+	<div class="attendance-situation-title">
+		<?php echo __("対象日選択"); ?>
+	</div>
+	<div class="attendance-calendar"><input type="text" data-type="attendance-date-calendar" placeholder="<?php echo __("指定日"); ?>" readonly></div>
+	<div class="attendance-situation-informations" style="border:2px #ccc solid;" data-type="attendance-list"></div>
+	<div class="btn-bottom" style="overflow:auto;padding-right:5%;margin-top:10px;">
+	<button class="btn btn-primary btn-lg pull-right" data-type="attendance-save"><?php echo __("保存する"); ?></button>
+	</div>
+	<h6 class="text-center">
+	1).<?php echo __("休日の場合は、チェックを外して下さい"); ?>&nbsp;2).<?php echo __("同時刻で設定されている場合取り消し扱いとなります"); ?>
+	</h6>
+</div>
+</script>
+
+<script id="tpl_remodal_attendance_situation_child" type="text/tmpl">
+<div class="payment_top" style="margin-top:10px;" data-staff-id="<<staff_id>>" data-type="row-top">
+	<div class="box-first"><<staff>></div>
+	<div class="box-second">
+	<select data-type="attendance-enter-h"></select>&nbsp;:&nbsp;<select data-type="attendance-enter-m"></select>&nbsp;〜&nbsp;
+	<select data-type="attendance-leave-h"></select>&nbsp;:&nbsp;<select data-type="attendance-leave-m"></select>
+	</div>
+	<div class="box-third"><<hour>>h<<min>>m</div>
+	<div class="box-fourth"><input type="number" data-type="attendance-resttime" min="0" placeholder="<?php echo __("休憩時間"); ?>"></div>
+	<div class="box-fifth"><<registerd>></div>
+	<div class="box-sixth"><input type="text" data-type="attendance-remarks" placeholder="<?php echo __("備考"); ?>"></div>
+	<div class="box-seventh" data-type="attendance-dayoff-div"><input type="checkbox" data-type="attendance-dayoff" onclick="return false;" checked=checked readonly></div>
+</div>
+</script>
+
+<script id="tpl_remodal_aftercheckout" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("チェックアウト後"); ?></p></p></h3>
+
+		<div class="checkoutafter_totalprice_top">
+			<div class="checkoutafter_totalprice_inner">
+				<div class="checkoutafter_totalprice_inner_left"><?php echo __("宿泊代金"); ?></div>
+				<div class="checkoutafter_totalprice_inner_right"><<hotel_fee>>&nbsp;USD</div>
+			</div>
+			<div class="checkoutafter_totalprice_inner">
+				<div class="checkoutafter_totalprice_inner_left"><?php echo __("各種他(CASH)"); ?></div>
+				<div class="checkoutafter_totalprice_inner_right"><<other_cash_fee>>&nbsp;USD</div>
+			</div>
+			<div class="checkoutafter_totalprice_inner">
+				<div class="checkoutafter_totalprice_inner_left"><?php echo __("各種他(CARD)"); ?></div>
+				<div class="checkoutafter_totalprice_inner_right"><<other_card_fee>>&nbsp;USD</div>
+			</div>
+			<div class="checkoutafter_totalprice_inner">
+				<div class="checkoutafter_totalprice_inner_left"><?php echo __("請求額(CASH)"); ?></div>
+				<div class="checkoutafter_totalprice_inner_right"><<cash_total>>&nbsp;USD</div>
+			</div>
+			<div class="checkoutafter_totalprice_inner">
+				<div class="checkoutafter_totalprice_inner_left" style="border-color:red;"><?php echo __("請求額(CASH:tax&nbsp;<<tax>>%)"); ?></div>
+				<div class="checkoutafter_totalprice_inner_right" style="border-color:red;"><<grand_cash_total>>&nbsp;USD</div>
+			</div>
+			<div class="checkoutafter_totalprice_inner">
+				<div class="checkoutafter_totalprice_inner_left"><?php echo __("総計"); ?></div>
+				<div class="checkoutafter_totalprice_inner_right"><<total>>&nbsp;USD</div>
+			</div>
+			<div class="checkoutafter_totalprice_inner">
+				<div class="checkoutafter_totalprice_inner_left"><?php echo __("総計(tax&nbsp;<<tax>>%)"); ?></div>
+				<div class="checkoutafter_totalprice_inner_right"><<grand_total>>&nbsp;USD</div>
+			</div>
+		</div>
+
+		<div class="row" style="margin-top:10px;">
+
+			<div class="col-md-12" data-type="menu-room-blocks">
+				<div class="col-md-6">
+					<button type="submit" data-type="howto-payment" name="on" class="btn active btn-lg"><?php echo __("支払い方法"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="price-detail" name="on" class="btn active btn-lg"><?php echo __("金額詳細"); ?></button>
+				</div>
+			</div>
+
+		</div>
+		<h6 class="text-center">
+		<?php echo __("各種、チェックアウト後の操作を行えます"); ?>
+		</h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_outputpayment_select" type="text/tmpl">
+<link rel="stylesheet" type="text/css" media="all" href="assets/css/php/rate-setting.php" />
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="rate_setting" class="rate-setting">
+		<h3 class="sub-title"><p><?php echo __("一方を選択して下さい"); ?></p></p></h3>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-6">
+					<button type="submit" data-type="select-outputpayment" name="on" class="btn active btn-lg"><?php echo __("支出管理"); ?></button>
+				</div>
+				<div class="col-md-6">
+					<button type="submit" data-type="select-balance" name="off" class="btn active btn-lg"><?php echo __("残高修正"); ?></button>
+				</div>
+			</div>
+		</div>
+		<h6 class="text-center"></h6>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_balance_situation" type="text/tmpl">
+<div class="balance-situation-block" data-type="balance-situations">
+	<div class="balance-situation-title"></div>
+	<div class="balance-situation-informations" data-type="balance-list">
+		<div class="balance-situation-informations-left" data-type="data-cash">
+			<div class="balance-situation-informations-left-top"><?php echo __("ホテル残高修正"); ?></div>
+			<div class="balance-situation-informations-left-container">
+				<div class="balance-situation-informations-left-container-add">
+					<div class="balance-situation-informations-first-cell"><?php echo __("修正時間"); ?></div>
+					<div class="balance-situation-informations-second-cell"><<staff>></div>
+					<div class="balance-situation-informations-third-cell"><input type="number" min="0" data-type="cash-balance" placeholder="<?php echo __("残高"); ?>"></div>
+				</div>
+				<div class="balance-situation-informations-left-container-list" data-type="data-row-top"></div>
+			</div>
+		</div>
+		<div class="balance-situation-informations-right" data-type="data-bank">
+			<div class="balance-situation-informations-right-top"><?php echo __("銀行残高修正"); ?></div>
+			<div class="balance-situation-informations-right-container">
+				<div class="balance-situation-informations-right-container-add">
+					<div class="balance-situation-informations-first-cell"><?php echo __("修正時間"); ?></div>
+					<div class="balance-situation-informations-second-cell"><<staff>></div>
+					<div class="balance-situation-informations-third-cell"><input type="number" min="0" data-type="bank-balance" placeholder="<?php echo __("残高"); ?>"></div>
+				</div>
+				<div class="balance-situation-informations-right-container-list" data-type="data-row-top"></div>
+			</div>
+		</div>
+	</div>
+	<div class="btn-bottom" style="overflow:auto;padding-right:5%;margin-top:10px;">
+		<button class="btn btn-primary btn-lg pull-right" data-type="balance-save"><?php echo __("保存する"); ?></button>
+	</div>
+	<h6 class="text-center">
+	1).<?php echo __("金額が変更されてない場合、保存はされません"); ?>&nbsp;2).<?php echo __("同日の金額修正は上書きされます"); ?>
+	</h6>
+</div>
+</script>
+
+<script id="tpl_remodal_balance_row" type="text/tmpl">
+<div class="balance-situation-informations-container-row" data-type="data-row">
+	<div class="balance-situation-informations-container-first-row"><<date>></div>
+	<div class="balance-situation-informations-container-second-row"><<staff>></div>
+	<div class="balance-situation-informations-container-third-row"><<price>>USD</div>
+</div>
+</script>
+
+<script id="tpl_agency_menu_row" type="text/tmpl">
+<tr data-id="<<agency_id>>" data-type="data-menu-row">
+	<td width="18%" class="text-center">
+	<div class="pd-left"><p style="border:none;"><input data-type="agency-name" placeholder="<?php echo __("企業名"); ?>" type="text"></p></div></td>
+	<td width="10%" class="text-center">
+	<div class="pd-left"><p style="border:none;"><input data-type="agency-vtno" placeholder="<?php echo __("VAT No"); ?>" type="text"></p></div></td>
+	<td width="17%" class="text-center">
+	<div class="pd-left"><p style="border:none;"><select style="width:100%;height:100%;" data-type="agency-salesource"></select></p></div></td>
+	<td width="10%" class="text-center">
+	<div class="pd-left"><p style="border:none;"><input data-type="agency-registerdate" placeholder="<?php echo __("登録日"); ?>" type="text" readonly/></p></div></td>
+	<td width="10%" class="text-center">
+	<div class="pd-left"><p style="white-space: nowrap;"><<staff>></p></div></td>
+	<td width="23%" class="text-center">
+	<div class="pd-left"><p style="border:none;"><input data-type="agency-address" placeholder="<?php echo __("所在地"); ?>" type="text"></p></div></td>
+	<td width="6%"><div><p style="border:none;text-align:center;"><button data-type="agency-detail"><?php echo __("詳細"); ?></button></p></div></td>
+	<td width="6%"><div>
+		<p style="border:none;text-align:center;"><input type="checkbox" onclick="return false;" data-type="agency-remove" checked=checked></p></div>
+	</td>
+</tr>
+</script>
+
+<script id="tpl_agency_table" type="text/tmpl">
+<div class="table-responsive style-scroll" style="width:96%;margin-left:auto;margin-right:auto;;margin-top:10px;" data-type="data-agency-top" data-agency-type-id="<<agency_type_id>>">
+	<div style="width:70%;border-bottom:1px #ccc double;font-size:1.4em;font-weight:bold;"><<agency_name>></div>
+	<table class="table"> 
+		<tbody data-type="data-tbody"></tbody>
+	</table>
+</div>
+</script>
+	
+<script id="tpl_agency_main" type="text/tmpl">
+<div class="model-body container-fluid" style="background-color: #fff">
+	<div id="body-show" class="tab-content menu" data-type="agency-list">
+		<div class="base-price" data-type="agency-main">
+			<h2><p><?php echo __("企業情報"); ?></p></h2>
+			<div class="fixed-free-style" data-type="data-table-top"></div>
+		</div>
+		<div class="btn-bottom">
+			<button style="margin-left:5px;" class="btn btn-primary btn-lg pull-right" data-type="new-items"><?php echo __("新規企業追加"); ?></button>
+			<button style="margin-left:5px;" class="btn btn-primary btn-lg pull-right" data-type="save-items"><?php echo __("保存する"); ?></button>
+		</div>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_diposit_registerd" type="text/tmpl">
+<div class="diposit-main-block" data-type="diposit-situations">
+	<div class="diposit-situation-title"><?php echo __("合計"); ?>&nbsp;<span data-type="main-total-cost"></span>$</div>
+	<div class="diposit-situation-informations" style="border:1px #ccc solid;" data-type="diposit-list"></div>
+	<div class="btn-bottom" style="overflow:auto;padding-right:5%;margin-top:10px;">
+	<p style="text-align:center;margin-top:10px;"><?php echo __("金額の入力は必須です、未入力の場合そのデータは登録されません"); ?></p>
+	<button class="btn btn-primary btn-lg pull-right" data-type="diposit-save"><?php echo __("保存する"); ?></button>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_diposit_child" type="text/tmpl">
+<div class="diposit_top" data-id="<<data_id>>" data-type="row-top">
+	<div class="box-first"><select data-type="diposit-reason"></select></div>
+	<div class="box-second"><input type="number" min="0" data-type="diposit-amount" placeholder="<?php echo __("金額"); ?>"></div>
+	<div class="box-third"><select data-type="diposit-cashtype"></select></div>
+	<div class="box-fourth"><<staff>></div>
+	<div class="box-fifth"><<time>></div>
+	<div class="box-sixth"><input type="text" placeholder="<?php echo __("備考"); ?>" data-type="diposit-remarks"></div>
+	<div class="box-seventh"><input type="checkbox" data-type="diposit-status" onclick="return false;" checked></div>
+</div>
+</script>
+
+<script id="tpl_remodal_diposit_add" type="text/tmpl">
+<div class="diposit_top" data-id="0" data-type="row-top">
+	<div class="box-first"><select data-type="diposit-reason"></select></div>
+	<div class="box-second"><input type="number" min="0" data-type="diposit-amount" placeholder="<?php echo __("金額"); ?>"></div>
+	<div class="box-third"><select data-type="diposit-cashtype"></select></div>
+	<div class="box-fourth"><?php echo $first_name; ?></div>
+	<div class="box-fifth"><?php echo localDatetime(date("YmdHis")); ?></div>
+	<div class="box-sixth"><input type="text" placeholder="<?php echo __("備考"); ?>" data-type="diposit-remarks"></div>
+	<div class="box-seventh"><button data-type="diposit-add"><?php echo __("追加"); ?></button></div>
+</div>
+</script>
+
+<script id="tpl_remodal_diposit_registerd_child" type="text/tmpl">
+<div class="extraorder_top" data-initial-type="<<type>>" data-initial-order-id="<<data_id>>" data-initial-category-id="<<category_id>>" data-group-id="<<group_id>>" data-type="row-top">
+	<div class="box-first"><select data-type="extraorder-maincategory"></select></div>
+	<div class="box-second"><select data-type="extraorder-category"></select></div>
+	<div class="box-third"><select data-type="extraorder-item"></select></div>
+	<div class="box-fourth"><select data-type="extraorder-cashtype"></select></div>
+	<div class="box-fifth"><input type="number" data-type="extraorder-count" min="0"></div>
+	<div class="box-sixth"><<staff>></div>
+	<div class="box-seventh"><input type="text" data-type="extraorder-remarks" placeholder="<?php echo __("備考"); ?>"></div>
+	<div class="box-eighth"><input type="checkbox" data-type="extraorder-status" onclick="return false;" checked></div>
+</div>
+</script>
+
+<script id="tpl_remodal_extraorder_situation" type="text/tmpl">
+<div class="extraorder-situation-block" data-type="extraorder-situations">
+	<div class="extraorder-situation-title"><?php echo __("合計"); ?>&nbsp;<span data-type="main-total-cost"></span>$</div>
+	<div class="extraorder-calendar"><input type="text" data-type="extraorder-date-calendar" placeholder="select date" readonly></div>
+	<div class="extraorder-situation-informations" style="border:1px #ccc solid;" data-type="extraorder-add-group"></div>
+	<div class="extraorder-situation-informations" style="border:1px #ccc solid;" data-type="extraorder-list"></div>
+	<div class="btn-bottom" style="overflow:auto;padding-right:5%;margin-top:10px;">
+	<p style="text-align:center;margin-top:10px;"><?php echo __("金額の入力は必須です、未入力の場合そのデータは登録されません"); ?></p>
+	<button class="btn btn-primary btn-lg pull-right" data-type="extraorder-save"><?php echo __("保存する"); ?></button>
+	</div>
+</div>
+</script>
+
+<script id="tpl_remodal_extraorder_group" type="text/tmpl">
+<div class="extraorder_group" data-type="extraorder-group" data-group-id="<<group_id>>">
+	<div style="margin-right:20px;margin-bottom:10px;"><button data-type="issue-invoice" class="btn btn-primary btn-lg pull-right"><?php echo __("領収書発行"); ?></button></div>
+	<div class="extraorder_group_title" data-type="group-title"><<title>>&nbsp;<span style="font-size:0.7em;">(<<enter_date>>)</span>&nbsp;<span data-type="total-cost"></span></div>
+	<div data-type="extraorder-group-top"></div>
+</div>
+</script>
+
+<script id="tpl_remodal_extraorder_add_group" type="text/tmpl">
+<div class="extraorder_group" data-type="extraorder-group" data-group-id="0">
+	<div class="extraorder_group_title" data-type="group-title"><<title>>&nbsp;<span style="font-size:0.7em;">(<<enter_date>>)</span>&nbsp;<span data-type="total-cost"></span></div>
+	<div data-type="extraorder-group-top"></div>
+</div>
+</script>
+
+<script id="tpl_remodal_extraorder_situation_child_add" type="text/tmpl">
+<div class="extraorder_top" data-initial-order-id="0" data-group-id="<<group_id>>" data-type="row-top">
+	<div class="box-first"><select data-type="extraorder-maincategory"></select></div>
+	<div class="box-second"><select data-type="extraorder-category"></select></div>
+	<div class="box-third"><select data-type="extraorder-item"></select></div>
+	<div class="box-fourth"><select data-type="extraorder-cashtype"></select></div>
+	<div class="box-fifth"><input type="number" data-type="extraorder-count" placeholder="<?php echo __("注文数"); ?>" min="0"></div>
+	<div class="box-sixth"><<staff>></div>
+	<div class="box-seventh"><input type="text" data-type="extraorder-remarks" placeholder="<?php echo __("備考"); ?>"></div>
+	<div class="box-eighth"><button data-type="extraorder-add"><?php echo __("追加"); ?></button></div>
+</div>
+</script>
+
+<script id="tpl_remodal_extraorder_situation_child" type="text/tmpl">
+<div class="extraorder_top" data-initial-type="<<type>>" data-initial-order-id="<<data_id>>" data-initial-category-id="<<category_id>>" data-group-id="<<group_id>>" data-type="row-top">
+	<div class="box-first"><select data-type="extraorder-maincategory"></select></div>
+	<div class="box-second"><select data-type="extraorder-category"></select></div>
+	<div class="box-third"><select data-type="extraorder-item"></select></div>
+	<div class="box-fourth"><select data-type="extraorder-cashtype"></select></div>
+	<div class="box-fifth"><input type="number" data-type="extraorder-count" min="0"></div>
+	<div class="box-sixth"><<staff>></div>
+	<div class="box-seventh"><input type="text" data-type="extraorder-remarks" placeholder="<?php echo __("備考"); ?>"></div>
+	<div class="box-eighth"><input type="checkbox" data-type="extraorder-status" onclick="return false;" checked></div>
+</div>
+</script>
+

@@ -1,0 +1,1345 @@
+msgid "操作する"
+msgstr "Operate"
+
+msgid "操作出来ません"
+msgstr "Can't Operate yet"
+
+msgid "操作を完了する"
+msgstr "操作を完了する"
+
+msgid "最終更新時間"
+msgstr "Last updated time"
+
+msgid "最終更新者"
+msgstr "Last updater"
+
+msgid "部屋番号で検索"
+msgstr "Search by room number"
+
+msgid "部屋タイプで検索"
+msgstr "Search by room type"
+
+msgid "部屋番号"
+msgstr "Room number"
+
+msgid "フロア"
+msgstr "Floor"
+
+msgid "部屋タイプ"
+msgstr "Room type"
+
+msgid "金額"
+msgstr "Price"
+
+msgid "部屋の状況"
+msgstr "Room status"
+
+msgid "日程の備考"
+msgstr "Schedule remark"
+
+msgid "予約情報の備考"
+msgstr "Booking information remark"
+
+msgid "宿泊者の備考"
+msgstr "Customer remark"
+
+msgid "現在の金額を集計する"
+msgstr "Calculate current price"
+
+msgid "現在の金額の集計"
+msgstr "Calculate current price"
+
+msgid "請求書発行"
+msgstr "Issue invoice"
+
+msgid "前の週"
+msgstr "week"
+
+msgid "次の週"
+msgstr "week"
+
+msgid "前の日"
+msgstr "day"
+
+msgid "次の月"
+msgstr "month"
+
+msgid "前の月"
+msgstr "month"
+
+msgid "次の日"
+msgstr "day"
+
+msgid "戻る"
+msgstr "Back"
+
+msgid "進む"
+msgstr "Farward"
+
+msgid "終了済み"
+msgstr "Finished"
+
+msgid "残り<<count>>室"
+msgstr "<<count>> available"
+
+msgid "残り<<def_max_count>>室"
+msgstr "<<def_max_count>> aivailable rooms"
+
+msgid "空室状況"
+msgstr "Available room status"
+
+msgid "編集する権限がありません"
+msgstr "You do not have right to edit"
+
+msgid "本日より過去の日付は選択出来ません"
+msgstr "You cannot select the day in the past"
+
+msgid "別の日を選択して下さい"
+msgstr "Please select the different day"
+
+msgid "同じ予約情報を同日に設定出来ません"
+msgstr "You cannot input the same information on the same day"
+
+msgid "同じ部屋情報を同日に設定出来ません"
+msgstr "You cannnot input the same room information on the same day"
+
+msgid "こちらの予約情報を削除します"
+msgstr "This booking information will be deleted"
+
+msgid "「操作する」ボタンを押すと削除されます"
+msgstr "Deleted after pressing 'Operate' button"
+
+msgid "こちらの予約情報の日程を全て削除します"
+msgstr "Delete all this booking information"
+
+msgid "予約情報が同日に重複しております"
+msgstr "Booking information on the same day is duplicated"
+
+msgid "予約情報が更新されています"
+msgstr "Booking information is updated"
+
+msgid "他のページへ遷移致しますか？"
+msgstr "Do you want to move to other page?"
+
+msgid "通信状況が安定しておりません"
+msgstr "Network status is not stable"
+
+msgid "接続環境をお確かめ下さい"
+msgstr "Please check connection environment"
+
+msgid "予約情報情報登録"
+msgstr "Register booking information"
+
+msgid "予約情報の登録、及び編集が完了しました"
+msgstr "Finished to register booking information and edit"
+
+msgid "確認する"
+msgstr "Confirm"
+
+msgid "操作を完了する"
+msgstr "Finish operation"
+
+msgid "全て表示"
+msgstr "Display all"
+
+msgid "予約情報編集"
+msgstr "Edit booking information"
+
+msgid "宿泊者名"
+msgstr "Customer name"
+
+msgid "電話番号"
+msgstr "Tell Number"
+
+msgid "電話番号で履歴を検索"
+msgstr "Searching history by telephone number"
+
+msgid "宿泊日程"
+msgstr "Schedule"
+
+msgid "宿泊日を追加する"
+msgstr "Add staying day"
+
+msgid "配色設定"
+msgstr "Setting color"
+
+msgid "エラー"
+msgstr "Error"
+
+msgid "登録処理に失敗しました"
+msgstr "Registration cannot be proceeded"
+
+msgid "操作した履歴は保存されません"
+msgstr "History of operation is not saved"
+
+msgid "設定された日付は適切ではありません"
+msgstr "Specified date is not found"
+
+msgid "宿泊開始日が設定されていません"
+msgstr "Start staying date is not specified"
+
+msgid "削除する事は出来ません"
+msgstr "Cannot delete"
+
+msgid "以前の日付を設定して下さい"
+msgstr "Please specify date after"
+
+msgid "以降の日付を設定して下さい"
+msgstr "Please specifiy date before"
+
+msgid "備考"
+msgstr "Remark"
+
+msgid "正常に処理が終了しませんでした"
+msgstr "Operation cannot be done rightly"
+
+msgid "連絡先の登録が正常に終了しませんでした"
+msgstr "Contact registration cannot be done rightly"
+
+msgid "宿泊者情報の取得が正常に行えませんでした"
+msgstr "Cannot receive staying customer information rightly"
+
+msgid "宿泊者情報の登録が正常に終了しませんでした"
+msgstr "Cannot register staying customer information rightly"
+
+msgid "配色設定に必要な情報に異常が有ります"
+msgstr "Specified color is not matched with necessary information"
+
+msgid "部屋の登録に必要な情報に異常が有ります"
+msgstr "Registered room is not matched with necessary information"
+
+msgid "宿泊日の情報が不正です"
+msgstr "Information of staying date is not legal"
+
+msgid "設定した宿泊情報が内容が正常に登録されました"
+msgstr "Staying information you set up is registered already"
+
+msgid "設定した宿泊者情報が内容が正常に登録されました"
+msgstr "Guest information you set up is registered already"
+
+msgid "宿泊予約完了"
+msgstr "Booking is completed"
+
+msgid "未設定"
+msgstr "Undefined"
+
+msgid "dateに同じ部屋が登録されています"
+msgstr "The room number date is not available"
+
+msgid "お知らせ"
+msgstr "Notification"
+
+msgid "部屋の登録情報が見つかりません"
+msgstr "Room registered information is not found"
+
+msgid "本日以前の日付は設定出来ません"
+msgstr "The day before today cannot be selected"
+
+msgid "月曜日"
+msgstr "Monday"
+
+msgid "月"
+msgstr "Mon"
+
+msgid "火曜日"
+msgstr "Tuesday"
+
+msgid "火"
+msgstr "Tue"
+
+msgid "水曜日"
+msgstr "Wednesday"
+
+msgid "水"
+msgstr "Wed"
+
+msgid "木曜日"
+msgstr "Thursday"
+
+msgid "木"
+msgstr "Thu"
+
+msgid "金曜日"
+msgstr "Friday"
+
+msgid "金"
+msgstr "Fri"
+
+msgid "土曜日"
+msgstr "Saturday"
+
+msgid "土"
+msgstr "Sat"
+
+msgid "日曜日"
+msgstr "Sunday"
+
+msgid "日"
+msgstr "Sun"
+
+msgid "yy-mm-dd"
+msgstr "mm/dd/yy"
+
+msgid "閉じる"
+msgstr "Close"
+
+msgid "1月"
+msgstr "Jan"
+
+msgid "2月"
+msgstr "Feb"
+
+msgid "3月"
+msgstr "Mar"
+
+msgid "4月"
+msgstr "Apr"
+
+msgid "5月"
+msgstr "May"
+
+msgid "6月"
+msgstr "Jun"
+
+msgid "7月"
+msgstr "Jul"
+
+msgid "8月"
+msgstr "Aug"
+
+msgid "9月"
+msgstr "Sep"
+
+msgid "10月"
+msgstr "Oct"
+
+msgid "11月"
+msgstr "Nov"
+
+msgid "12月"
+msgstr "Dec"
+
+msgid "nameとしてログイン中"
+msgstr "Be logged in as name"
+
+msgid "この予約情報のみを表示"
+msgstr "Only show booking information"
+
+msgid "変更された情報を一度保存しますが宜しいですか？"
+msgstr "Do you want to save information you changed？"
+
+msgid "編集可能な状態では有りません"
+msgstr "Cannot edit"
+
+msgid "「操作する」を押して下さい"
+msgstr "Please press Operate"
+
+msgid "日付"
+msgstr "Date"
+
+msgid "総計(日)"
+msgstr "Statistic (date)"
+
+msgid "詳細"
+msgstr "Detail"
+
+msgid "<<y>>/<<m>>/<<d>>"
+msgstr "<<d>>/<<m>>/<<y>>"
+
+msgid "<<y>>/<<m>>"
+msgstr "<<m>>/<<y>>"
+
+msgid "__<<y>>/<<m>>/<<d>>"
+msgstr "__<<m>>/<<d>>/<<y>>"
+
+msgid "部屋別特別金額"
+msgstr "Special charge by room"
+
+msgid "部屋タイプ別特別金額"
+msgstr "Special charge by room type"
+
+msgid "金額特別設定"
+msgstr "Room Charge"
+
+msgid "優先金額"
+msgstr "Priority charge"
+
+msgid "こちらの予約情報は強制的にこの金額が適用されます"
+msgstr "This booking information is forced to be charged"
+
+msgid "一覧表示"
+msgstr "List"
+
+msgid "金額設定"
+msgstr "Setting"
+
+msgid "有効期間"
+msgstr "Validation"
+
+msgid "開始日"
+msgstr "Starting date"
+
+msgid "終了日"
+msgstr "Completing date"
+
+msgid "設定値"
+msgstr "Set up value"
+
+msgid "設定者"
+msgstr "Staff"
+
+msgid "操作"
+msgstr "Operation"
+
+msgid "編集する"
+msgstr "Edit"
+
+msgid "削除する"
+msgstr "Delete"
+
+msgid "確認する"
+msgstr "Confirm"
+
+msgid "登録する"
+msgstr "Registered"
+
+msgid "期間毎に部屋番号、及び部屋タイプで金額の変動を行えます"
+msgstr "Charge amount will be changed by room number, room type every duration"
+
+msgid "一方を選択して下さい"
+msgstr "Please select one step"
+
+msgid "日程のデータが不正です"
+msgstr "Date is not valid"
+
+msgid "設定数値が不正です"
+msgstr "Set up value is not correct"
+
+msgid "設定した金額情報が内容が正常に登録されました"
+msgstr "Charge information you have set up is registered normally"
+
+msgid "設定した期間に既に同じ部屋で金額設定がされています"
+msgstr "Charge setting is duplicated with the same room within your setting duration"
+
+msgid "設定した期間に既に同じ部屋タイプで金額設定がされています"
+msgstr "Charge setting is duplicated with the same room type within your setting duration"
+
+msgid "削除が完了しました"
+msgstr "Deletion is completed"
+
+msgid "金額が変動している可能性が御座います(画面を更新すると適用されます)"
+msgstr "Charge can be changed (Apply when you update screen)"
+
+msgid "電話番号を入力して下さい"
+msgstr "Please input telephone number"
+
+msgid "権限"
+msgstr "Authority"
+
+msgid "従業員アカウント"
+msgstr "Staff Account"
+
+msgid "従業員"
+msgstr "Staff Setting"
+
+msgid "従業員設定"
+msgstr "Setting"
+
+msgid "従業員管理"
+msgstr "For Staff"
+
+msgid "情報の取得が行えませんでした"
+msgstr "Information cannot be received"
+
+msgid "管理者"
+msgstr "Management"
+
+msgid "一般"
+msgstr "Staff"
+
+msgid "日本語"
+msgstr "Japanese"
+
+msgid "英語"
+msgstr "English"
+
+msgid "この宿泊者の履歴を表示する"
+msgstr "Display history of customer"
+
+msgid "全体設定"
+msgstr "General"
+
+msgid "各種設定"
+msgstr "Various"
+
+msgid "各種言語"
+msgstr "Languages"
+
+msgid "言語"
+msgstr "Lang"
+
+msgid "税率"
+msgstr "Tax"
+
+msgid "言語情報が不正です"
+msgstr "Language information is not correct"
+
+msgid "設定が登録されました、画面を更新すると反映されます"
+msgstr "Setting is registered and be shown when you refresh screen"
+
+msgid "宿泊履歴"
+msgstr "Staying history"
+
+msgid "最終宿泊日"
+msgstr "Last staying date"
+
+msgid "選択する"
+msgstr "Select"
+
+msgid "候補"
+msgstr "Candidate"
+
+msgid "以下の候補が見つかりました"
+msgstr "Candidate could be found"
+
+msgid "候補が見つかりませんでした"
+msgstr "Candidate could not be found"
+
+msgid "宿泊情報登録"
+msgstr "registed for Staying information"
+
+msgid "月別"
+msgstr "Monthly"
+
+msgid "週別"
+msgstr "Weekly"
+
+msgid "日別"
+msgstr "Daily"
+
+msgid "K9予約システム"
+msgstr "K9 Reservation System"
+
+msgid "更新しても宜しいですか？"
+msgstr "更新しても宜しいですか？"
+
+msgid "ログアウト"
+msgstr "Logout"
+
+msgid "削除して宜しいですか？"
+msgstr "Are you sure that want to remove this information?"
+
+msgid "登録する"
+msgstr "Subscribe"
+
+msgid "部屋使用停止"
+msgstr "Non available room."
+
+msgid "パスワード"
+msgstr "Password"
+
+msgid "異なる部屋番号の位置には設定出来ません"
+msgstr "dosen't allow to put a field of other room line."
+
+msgid "パスワード確認"
+msgstr "Password Confirm"
+
+msgid "名前"
+msgstr "Name"
+
+msgid "数値とアルファベットのみ入力可能です"
+msgstr "Format input is only number or alpha"
+
+msgid "パスワードが一致しません"
+msgstr "Re-pass is coincident with pass"
+
+msgid "パスワードの設定が不正です"
+msgstr "パスワードの設定が不正です"
+
+msgid "設定出来ません"
+msgstr "You don't have a right."
+
+msgid "変更しない場合は未入力"
+msgstr "Do not input if you do not want to update"
+
+msgid "#data#が未入力です"
+msgstr "#data# is not input"
+
+msgid "英数字のみ"
+msgstr "Only English character"
+
+msgid "#data#文字以上"
+msgstr "Over #data# character(s)"
+
+msgid "#data#は#num#文字以上で入力して下さい"
+msgstr "Please input #data# over #num# characters"
+
+msgid "#data#は英数字のみで入力して下さい"
+msgstr "Please input #data# only by English character"
+
+msgid "現在状況"
+msgstr "Current status"
+
+msgid "部屋清掃状況"
+msgstr "Room cleaning status"
+
+msgid "部屋状況の変更が完了しました"
+msgstr "Change room status is completed"
+
+msgid "部屋状況管理"
+msgstr "Room Status"
+
+msgid "チェックイン"
+msgstr "Check In"
+
+msgid "チェックアウト"
+msgstr "Check Out"
+
+msgid "各種、チェックアウト後の操作を行えます"
+msgstr "Each functions for after checking out."
+
+msgid "チェックアウト後"
+msgstr "After Checking Out"
+
+msgid "チェックアウト済み"
+msgstr "Finished of Check Out"
+
+msgid "チェックインしても宜しいですか？"
+msgstr "Do you want to check in?"
+
+msgid "チェックアウトしても宜しいですか？"
+msgstr "Do you want to check out?"
+
+msgid "チェックイン後、こちらの操作は取り消せません"
+msgstr "you can't back to previous progress after checkin."
+
+msgid "する"
+msgstr "Yes"
+
+msgid "しない"
+msgstr "No"
+
+msgid "既にチェックイン済みです"
+msgstr "You checked in already"
+
+msgid "チェックインが完了しました"
+msgstr "Check in is finished"
+
+msgid "チェックアウトが完了しました"
+msgstr "Check out is finished"
+
+msgid "当日までの費用が請求書に記載されます"
+msgstr "Fee until today is writen on invoice"
+
+msgid "チェックインされていません"
+msgstr "You are not checked in"
+
+msgid "既にチェックアウト済みです"
+msgstr "You checked out already"
+
+msgid "#1#"
+msgstr "Jan"
+
+msgid "#2#"
+msgstr "Feb"
+
+msgid "#3#"
+msgstr "Mar"
+
+msgid "#4#"
+msgstr "Apr"
+
+msgid "#5#"
+msgstr "May"
+
+msgid "#6#"
+msgstr "Jun"
+
+msgid "#7#"
+msgstr "Jul"
+
+msgid "#8#"
+msgstr "Aug"
+
+msgid "#9#"
+msgstr "Sep"
+
+msgid "#10#"
+msgstr "Oct"
+
+msgid "#11#"
+msgstr "Nov"
+
+msgid "#12#"
+msgstr "Dec"
+
+msgid "宿泊者名未設定"
+msgstr "Undefined Guest."
+
+msgid "まだこちらの宿泊は開始していません"
+msgstr "This staying is not began"
+
+msgid "新規宿泊"
+msgstr "New staying"
+
+msgid "宿泊編集"
+msgstr "Edit staying"
+
+msgid "宿泊削除"
+msgstr "Delete staying"
+
+msgid "全宿泊削除"
+msgstr "Delete all staying"
+
+msgid "予約タイプ"
+msgstr "Reservation Type"
+
+msgid "walk-in"
+msgstr "Walk-In"
+
+msgid "calling"
+msgstr "Calling"
+
+msgid "email"
+msgstr "Email"
+
+msgid "メールアドレスの形式が違います"
+msgstr "wrong email format."
+
+msgid "空室が有りません"
+msgstr "no available room."
+
+msgid "数字のみで入力して下さい"
+msgstr "only valid number."
+
+msgid "は空室です"
+msgstr "is available."
+
+msgid "宿泊者検索"
+msgstr "search for guest."
+
+msgid "候補が多過ぎます"
+msgstr "too many candidate."
+
+msgid "飲食料金"
+msgstr "price for food and drink."
+
+msgid "変更されたメニューは存在しません"
+msgstr "nothing changed any menus."
+
+msgid "変更された項目は存在しません"
+msgstr "nothing changed any items."
+
+msgid "設定した内容が正常に登録されました"
+msgstr "Information you set up is registered already."
+
+msgid "フードメニュー"
+msgstr "Food Menus."
+
+msgid "ドリンクメニュー"
+msgstr "Drink Menus."
+
+msgid "フード"
+msgstr "Food."
+
+msgid "ドリンク"
+msgstr "Drink."
+
+msgid "週末価格"
+msgstr "Weekends Price."
+
+msgid "特別価格"
+msgstr "Weekdays Price."
+
+msgid "各注文数の入力を行います"
+msgstr "Culculating of count of order for each categories."
+
+msgid "注文関連"
+msgstr "Related of any order"
+
+msgid "件数"
+msgstr "Count"
+
+msgid "当日以降の日付は指定出来ません"
+msgstr "You can't select any days before today."
+
+msgid "部屋別"
+msgstr "Room"
+
+msgid "部屋タイプ別"
+msgstr "Room Type"
+
+msgid "各種、金額の変更を行えます"
+msgstr "you can set base price on each items."
+
+msgid "１つ選択して下さい"
+msgstr "Select one"
+
+msgid "標準金額設定"
+msgstr "Base prices"
+
+msgid "洗濯"
+msgstr "Laundry"
+
+msgid "送迎"
+msgstr "Limousine"
+
+msgid "変更された情報は保存されませんが宜しいですか?"
+msgstr "No problem if you press yes's button your setting data is not registerd."
+
+msgid "種別"
+msgstr "Type"
+
+msgid "休憩"
+msgstr "Rest"
+
+msgid "宿泊"
+msgstr "Stay"
+
+msgid "宿泊タイプ"
+msgstr "Reserve Type"
+
+msgid "空室は清掃されていません"
+msgstr "There isn't clean room."
+
+msgid "支払い"
+msgstr "Payment"
+
+msgid "タバコ"
+msgstr "Tobacco"
+
+msgid "各種項目、及び金額の設定を行えます"
+msgstr "you can set both of price and item setting."
+
+msgid "各種項目設定"
+msgstr "Setting for each items."
+
+msgid "項目が削除される様設定されています、宜しいですか？"
+msgstr "because of checkbox is off any items,these one's will be removed, is it okay?"
+
+msgid "※再度表示する場合は開発元に問い合わせ下さい"
+msgstr "※if you want to show it again you can contact to administrator."
+
+msgid "クレジット設定状況"
+msgstr "progress of current credit details."
+
+msgid "クレジット設定"
+msgstr "Credit Setting"
+
+msgid "支払いに関して"
+msgstr "About payment."
+
+msgid "支払い方法と、支払い状況の登録"
+msgstr "About how to payment and progress of register."
+
+msgid "支払い方法をお選び下さい"
+msgstr "Select how to payment."
+
+msgid "支払い方法"
+msgstr "how to payment."
+
+msgid "決済種別"
+msgstr "Card Types"
+
+msgid "支出状況"
+msgstr "progress of expenses."
+
+msgid "支出金額"
+msgstr "Expenses."
+
+msgid "支出設定"
+msgstr "Setting for expenses."
+
+msgid "ルームサービス"
+msgstr "Room Service"
+
+msgid "タバコ"
+msgstr "Tobacco"
+
+msgid "金額の入力は必須です、未入力の場合そのデータは登録されません"
+msgstr "input price for each are required,and if input box for price value is empty that this data will not be registerd."
+
+msgid "レポート"
+msgstr "Report"
+
+msgid "指定日"
+msgstr "Daily"
+
+msgid "指定月"
+msgstr "Monthly"
+
+msgid "チーフ"
+msgstr "Chief"
+
+msgid "取得する人を指定して下さい"
+msgstr "Please select one day you need."
+
+msgid "売上状況、及び他各情報をエクセルの形式で取得します"
+msgstr "You can get a sales situation and other ones with excel format."
+
+msgid "勤怠管理"
+msgstr "Attendance"
+
+msgid "アカウント"
+msgstr "Account"
+
+msgid "記録無"
+msgstr "No records."
+
+msgid "休日の場合は、チェックを外して下さい"
+msgstr "Check off if one is day off."
+
+msgid "削除する場合はチェックを外して下さい"
+msgstr "Check off if you remove."
+
+msgid "デポジット管理"
+msgstr "Deposit"
+
+msgid "デポジット"
+msgstr "Deposit"
+
+msgid "金額が設定されてない項目は保存されません"
+msgstr "if no value is set,can't be registerd."
+
+msgid "チェック後"
+msgstr "Afetr checking"
+
+msgid "他の項目を選択する"
+msgstr "select others"
+
+msgid "支払済"
+msgstr "done"
+
+msgid "未支払"
+msgstr "yet"
+
+msgid "未支払"
+msgstr "yet"
+
+msgid "未払で検索"
+msgstr "Search for unpaid"
+
+msgid "決済手数料"
+msgstr "Commission"
+
+msgid "支出管理"
+msgstr "Output"
+
+msgid "残高修正"
+msgstr "Fix balance"
+
+msgid "各種残高修正"
+msgstr "Each balance fix"
+
+msgid "財務管理"
+msgstr "Account"
+
+msgid "修正時間"
+msgstr "Edit time"
+
+msgid "ホテル残高修正"
+msgstr "Edit balance in Hotel"
+
+msgid "銀行残高修正"
+msgstr "Edit balance in Bank"
+
+msgid "金額が変更されてない場合、保存はされません"
+msgstr "if balance is not changed, new one is not registerd."
+
+msgid "同日の金額修正は上書きされます"
+msgstr "if previous balance is registed in the day,this data is overridden."
+
+msgid "同時刻で設定されている場合取り消し扱いとなります"
+msgstr "if same time is set both of enter and leave,this recode is not effected."
+
+msgid "対象日選択"
+msgstr "Target Date"
+
+msgid "通信状況により時間が掛かる恐れがあります"
+msgstr "because of network condition downloading might be late."
+
+msgid "月毎の取得を行うと時間が掛かります、実行後はしばらくお待ち下さい"
+msgstr "please wait if monthly downloading is working."
+
+msgid "宿泊代金"
+msgstr "Hotel Fee"
+
+msgid "各種他(CASH)"
+msgstr "Others(CASH)"
+
+msgid "各種他(CARD)"
+msgstr "Others(CARD)"
+
+msgid "総計"
+msgstr "Total"
+
+msgid "請求額(CASH)"
+msgstr "Billing amount(CASH)"
+
+msgid "総計(tax&nbsp;<<tax>>%)"
+msgstr "Grand Total(tax&nbsp;<<tax>>%)"
+
+msgid "請求額(CASH:tax&nbsp;<<tax>>%)"
+msgstr "Billing amount(CASH:tax&nbsp;<<tax>>%)"
+
+msgid "金額詳細"
+msgstr "Price Detail"
+
+msgid "金額詳細"
+msgstr "Price Detail"
+
+msgid "日本語タイトル"
+msgstr "Japanese Title"
+
+msgid "英語タイトル"
+msgstr "English Title"
+
+msgid "言語の切り替えにより、シートの翻訳が変更されます"
+msgstr "you can translate to other language by all settings."
+
+msgid "price"
+msgstr "金額"
+
+msgid "アイテム番号"
+msgstr "Item Num"
+
+msgid "項目名"
+msgstr "Item Name"
+
+msgid "商品名"
+msgstr "Product Name"
+
+msgid "店名"
+msgstr "Store Name"
+
+msgid "指定日"
+msgstr "Target Day"
+
+msgid "休憩時間"
+msgstr "Break Time"
+
+msgid "残高"
+msgstr "Current Balance"
+
+msgid "姓"
+msgstr "First Name"
+
+msgid "名前"
+msgstr "Given Name"
+
+msgid "ミドルネーム"
+msgstr "Middle Name"
+
+msgid "ユーザ名"
+msgstr "User Name"
+
+msgid "敬称"
+msgstr "Title"
+
+msgid "過去のゲストを検索する場合はこちらを押して下さい"
+msgstr "Please click on this button to search for returning guest"
+
+msgid "予約番号"
+msgstr "Booking ID"
+
+msgid "パスポート番号"
+msgstr "Passport No"
+
+msgid "クラス"
+msgstr "Classification"
+
+msgid "言語"
+msgstr "Language"
+
+msgid "個人情報"
+msgstr "Person Infomation"
+
+msgid "連絡先"
+msgstr "Contact Infomation"
+
+msgid "所在地詳細"
+msgstr "Address"
+
+msgid "都市"
+msgstr "City"
+
+msgid "州"
+msgstr "State"
+
+msgid "郵便番号"
+msgstr "Zip Code"
+
+msgid "国"
+msgstr "Country"
+
+msgid "国籍"
+msgstr "Nationality"
+
+msgid "電話番号"
+msgstr "Telephone"
+
+msgid "メールアドレス"
+msgstr "Email"
+
+msgid "宿泊情報"
+msgstr "Adminstration Infomation"
+
+msgid "宿泊予約元"
+msgstr "Sale Source"
+
+msgid "宿泊開始日"
+msgstr "Arrival"
+
+msgid "宿泊日数"
+msgstr "Nights"
+
+msgid "空室確認"
+msgstr "Room Available?"
+
+msgid "出発日"
+msgstr "Departure"
+
+msgid "予約タイプ"
+msgstr "Reservation Type"
+
+msgid "支払方法"
+msgstr "Payment"
+
+msgid "支払状況"
+msgstr "Purchase"
+
+msgid "部屋情報及び金額"
+msgstr "Rate Infomation"
+
+msgid "大人"
+msgstr "Adults"
+
+msgid "子供"
+msgstr "Children"
+
+msgid "金額設定(上書き)"
+msgstr "Overwrite Rate"
+
+msgid "平日価格"
+msgstr "Weekdays"
+
+msgid "週末価格"
+msgstr "Weekends"
+
+msgid "各種備考"
+msgstr "General Note"
+
+msgid "宿泊者向け"
+msgstr "Guest Note"
+
+msgid "予約情報向け"
+msgstr "Reservation Note"
+
+msgid "予約情報確認"
+msgstr "Confirmation Infomation"
+
+msgid "部屋情報(s)"
+msgstr "Revered Room(s)"
+
+msgid "他の項目を確認"
+msgstr "Other Items"
+
+msgid "保存する"
+msgstr "Save"
+
+msgid "閉じる"
+msgstr "Close"
+
+msgid "元の状態へ戻す"
+msgstr "Reset"
+
+msgid "宿泊者ID"
+msgstr "Guest ID"
+
+msgid "宿泊者候補"
+msgstr "Guest List"
+
+msgid "宿泊者検索"
+msgstr "Search Guest"
+
+msgid "宿泊者名と所在地"
+msgstr "Guest name and Address"
+
+msgid "個人情報"
+msgstr "Personal Information"
+
+msgid "宿泊履歴(過去2回)"
+msgstr "Stay Histories Of Last 2"
+
+msgid "追加"
+msgstr "add"
+
+msgid "役職"
+msgstr "Job Title"
+
+msgid "ハウスキーパー"
+msgstr "House Keeper"
+
+msgid "調理人"
+msgstr "Cooking"
+
+msgid "マネージャー"
+msgstr "Manager"
+
+msgid "フロント"
+msgstr "Front Desk"
+
+msgid "サービス"
+msgstr "Service"
+
+msgid "管理者"
+msgstr "Master"
+
+msgid "チーフ"
+msgstr "Chief"
+
+msgid "スタッフ"
+msgstr "Normal"
+
+msgid "法人管理"
+msgstr "Agent"
+
+msgid "法人追加"
+msgstr "Add"
+
+msgid "法人一覧"
+msgstr "List"
+
+msgid "各種項目、及び法人の管理が行えます"
+msgstr "you can do those of to add and listing."
+
+msgid "企業情報追加"
+msgstr "Addition Agent Information."
+
+msgid "企業情報"
+msgstr "Agent Information."
+
+msgid "一覧へ遷移"
+msgstr "Move to List Page"
+
+msgid "企業名"
+msgstr "Company Name"
+
+msgid "連絡先"
+msgstr "Phone"
+
+msgid "企業タイプ"
+msgstr "Type"
+
+msgid "所在地"
+msgstr "Address"
+
+msgid "【##USER##】が編集中です"
+msgstr "【##USER##】is editing now."
+
+msgid "【##USER##】によりスケジュールの内容は既に更新されております。※画面をリロード致します"
+msgstr "Any information was managed by 【##USER##】※ do reloading"
+
+msgid "入力必須"
+msgstr "Required"
+
+msgid "新規企業追加"
+msgstr "Add New Agency"
+
+msgid "請求書 企業名"
+msgstr "Invoice CompanyName"
+
+msgid "請求書VAT Number"
+msgstr "Invoice VAT Number"
+
+msgid "請求書 所在地"
+msgstr "Invoice Address"
+
+msgid "請求書 連絡先"
+msgstr "Invoice Phone"
+
+msgid "編集権限が他の方に移っています"
+msgstr "You don't have right to edit already."
+
+msgid "作業制限時刻が過ぎております"
+msgstr "alreay out of time."
+
+msgid "外部注文"
+msgstr "Extra"
+
+msgid "注文数"
+msgstr "Count"
+
+msgid "新規注文追加"
+msgstr "New Order"
+
+msgid "注文ID"
+msgstr "Order ID"
+
+msgid "合計"
+msgstr "Total"
+
+msgid "各種宿泊外での注文を管理します"
+msgstr "各種宿泊外での注文を管理します"
+
+msgid "削除予定の部屋タイプは使用中、もしくは今後使われる予定です"
+msgstr "Intented Room Type is used now or in the future."
+
+msgid "削除予定の項目は使用中、もしくは今後使われる予定です"
+msgstr "Intented Item is used now or in the future."
+
+msgid "編集権限を既に失っております(リロード致します)"
+msgstr "you don't have a right to edit already. ※need to reload."
+
+msgid "領収書発行"
+msgstr "Issue Invoice"
+
+msgid "Ｋ９ Ｒｉｖｅｒｓｉｄｅ Ｈｏｔｅｌ 　業　務　日　報"
+msgstr "Ｋ９ Ｒｉｖｅｒｓｉｄｅ Ｈｏｔｅｌ 　Ｄａｉｌｙ	Ｒｅｐｏｒｔ"
+
+msgid "商品番号"
+msgstr "Item Num"
+
+msgid "空白の場合自動的に番号が振られます"
+msgstr "Booking number is set automatically if empty here."
+
+msgid "使用可能(清掃後)な部屋が存在しません、使用可能な部屋が存在するか確認して下さい"
+msgstr "No available rooms because of no clean rooms,so please check current situation of target rooms especially clean room is available."
+
+msgid "宿泊IDで検索"
+msgstr "Search With Booking Number"
+
+msgid "Booking Numberを入力して下さい"
+msgstr "Input booking number here."
+
+msgid "問い合わせに対する予約は存在しません"
+msgstr "any reservation dosen't exists based on the booking number."
+
+msgid "必要項目を指定して下さい"
+msgstr "Please fill these informations with your requirments."
+
+msgid "予定期間"
+msgstr "Intented period."
+
+msgid "理由"
+msgstr "Reason"
+
+msgid "使用停止設定"
+msgstr "Setting for an unavailable room."
+
+msgid "指定期間には既に設定済みです"
+msgstr "already exists other reason on the target period."
+
+msgid "指定した期間には宿泊予約が設定されています"
+msgstr "reservation is already set on the period."
+
+msgid "使用可能な部屋が有りません"
+msgstr "no available room with any reason."
+
+msgid "清掃済みの部屋が有りません"
+msgstr "no available clean room."
+
+msgid "デポジット受領書"
+msgstr "Issue Diposit"
+
+
