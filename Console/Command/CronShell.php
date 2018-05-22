@@ -26,6 +26,7 @@
 
 App::uses('AppController','Controller');
 App::uses('K9DailyReportController','Controller');
+App::uses('K9S3DBBackupController','Controller');
 
 class Exampe extends Shell {
 
@@ -50,6 +51,14 @@ class CronShell extends AppShell {
 		echo __LINE__;
 		return;
 		
+	}
+
+	public function s3DbBackup()
+	{
+		$client=$_SERVER["argv"][5];
+	    $this->Controller=new K9S3DBBackupController();
+	    $this->Controller->s3DbBackup($client);
+		exit;
 	}
 
     public function dailyReport(){
